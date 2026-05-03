@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
   const session = await auth()
   const user = session?.user
+  const showAdmin = isAdmin || user?.role === "ADMIN"
 
   return (
     <nav
@@ -32,7 +33,7 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
             >
               Dashboard
             </Link>
-            {isAdmin && (
+            {showAdmin && (
               <>
                 <Link
                   href="/admin/pricing"

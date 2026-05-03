@@ -1,0 +1,1 @@
+ALTER TABLE "service_fees" ADD COLUMN "divide_by_pax" boolean DEFAULT false NOT NULL;

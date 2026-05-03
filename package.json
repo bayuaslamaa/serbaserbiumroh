@@ -7,10 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "seed": "tsx lib/db/seed.ts",
+    "db:generate": "dotenv -e .env.local -- drizzle-kit generate",
+    "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
+    "seed": "dotenv -e .env.local -- tsx lib/db/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -44,8 +44,8 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.1.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22.10.7",
     "@types/pg": "^8.11.10",
@@ -53,14 +53,17 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.27.2",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.29",
+    "happy-dom": "^20.9.0",
     "jsdom": "^29.1.1",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^2.1.8"
   }
 }

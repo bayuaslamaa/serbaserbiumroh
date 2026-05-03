@@ -6,15 +6,16 @@ import { eq } from "drizzle-orm"
 import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 import { users, accounts, sessions, verificationTokens } from "@/lib/db/schema"
+import { authConfig } from "@/auth.config"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: DrizzleAdapter(db, {
     usersTable: users,
     accountsTable: accounts,
     sessionsTable: sessions,
     verificationTokensTable: verificationTokens,
   }),
-  session: { strategy: "jwt" },
   providers: [
     Credentials({
       name: "credentials",
@@ -52,23 +53,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id!
-        token.role = user.role
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id
-        session.user.role = token.role
-      }
-      return session
-    },
-  },
-  pages: {
-    signIn: "/login",
-  },
 })

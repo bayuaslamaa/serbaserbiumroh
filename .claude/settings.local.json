@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version)",
+      "Bash(git init *)",
+      "Bash(git checkout *)",
+      "Bash(mkdir -p \"/Users/bayuaslama_/Documents/GitHub/umroh-planner/app/\\(dashboard\\)/estimate/[id]\")",
+      "Bash(mkdir -p /Users/bayuaslama_/Documents/GitHub/umroh-planner/app/api/auth/\\\\[...nextauth\\\\])",
+      "Bash(mkdir -p \"/Users/bayuaslama_/Documents/GitHub/umroh-planner/app/api/estimate/[id]/export\")",
+      "Bash(mkdir -p \"/Users/bayuaslama_/Documents/GitHub/umroh-planner/app/api/admin/pricing/[category]\")",
+      "Bash(pnpm install *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm add *)",
+      "Bash(xargs ls *)",
+      "Bash(pnpm list *)",
+      "Bash(pnpm tsc *)",
+      "Bash(pnpm db:migrate *)",
+      "Bash(pnpm seed *)",
+      "Bash(pnpm db:generate *)",
+      "Bash(dotenv *)",
+      "Bash(pnpm exec *)",
+      "Bash(npx tsc *)",
+      "Bash(pnpm vitest *)"
+    ]
+  }
+}

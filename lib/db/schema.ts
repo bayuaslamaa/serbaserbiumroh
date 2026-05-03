@@ -6,6 +6,7 @@ import {
   timestamp,
   pgEnum,
   jsonb,
+  unique,
 } from "drizzle-orm/pg-core"
 import { createId } from "@paralleldrive/cuid2"
 
@@ -79,8 +80,26 @@ export const serviceFees = pgTable("service_fees", {
   amount: integer("amount").notNull(),
   label: text("label").notNull(),
   enabled: boolean("enabled").notNull().default(true),
+  divideByPax: boolean("divide_by_pax").notNull().default(false),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
+
+// --- Hotel Monthly Prices (per hotel entry, month 1-12) ---
+export const hotelMonthlyPrices = pgTable(
+  "hotel_monthly_prices",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    hotelPriceId: text("hotel_price_id")
+      .notNull()
+      .references(() => hotelPrices.id, { onDelete: "cascade" }),
+    month: integer("month").notNull(), // 1-12
+    sarPerNight: integer("sar_per_night").notNull(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.hotelPriceId, t.month)]
+)
 
 // --- Room Multipliers (seeded, not admin-editable in v1) ---
 export const roomMultipliers = pgTable("room_multipliers", {
@@ -157,6 +176,7 @@ export const estimates = pgTable("estimates", {
 // --- Inferred types ---
 export type ExchangeRate = typeof exchangeRates.$inferSelect
 export type HotelPrice = typeof hotelPrices.$inferSelect
+export type HotelMonthlyPrice = typeof hotelMonthlyPrices.$inferSelect
 export type AirlinePrice = typeof airlinePrices.$inferSelect
 export type ServiceFee = typeof serviceFees.$inferSelect
 export type RoomMultiplier = typeof roomMultipliers.$inferSelect

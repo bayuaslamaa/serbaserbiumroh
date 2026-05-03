@@ -5,6 +5,7 @@ import {
   airlinePrices,
   serviceFees,
   roomMultipliers,
+  hotelMonthlyPrices,
 } from "./schema"
 
 async function seed() {
@@ -125,21 +126,23 @@ async function seed() {
   await db
     .insert(serviceFees)
     .values([
-      { key: "VISA", currency: "USD", amount: 165, label: "Visa Umroh Reguler" },
-      { key: "SISKOPATUH", currency: "IDR", amount: 200000, label: "Siskopatuh" },
-      { key: "TASREH", currency: "SAR", amount: 25, label: "Tasreh Raudhah" },
+      { key: "VISA", currency: "USD", amount: 165, label: "Visa Umroh Reguler", divideByPax: false },
+      { key: "SISKOPATUH", currency: "IDR", amount: 200000, label: "Siskopatuh", divideByPax: false },
+      { key: "TASREH", currency: "SAR", amount: 25, label: "Tasreh Raudhah", divideByPax: false },
       {
         key: "TRANSPORT",
         currency: "SAR",
         amount: 325,
         label: "Transportasi Full Rute (Staria)",
+        divideByPax: true,
       },
-      { key: "TOUR_MAKKAH", currency: "SAR", amount: 150, label: "Tour Ziarah Makkah" },
+      { key: "TOUR_MAKKAH", currency: "SAR", amount: 150, label: "Tour Ziarah Makkah", divideByPax: true },
       {
         key: "TOUR_MADINAH",
         currency: "SAR",
         amount: 150,
         label: "Tour Ziarah Madinah",
+        divideByPax: true,
       },
     ])
     .onConflictDoNothing()
@@ -176,6 +179,19 @@ async function seed() {
     .onConflictDoNothing()
 
   console.log("✓ Room multipliers seeded")
+
+  // Hotel monthly prices — seed each hotel's 12 months at the base price so admin can update peaks
+  const allHotels = await db.select().from(hotelPrices)
+  const monthlyRows = allHotels.flatMap((h) =>
+    Array.from({ length: 12 }, (_, i) => ({
+      hotelPriceId: h.id,
+      month: i + 1,
+      sarPerNight: h.sarPerNight,
+    }))
+  )
+  await db.insert(hotelMonthlyPrices).values(monthlyRows).onConflictDoNothing()
+  console.log("✓ Hotel monthly prices seeded")
+
   console.log("✅ Seeding complete!")
   process.exit(0)
 }
