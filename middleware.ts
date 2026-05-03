@@ -11,7 +11,12 @@ export default auth((req) => {
   const isAuthRoute = nextUrl.pathname.startsWith("/login")
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth")
   const isAdminRoute = nextUrl.pathname.startsWith("/admin")
-  const isPublicRoute = isAuthRoute || isApiAuthRoute
+  const isContentRoute =
+    nextUrl.pathname === "/" ||
+    nextUrl.pathname.startsWith("/panduan") ||
+    nextUrl.pathname.startsWith("/cerita-jamaah") ||
+    nextUrl.pathname.startsWith("/hotel-nusuk")
+  const isPublicRoute = isAuthRoute || isApiAuthRoute || isContentRoute
 
   if (isPublicRoute) {
     if (isLoggedIn && isAuthRoute) {

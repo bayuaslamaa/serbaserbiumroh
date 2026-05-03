@@ -27,6 +27,27 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
           </Link>
           <div className="hidden md:flex items-center gap-4">
             <Link
+              href="/panduan"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Panduan
+            </Link>
+            <Link
+              href="/cerita-jamaah"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Cerita Jamaah
+            </Link>
+            <Link
+              href="/hotel-nusuk"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Hotel Nusuk
+            </Link>
+            <Link
               href="/dashboard"
               className="text-sm transition-colors hover:text-[var(--color-text)]"
               style={{ color: "var(--color-text-muted)" }}
