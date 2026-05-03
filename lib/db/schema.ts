@@ -7,6 +7,7 @@ import {
   pgEnum,
   jsonb,
   unique,
+  bigint,
 } from "drizzle-orm/pg-core"
 import { createId } from "@paralleldrive/cuid2"
 
@@ -173,6 +174,74 @@ export const estimates = pgTable("estimates", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
+// --- Pilgrim Stories ---
+export const pilgrimStories = pgTable("pilgrim_stories", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  slug: text("slug").unique().notNull(),
+  authorName: text("author_name").notNull(),
+  departureCity: text("departure_city").notNull(),
+  travelMonth: integer("travel_month"),
+  travelYear: integer("travel_year"),
+  pax: integer("pax").notNull(),
+  hotelTier: hotelTierEnum("hotel_tier").notNull(),
+  airlineTier: airlineTierEnum("airline_tier"),
+  makkahNights: integer("makkah_nights").notNull(),
+  madinahNights: integer("madinah_nights").notNull(),
+  totalBudgetIdr: bigint("total_budget_idr", { mode: "number" }).notNull(),
+  narrative: text("narrative").notNull().default(""),
+  isPublished: boolean("is_published").notNull().default(false),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+})
+
+// --- Story Itinerary Days ---
+export const storyItineraryDays = pgTable("story_itinerary_days", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  storyId: text("story_id")
+    .notNull()
+    .references(() => pilgrimStories.id, { onDelete: "cascade" }),
+  dayNumber: integer("day_number").notNull(),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
+
+// --- Story Packing Items ---
+export const storyPackingItems = pgTable("story_packing_items", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  storyId: text("story_id")
+    .notNull()
+    .references(() => pilgrimStories.id, { onDelete: "cascade" }),
+  category: text("category").notNull(),
+  itemName: text("item_name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
+
+// --- Hotel Listings ---
+export const hotelListings = pgTable("hotel_listings", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  slug: text("slug").unique().notNull(),
+  name: text("name").notNull(),
+  city: cityEnum("city").notNull(),
+  tier: hotelTierEnum("tier").notNull(),
+  distanceMeters: integer("distance_meters"),
+  facilities: text("facilities").notNull().default(""),
+  pilgrimNotes: text("pilgrim_notes").notNull().default(""),
+  isPublished: boolean("is_published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+})
+
 // --- Inferred types ---
 export type ExchangeRate = typeof exchangeRates.$inferSelect
 export type HotelPrice = typeof hotelPrices.$inferSelect
@@ -183,3 +252,11 @@ export type RoomMultiplier = typeof roomMultipliers.$inferSelect
 export type User = typeof users.$inferSelect
 export type Estimate = typeof estimates.$inferSelect
 export type NewEstimate = typeof estimates.$inferInsert
+export type PilgrimStory = typeof pilgrimStories.$inferSelect
+export type NewPilgrimStory = typeof pilgrimStories.$inferInsert
+export type StoryItineraryDay = typeof storyItineraryDays.$inferSelect
+export type NewStoryItineraryDay = typeof storyItineraryDays.$inferInsert
+export type StoryPackingItem = typeof storyPackingItems.$inferSelect
+export type NewStoryPackingItem = typeof storyPackingItems.$inferInsert
+export type HotelListing = typeof hotelListings.$inferSelect
+export type NewHotelListing = typeof hotelListings.$inferInsert

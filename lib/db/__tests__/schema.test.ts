@@ -7,6 +7,9 @@ import {
   roomMultipliers,
   users,
   estimates,
+  pilgrimStories,
+  storyItineraryDays,
+  hotelListings,
 } from "@/lib/db/schema"
 
 describe("schema table definitions", () => {
@@ -66,5 +69,31 @@ describe("schema table definitions", () => {
     expect(cols).toContain("totalIdrGrp")
     expect(cols).toContain("rawInput")
     expect(cols).toContain("userId")
+  })
+
+  it("pilgrimStories table has expected columns", () => {
+    const cols = Object.keys(pilgrimStories)
+    expect(cols).toContain("id")
+    expect(cols).toContain("slug")
+    expect(cols).toContain("authorName")
+    expect(cols).toContain("pax")
+    expect(cols).toContain("hotelTier")
+    expect(cols).toContain("isPublished")
+    expect(cols).toContain("isFeatured")
+  })
+
+  it("storyItineraryDays table has storyId field", () => {
+    const cols = Object.keys(storyItineraryDays)
+    expect(cols).toContain("storyId")
+    expect(cols).toContain("dayNumber")
+    expect(cols).toContain("label")
+  })
+
+  it("hotelListings table has city and tier fields", () => {
+    const cols = Object.keys(hotelListings)
+    expect(cols).toContain("city")
+    expect(cols).toContain("tier")
+    expect(cols).toContain("slug")
+    expect(cols).toContain("name")
   })
 })
