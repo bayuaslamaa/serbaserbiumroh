@@ -4,11 +4,13 @@ import type { EstimateParams, PricingConfig } from "@/types"
 import { RadioCardGrid } from "./RadioCardGrid"
 import { Stepper } from "./Stepper"
 import { ServiceCheckboxGrid } from "./ServiceCheckboxGrid"
+import { Badge } from "@/components/ui/badge"
 
 interface ParamsPanelProps {
   params: EstimateParams
   pricing: PricingConfig
   onChange: (patch: Partial<EstimateParams>) => void
+  storySource?: string
 }
 
 const MONTH_LABELS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"]
@@ -25,7 +27,7 @@ function resolveMonthlyHotelSar(
   return config.sarPerNight
 }
 
-export function ParamsPanel({ params, pricing, onChange }: ParamsPanelProps) {
+export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPanelProps) {
   const hotelOptions = (["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const).map((tier) => ({
     value: tier,
     label: pricing.hotels.MAKKAH[tier].label,
@@ -54,12 +56,23 @@ export function ParamsPanel({ params, pricing, onChange }: ParamsPanelProps) {
       className="rounded-xl border p-5 flex flex-col gap-6"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
-      <h2
-        className="text-lg font-bold"
-        style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
-      >
-        Detail Perjalanan
-      </h2>
+      <div className="flex items-center gap-3 flex-wrap">
+        <h2
+          className="text-lg font-bold"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
+        >
+          Detail Perjalanan
+        </h2>
+        {storySource && (
+          <Badge
+            variant="outline"
+            className="text-xs"
+            style={{ borderColor: "var(--color-gold-muted)", color: "var(--color-gold)" }}
+          >
+            berdasarkan cerita {storySource}
+          </Badge>
+        )}
+      </div>
 
       <section className="flex flex-col gap-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>

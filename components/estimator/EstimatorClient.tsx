@@ -90,6 +90,8 @@ interface EstimatorClientProps {
   existingAiNotes?: string
   existingTitle?: string | null
   savedAt?: string | null
+  initialParams?: Partial<EstimateParams>
+  storySource?: string
 }
 
 export function EstimatorClient({
@@ -100,10 +102,12 @@ export function EstimatorClient({
   existingAiNotes,
   existingTitle,
   savedAt,
+  initialParams,
+  storySource,
 }: EstimatorClientProps) {
   const startState: State = {
     rawInput: existingRawInput ?? "",
-    params: existingParams ?? DEFAULT_PARAMS,
+    params: existingParams ?? (initialParams ? { ...DEFAULT_PARAMS, ...initialParams } : DEFAULT_PARAMS),
     aiNotes: existingAiNotes ?? "",
     parseStatus: "idle",
     saveStatus: "idle",
@@ -220,6 +224,7 @@ export function EstimatorClient({
             params={state.params}
             pricing={pricingConfig}
             onChange={(patch) => dispatch({ type: "UPDATE_PARAMS", payload: patch })}
+            storySource={storySource}
           />
         </div>
 

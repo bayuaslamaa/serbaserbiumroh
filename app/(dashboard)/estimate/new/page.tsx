@@ -2,12 +2,62 @@ import { requireAuth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { fetchPricingConfig } from "@/lib/budget/calculate"
 import { EstimatorClient } from "@/components/estimator/EstimatorClient"
+import type { EstimateParams, HotelTier } from "@/types"
 
 export const metadata = { title: "Buat Estimasi Baru" }
 
-export default async function NewEstimatePage() {
+const VALID_TIERS: HotelTier[] = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
+
+function parseIntParam(value: string | undefined, min: number, max: number): number | undefined {
+  if (value == null) return undefined
+  const n = parseInt(value, 10)
+  if (isNaN(n) || n < min || n > max) return undefined
+  return n
+}
+
+function parseTier(value: string | undefined): HotelTier | undefined {
+  if (value == null) return undefined
+  const upper = value.toUpperCase() as HotelTier
+  return VALID_TIERS.includes(upper) ? upper : undefined
+}
+
+interface SearchParams {
+  storyName?: string
+  makkahNights?: string
+  madinahNights?: string
+  pax?: string
+  tier?: string
+  travelMonth?: string
+  city?: string
+}
+
+export default async function NewEstimatePage({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}) {
   await requireAuth()
   const pricingConfig = await fetchPricingConfig(db)
+
+  const initialParams: Partial<EstimateParams> = {}
+
+  const makkahNights = parseIntParam(searchParams.makkahNights, 1, 30)
+  if (makkahNights != null) initialParams.nightsMakkah = makkahNights
+
+  const madinahNights = parseIntParam(searchParams.madinahNights, 1, 30)
+  if (madinahNights != null) initialParams.nightsMadinah = madinahNights
+
+  const pax = parseIntParam(searchParams.pax, 1, 200)
+  if (pax != null) initialParams.pax = pax
+
+  const hotelTier = parseTier(searchParams.tier)
+  if (hotelTier != null) initialParams.hotelTier = hotelTier
+
+  const travelMonth = parseIntParam(searchParams.travelMonth, 1, 12)
+  if (travelMonth != null) initialParams.travelMonth = travelMonth
+
+  const hasInitialParams = Object.keys(initialParams).length > 0
+  const storyName = searchParams.storyName?.trim() || undefined
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -22,7 +72,11 @@ export default async function NewEstimatePage() {
           Deskripsikan rencana perjalanan Anda, atau atur parameter secara manual.
         </p>
       </div>
-      <EstimatorClient pricingConfig={pricingConfig} />
+      <EstimatorClient
+        pricingConfig={pricingConfig}
+        initialParams={hasInitialParams ? initialParams : undefined}
+        storySource={storyName}
+      />
     </div>
   )
 }
