@@ -70,6 +70,20 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
                 >
                   Users
                 </Link>
+                <Link
+                  href="/admin/content/stories"
+                  className="text-sm transition-colors hover:text-[var(--color-text)]"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Cerita Jamaah
+                </Link>
+                <Link
+                  href="/admin/content/hotels"
+                  className="text-sm transition-colors hover:text-[var(--color-text)]"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  Hotel Nusuk
+                </Link>
               </>
             )}
           </div>
