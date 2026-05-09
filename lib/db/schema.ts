@@ -7,8 +7,10 @@ import {
   pgEnum,
   jsonb,
   unique,
+  uniqueIndex,
   bigint,
 } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
 import { createId } from "@paralleldrive/cuid2"
 
 // --- Enums ---
@@ -53,6 +55,7 @@ export const hotelPrices = pgTable("hotel_prices", {
     .$defaultFn(() => createId()),
   city: cityEnum("city").notNull(),
   tier: hotelTierEnum("tier").notNull(),
+  importKey: text("import_key").notNull().unique(),
   sarPerNight: integer("sar_per_night").notNull(),
   label: text("label").notNull(), // e.g. "Safwa Tower 3"
   sublabel: text("sublabel").notNull(), // e.g. "3★, dekat Haram"
@@ -60,16 +63,26 @@ export const hotelPrices = pgTable("hotel_prices", {
 })
 
 // --- Airline Prices (IDR, per person round-trip) ---
-export const airlinePrices = pgTable("airline_prices", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
-  tier: airlineTierEnum("tier").notNull(),
-  idr: integer("idr").notNull(),
-  label: text("label").notNull(), // e.g. "Lion Air, AirAsia"
-  sublabel: text("sublabel").notNull(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-})
+export const airlinePrices = pgTable(
+  "airline_prices",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    tier: airlineTierEnum("tier").notNull(),
+    importKey: text("import_key").notNull().unique(),
+    idr: integer("idr").notNull(),
+    label: text("label").notNull(), // e.g. "Lion Air, AirAsia"
+    sublabel: text("sublabel").notNull(),
+    isDefault: boolean("is_default").notNull().default(false),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("airline_prices_default_tier_unique")
+      .on(t.tier)
+      .where(sql`${t.isDefault} = true`),
+  ]
+)
 
 // --- Service Fees ---
 export const serviceFees = pgTable("service_fees", {
@@ -100,6 +113,23 @@ export const hotelMonthlyPrices = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [unique().on(t.hotelPriceId, t.month)]
+)
+
+// --- Airline Monthly Prices (per airline option, month 1-12, IDR round-trip per person) ---
+export const airlineMonthlyPrices = pgTable(
+  "airline_monthly_prices",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    airlinePriceId: text("airline_price_id")
+      .notNull()
+      .references(() => airlinePrices.id, { onDelete: "cascade" }),
+    month: integer("month").notNull(), // 1-12
+    idr: integer("idr").notNull(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.airlinePriceId, t.month)]
 )
 
 // --- Room Multipliers (seeded, not admin-editable in v1) ---
@@ -247,6 +277,7 @@ export type ExchangeRate = typeof exchangeRates.$inferSelect
 export type HotelPrice = typeof hotelPrices.$inferSelect
 export type HotelMonthlyPrice = typeof hotelMonthlyPrices.$inferSelect
 export type AirlinePrice = typeof airlinePrices.$inferSelect
+export type AirlineMonthlyPrice = typeof airlineMonthlyPrices.$inferSelect
 export type ServiceFee = typeof serviceFees.$inferSelect
 export type RoomMultiplier = typeof roomMultipliers.$inferSelect
 export type User = typeof users.$inferSelect

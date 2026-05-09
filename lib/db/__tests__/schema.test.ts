@@ -3,6 +3,7 @@ import {
   exchangeRates,
   hotelPrices,
   airlinePrices,
+  airlineMonthlyPrices,
   serviceFees,
   roomMultipliers,
   users,
@@ -27,6 +28,7 @@ describe("schema table definitions", () => {
     expect(cols).toContain("id")
     expect(cols).toContain("city")
     expect(cols).toContain("tier")
+    expect(cols).toContain("importKey")
     expect(cols).toContain("sarPerNight")
     expect(cols).toContain("label")
     expect(cols).toContain("sublabel")
@@ -36,8 +38,18 @@ describe("schema table definitions", () => {
     const cols = Object.keys(airlinePrices)
     expect(cols).toContain("id")
     expect(cols).toContain("tier")
+    expect(cols).toContain("importKey")
     expect(cols).toContain("idr")
     expect(cols).toContain("label")
+    expect(cols).toContain("isDefault")
+  })
+
+  it("airlineMonthlyPrices table has expected columns", () => {
+    const cols = Object.keys(airlineMonthlyPrices)
+    expect(cols).toContain("id")
+    expect(cols).toContain("airlinePriceId")
+    expect(cols).toContain("month")
+    expect(cols).toContain("idr")
   })
 
   it("serviceFees table has expected columns including enabled flag", () => {

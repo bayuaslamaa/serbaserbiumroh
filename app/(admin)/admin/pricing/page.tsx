@@ -1,6 +1,13 @@
 import { requireAdmin } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { exchangeRates, hotelPrices, airlinePrices, serviceFees, hotelMonthlyPrices } from "@/lib/db/schema"
+import {
+  exchangeRates,
+  hotelPrices,
+  airlinePrices,
+  serviceFees,
+  hotelMonthlyPrices,
+  airlineMonthlyPrices,
+} from "@/lib/db/schema"
 import { PricingTable } from "@/components/admin/PricingTable"
 import { asc } from "drizzle-orm"
 
@@ -9,18 +16,26 @@ export const metadata = { title: "Admin — Kelola Harga" }
 export default async function AdminPricingPage() {
   await requireAdmin()
 
-  const [rates, hotelsRaw, airlines, services, monthlyPrices] = await Promise.all([
+  const [rates, hotelsRaw, airlinesRaw, services, monthlyPrices, airlineMonthlyRows] = await Promise.all([
     db.select().from(exchangeRates),
     db.select().from(hotelPrices),
     db.select().from(airlinePrices),
     db.select().from(serviceFees),
     db.select().from(hotelMonthlyPrices).orderBy(asc(hotelMonthlyPrices.month)),
+    db.select().from(airlineMonthlyPrices).orderBy(asc(airlineMonthlyPrices.month)),
   ])
 
   const hotels = hotelsRaw.map((h) => ({
     ...h,
     monthlyPrices: monthlyPrices
       .filter((mp) => mp.hotelPriceId === h.id)
+      .sort((a, b) => a.month - b.month),
+  }))
+
+  const airlines = airlinesRaw.map((a) => ({
+    ...a,
+    monthlyPrices: airlineMonthlyRows
+      .filter((mp) => mp.airlinePriceId === a.id)
       .sort((a, b) => a.month - b.month),
   }))
 

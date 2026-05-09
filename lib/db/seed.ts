@@ -6,7 +6,10 @@ import {
   serviceFees,
   roomMultipliers,
   hotelMonthlyPrices,
+  airlineMonthlyPrices,
 } from "./schema"
+import { normalizeHotelPricingImportKey } from "../admin/hotel-pricing-import"
+import { normalizeAirlinePricingImportKey } from "../admin/airline-pricing-import"
 
 async function seed() {
   console.log("Seeding database...")
@@ -30,6 +33,11 @@ async function seed() {
       {
         city: "MADINAH",
         tier: "ECONOMY",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MADINAH",
+          tier: "ECONOMY",
+          label: "Hotel Ekonomi Madinah",
+        }),
         sarPerNight: 450,
         label: "Hotel Ekonomi Madinah",
         sublabel: "2-3★, ±1km Nabawi",
@@ -37,6 +45,11 @@ async function seed() {
       {
         city: "MADINAH",
         tier: "STANDARD",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MADINAH",
+          tier: "STANDARD",
+          label: "Grand Plaza Badr Maqam",
+        }),
         sarPerNight: 650,
         label: "Grand Plaza Badr Maqam",
         sublabel: "4★, dekat Nabawi",
@@ -44,6 +57,11 @@ async function seed() {
       {
         city: "MADINAH",
         tier: "PELATARAN",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MADINAH",
+          tier: "PELATARAN",
+          label: "Pelataran Masjid Nabawi",
+        }),
         sarPerNight: 2000,
         label: "Pelataran Masjid Nabawi",
         sublabel: "Di dalam pelataran",
@@ -51,6 +69,11 @@ async function seed() {
       {
         city: "MADINAH",
         tier: "PREMIUM",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MADINAH",
+          tier: "PREMIUM",
+          label: "Hotel Bintang 5 Madinah",
+        }),
         sarPerNight: 3500,
         label: "Hotel Bintang 5 Madinah",
         sublabel: "Bintang 5 pelataran",
@@ -59,6 +82,11 @@ async function seed() {
       {
         city: "MAKKAH",
         tier: "ECONOMY",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MAKKAH",
+          tier: "ECONOMY",
+          label: "Hotel Ekonomi Makkah",
+        }),
         sarPerNight: 800,
         label: "Hotel Ekonomi Makkah",
         sublabel: "2-3★, jauh Haram",
@@ -66,6 +94,11 @@ async function seed() {
       {
         city: "MAKKAH",
         tier: "STANDARD",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MAKKAH",
+          tier: "STANDARD",
+          label: "Safwa Tower 3",
+        }),
         sarPerNight: 1300,
         label: "Safwa Tower 3",
         sublabel: "3★, dekat Haram",
@@ -73,6 +106,11 @@ async function seed() {
       {
         city: "MAKKAH",
         tier: "PELATARAN",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MAKKAH",
+          tier: "PELATARAN",
+          label: "Pelataran Masjidil Haram",
+        }),
         sarPerNight: 3500,
         label: "Pelataran Masjidil Haram",
         sublabel: "Di dalam pelataran",
@@ -80,6 +118,11 @@ async function seed() {
       {
         city: "MAKKAH",
         tier: "PREMIUM",
+        importKey: normalizeHotelPricingImportKey({
+          city: "MAKKAH",
+          tier: "PREMIUM",
+          label: "Hotel Bintang 5 Makkah",
+        }),
         sarPerNight: 6000,
         label: "Hotel Bintang 5 Makkah",
         sublabel: "Bintang 5 pelataran",
@@ -95,27 +138,47 @@ async function seed() {
     .values([
       {
         tier: "BUDGET",
+        importKey: normalizeAirlinePricingImportKey({
+          tier: "BUDGET",
+          label: "Lion Air, AirAsia",
+        }),
         idr: 12500000,
         label: "Lion Air, AirAsia",
         sublabel: "Transit, ~12,5jt",
+        isDefault: true,
       },
       {
         tier: "STANDARD",
+        importKey: normalizeAirlinePricingImportKey({
+          tier: "STANDARD",
+          label: "Batik Air, Saudia",
+        }),
         idr: 14500000,
         label: "Batik Air, Saudia",
         sublabel: "~14,5jt",
+        isDefault: true,
       },
       {
         tier: "GARUDA",
+        importKey: normalizeAirlinePricingImportKey({
+          tier: "GARUDA",
+          label: "Garuda Indonesia",
+        }),
         idr: 17000000,
         label: "Garuda Indonesia",
         sublabel: "Penerbangan langsung",
+        isDefault: true,
       },
       {
         tier: "BUSINESS",
+        importKey: normalizeAirlinePricingImportKey({
+          tier: "BUSINESS",
+          label: "Business Class",
+        }),
         idr: 25000000,
         label: "Business Class",
         sublabel: "Semua maskapai",
+        isDefault: true,
       },
     ])
     .onConflictDoNothing()
@@ -191,6 +254,18 @@ async function seed() {
   )
   await db.insert(hotelMonthlyPrices).values(monthlyRows).onConflictDoNothing()
   console.log("✓ Hotel monthly prices seeded")
+
+  // Airline monthly prices — seed each airline option's 12 months at the base price so admin can update peaks
+  const allAirlines = await db.select().from(airlinePrices)
+  const airlineMonthlyRows = allAirlines.flatMap((a) =>
+    Array.from({ length: 12 }, (_, i) => ({
+      airlinePriceId: a.id,
+      month: i + 1,
+      idr: a.idr,
+    }))
+  )
+  await db.insert(airlineMonthlyPrices).values(airlineMonthlyRows).onConflictDoNothing()
+  console.log("✓ Airline monthly prices seeded")
 
   console.log("✅ Seeding complete!")
   process.exit(0)

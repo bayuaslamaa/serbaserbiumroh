@@ -1,7 +1,7 @@
 ---
 title: "feat: Build Umroh Budget Estimator — Full-Stack Next.js Application"
 type: feat
-status: active
+status: completed
 date: 2026-04-30
 ---
 

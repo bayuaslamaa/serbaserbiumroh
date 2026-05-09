@@ -1,5 +1,12 @@
-import { asc } from "drizzle-orm"
-import type { EstimateParams, BudgetBreakdown, PricingConfig, ServiceKey, HotelPriceConfig } from "@/types"
+import { asc, desc } from "drizzle-orm"
+import type {
+  EstimateParams,
+  BudgetBreakdown,
+  PricingConfig,
+  ServiceKey,
+  HotelPriceConfig,
+  AirlinePriceConfig,
+} from "@/types"
 
 function formatAmountDisplay(currency: string, amount: number): string {
   if (currency === "USD") return `$${amount}`
@@ -14,6 +21,14 @@ function resolveHotelSar(config: HotelPriceConfig, travelMonth?: number): number
     if (monthly != null) return monthly
   }
   return config.sarPerNight
+}
+
+function resolveAirlineIdr(config: AirlinePriceConfig, travelMonth?: number): number {
+  if (travelMonth != null) {
+    const monthly = config.monthlyPrices?.[travelMonth]
+    if (monthly != null) return monthly
+  }
+  return config.idr
 }
 
 export function calculateBudget(params: EstimateParams, pricing: PricingConfig): BudgetBreakdown {
@@ -61,7 +76,7 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
     })
   }
 
-  const flightIdr = pricing.airlines[params.airline].idr
+  const flightIdr = resolveAirlineIdr(pricing.airlines[params.airline], params.travelMonth)
   const totalIdrPax = hotelMadinahIdr + hotelMakkahIdr + servicesIdr + flightIdr
   const totalIdrGrp = totalIdrPax * params.pax
 
@@ -79,16 +94,23 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
 }
 
 export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<PricingConfig> {
-  const { exchangeRates, hotelPrices, airlinePrices, serviceFees, roomMultipliers, hotelMonthlyPrices } = await import(
-    "@/lib/db/schema"
-  )
-  const [rates, hotels, airlines, services, rooms, monthlyPrices] = await Promise.all([
+  const {
+    exchangeRates,
+    hotelPrices,
+    airlinePrices,
+    serviceFees,
+    roomMultipliers,
+    hotelMonthlyPrices,
+    airlineMonthlyPrices,
+  } = await import("@/lib/db/schema")
+  const [rates, hotels, airlines, services, rooms, monthlyPrices, airlineMonthlyRows] = await Promise.all([
     db.select().from(exchangeRates),
     db.select().from(hotelPrices).orderBy(asc(hotelPrices.updatedAt)),
-    db.select().from(airlinePrices),
+    db.select().from(airlinePrices).orderBy(desc(airlinePrices.isDefault), asc(airlinePrices.updatedAt)),
     db.select().from(serviceFees),
     db.select().from(roomMultipliers),
     db.select().from(hotelMonthlyPrices),
+    db.select().from(airlineMonthlyPrices),
   ])
 
   const ratesMap: Record<string, number> = {}
@@ -112,8 +134,31 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
   }
 
   const airlinesMap: PricingConfig["airlines"] = {} as PricingConfig["airlines"]
+  const airlineOptionsMap: NonNullable<PricingConfig["airlineOptions"]> = {} as NonNullable<PricingConfig["airlineOptions"]>
+  const monthlyByAirlineId: Record<string, Record<number, number>> = {}
+  for (const mp of airlineMonthlyRows) {
+    if (!monthlyByAirlineId[mp.airlinePriceId]) monthlyByAirlineId[mp.airlinePriceId] = {}
+    monthlyByAirlineId[mp.airlinePriceId][mp.month] = mp.idr
+  }
+
   for (const a of airlines) {
-    airlinesMap[a.tier] = { idr: a.idr, label: a.label }
+    const config = {
+      id: a.id,
+      tier: a.tier,
+      idr: a.idr,
+      label: a.label,
+      sublabel: a.sublabel,
+      isDefault: a.isDefault,
+      monthlyPrices: monthlyByAirlineId[a.id] ?? {},
+    }
+    if (!airlineOptionsMap[a.tier]) {
+      airlineOptionsMap[a.tier] = []
+    }
+    airlineOptionsMap[a.tier].push(config)
+
+    if (a.isDefault || !airlinesMap[a.tier]) {
+      airlinesMap[a.tier] = config
+    }
   }
 
   const servicesMap: PricingConfig["services"] = {} as PricingConfig["services"]
@@ -139,6 +184,7 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
     rates: ratesMap,
     hotels: hotelsMap,
     airlines: airlinesMap,
+    airlineOptions: airlineOptionsMap,
     services: servicesMap,
     roomMultipliers: roomsMap,
   }

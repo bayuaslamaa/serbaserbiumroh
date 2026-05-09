@@ -7,8 +7,11 @@ import {
   airlinePrices,
   serviceFees,
   hotelMonthlyPrices,
+  airlineMonthlyPrices,
 } from "@/lib/db/schema"
 import { eq, and } from "drizzle-orm"
+import { normalizeHotelPricingImportKey } from "@/lib/admin/hotel-pricing-import"
+import { normalizeAirlinePricingImportKey } from "@/lib/admin/airline-pricing-import"
 
 async function requireAdmin() {
   const session = await auth()
@@ -64,6 +67,11 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
         tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
         label: label.trim(),
         sublabel: sublabel.trim(),
+        importKey: normalizeHotelPricingImportKey({
+          city: city as "MAKKAH" | "MADINAH",
+          tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
+          label: label.trim(),
+        }),
         sarPerNight,
         updatedAt: now,
       })
@@ -78,6 +86,62 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
     const monthlyPrices = await db.insert(hotelMonthlyPrices).values(monthlyRows).returning()
 
     return NextResponse.json({ hotel, monthlyPrices }, { status: 201 })
+  }
+
+  if (category === "airline") {
+    const { tier, label, sublabel, idr, isDefault } = body
+    if (!AIRLINE_TIERS.includes(tier as string)) {
+      return NextResponse.json({ error: "invalid tier" }, { status: 400 })
+    }
+    if (typeof label !== "string" || !label.trim()) {
+      return NextResponse.json({ error: "label required" }, { status: 400 })
+    }
+    if (typeof sublabel !== "string") {
+      return NextResponse.json({ error: "sublabel required" }, { status: 400 })
+    }
+    if (typeof idr !== "number" || idr <= 0) {
+      return NextResponse.json({ error: "idr must be a positive number" }, { status: 400 })
+    }
+
+    const importKey = normalizeAirlinePricingImportKey({
+      tier: tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS",
+      label: label.trim(),
+    })
+    const shouldBeDefault = typeof isDefault === "boolean" ? isDefault : false
+
+    const result = await db.transaction(async (tx) => {
+      if (shouldBeDefault) {
+        await tx
+          .update(airlinePrices)
+          .set({ isDefault: false, updatedAt: now })
+          .where(eq(airlinePrices.tier, tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"))
+      }
+
+      const [airline] = await tx
+        .insert(airlinePrices)
+        .values({
+          tier: tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS",
+          label: label.trim(),
+          sublabel: sublabel.trim(),
+          importKey,
+          idr,
+          isDefault: shouldBeDefault,
+          updatedAt: now,
+        })
+        .returning()
+
+      const monthlyRows = Array.from({ length: 12 }, (_, i) => ({
+        airlinePriceId: airline.id,
+        month: i + 1,
+        idr,
+        updatedAt: now,
+      }))
+      const monthlyPrices = await tx.insert(airlineMonthlyPrices).values(monthlyRows).returning()
+
+      return { airline, monthlyPrices }
+    })
+
+    return NextResponse.json(result, { status: 201 })
   }
 
   return NextResponse.json({ error: "Unknown category" }, { status: 400 })
@@ -115,7 +179,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   }
 
   if (category === "hotel") {
-    const { city, tier, sarPerNight } = body
+    const { hotelId, city, tier, sarPerNight } = body
     if (!CITIES.includes(city as string)) {
       return NextResponse.json({ error: "invalid city" }, { status: 400 })
     }
@@ -129,10 +193,12 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       .update(hotelPrices)
       .set({ sarPerNight, updatedAt: now })
       .where(
-        and(
-          eq(hotelPrices.city, city as "MAKKAH" | "MADINAH"),
-          eq(hotelPrices.tier, tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM")
-        )
+        typeof hotelId === "string" && hotelId
+          ? eq(hotelPrices.id, hotelId)
+          : and(
+              eq(hotelPrices.city, city as "MAKKAH" | "MADINAH"),
+              eq(hotelPrices.tier, tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM")
+            )
       )
       .returning()
     if (!updated) return NextResponse.json({ error: "Hotel price not found" }, { status: 404 })
@@ -140,18 +206,54 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   }
 
   if (category === "airline") {
-    const { tier, idr } = body
+    const { airlineId, tier, idr, label, sublabel, isDefault } = body
     if (!AIRLINE_TIERS.includes(tier as string)) {
       return NextResponse.json({ error: "invalid tier" }, { status: 400 })
     }
-    if (typeof idr !== "number" || idr <= 0) {
+    if (idr !== undefined && (typeof idr !== "number" || idr <= 0)) {
       return NextResponse.json({ error: "idr must be a positive number" }, { status: 400 })
     }
-    const [updated] = await db
-      .update(airlinePrices)
-      .set({ idr, updatedAt: now })
-      .where(eq(airlinePrices.tier, tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"))
-      .returning()
+    if (label !== undefined && (typeof label !== "string" || !label.trim())) {
+      return NextResponse.json({ error: "label required" }, { status: 400 })
+    }
+    if (sublabel !== undefined && typeof sublabel !== "string") {
+      return NextResponse.json({ error: "sublabel required" }, { status: 400 })
+    }
+
+    const updates: Partial<typeof airlinePrices.$inferInsert> & { updatedAt: Date } = { updatedAt: now }
+    if (typeof idr === "number") updates.idr = idr
+    if (typeof label === "string") {
+      updates.label = label.trim()
+      updates.importKey = normalizeAirlinePricingImportKey({
+        tier: tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS",
+        label: label.trim(),
+      })
+    }
+    if (typeof sublabel === "string") updates.sublabel = sublabel.trim()
+    if (typeof isDefault === "boolean") updates.isDefault = isDefault
+
+    const whereClause =
+      typeof airlineId === "string" && airlineId
+        ? eq(airlinePrices.id, airlineId)
+        : and(
+            eq(airlinePrices.tier, tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"),
+            eq(airlinePrices.isDefault, true)
+          )
+
+    const [updated] = await db.transaction(async (tx) => {
+      if (isDefault === true) {
+        await tx
+          .update(airlinePrices)
+          .set({ isDefault: false, updatedAt: now })
+          .where(eq(airlinePrices.tier, tier as "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"))
+      }
+
+      return tx
+        .update(airlinePrices)
+        .set(updates)
+        .where(whereClause)
+        .returning()
+    })
     if (!updated) return NextResponse.json({ error: "Airline price not found" }, { status: 404 })
     return NextResponse.json({ airline: updated })
   }
@@ -195,6 +297,26 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
       .where(and(eq(hotelMonthlyPrices.hotelPriceId, hotelId), eq(hotelMonthlyPrices.month, month)))
       .returning()
     if (!updated) return NextResponse.json({ error: "Monthly price not found" }, { status: 404 })
+    return NextResponse.json({ monthlyPrice: updated })
+  }
+
+  if (category === "monthly-airline") {
+    const { airlineId, month, idr } = body
+    if (typeof airlineId !== "string" || !airlineId) {
+      return NextResponse.json({ error: "airlineId required" }, { status: 400 })
+    }
+    if (typeof month !== "number" || month < 1 || month > 12) {
+      return NextResponse.json({ error: "month must be 1-12" }, { status: 400 })
+    }
+    if (typeof idr !== "number" || idr <= 0) {
+      return NextResponse.json({ error: "idr must be a positive number" }, { status: 400 })
+    }
+    const [updated] = await db
+      .update(airlineMonthlyPrices)
+      .set({ idr, updatedAt: now })
+      .where(and(eq(airlineMonthlyPrices.airlinePriceId, airlineId), eq(airlineMonthlyPrices.month, month)))
+      .returning()
+    if (!updated) return NextResponse.json({ error: "Monthly airline price not found" }, { status: 404 })
     return NextResponse.json({ monthlyPrice: updated })
   }
 

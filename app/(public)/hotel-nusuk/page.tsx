@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { hotelListings, hotelPrices, exchangeRates } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { HotelFilters } from '@/components/hotel-nusuk/HotelFilters'
+import { buildHotelNusukPriceMap } from '@/lib/hotel-nusuk/pricing'
 
 export const revalidate = 3600
 
@@ -23,12 +24,7 @@ export default async function HotelNusukPage() {
 
   const sarToIdrRate = rateRows[0]?.rateToIdr ?? 4700
 
-  // Build price map: { "MAKKAH_STANDARD": idrPerNight, ... }
-  const priceMap: Record<string, number> = {}
-  for (const price of prices) {
-    const key = `${price.city}_${price.tier}`
-    priceMap[key] = price.sarPerNight * sarToIdrRate
-  }
+  const priceMap = buildHotelNusukPriceMap(prices, sarToIdrRate)
 
   return (
     <div className="max-w-5xl mx-auto">

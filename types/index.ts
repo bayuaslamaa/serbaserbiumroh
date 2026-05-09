@@ -56,6 +56,16 @@ export interface HotelPriceConfig {
   monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override
 }
 
+export interface AirlinePriceConfig {
+  id?: string
+  tier?: AirlineTier
+  idr: number
+  label: string
+  sublabel?: string | null
+  isDefault?: boolean
+  monthlyPrices?: Record<number, number> // month 1-12 → IDR override
+}
+
 export interface ServiceFeeConfig {
   currency: string
   amount: number
@@ -67,7 +77,8 @@ export interface ServiceFeeConfig {
 export interface PricingConfig {
   rates: Record<string, number> // { SAR: 4700, USD: 17300 }
   hotels: Record<City, Record<HotelTier, HotelPriceConfig>>
-  airlines: Record<AirlineTier, { idr: number; label: string }>
+  airlines: Record<AirlineTier, AirlinePriceConfig>
+  airlineOptions?: Record<AirlineTier, AirlinePriceConfig[]>
   services: Record<ServiceKey, ServiceFeeConfig>
   roomMultipliers: Record<RoomType, RoomMultiplierConfig>
 }

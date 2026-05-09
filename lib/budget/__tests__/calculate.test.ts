@@ -19,10 +19,10 @@ const mockPricing: PricingConfig = {
     },
   },
   airlines: {
-    BUDGET: { idr: 12500000, label: "Lion Air" },
-    STANDARD: { idr: 14500000, label: "Batik Air" },
-    GARUDA: { idr: 17000000, label: "Garuda" },
-    BUSINESS: { idr: 25000000, label: "Business" },
+    BUDGET: { idr: 12500000, label: "Lion Air", monthlyPrices: {} },
+    STANDARD: { idr: 14500000, label: "Batik Air", monthlyPrices: { 2: 18500000 } },
+    GARUDA: { idr: 17000000, label: "Garuda", monthlyPrices: {} },
+    BUSINESS: { idr: 25000000, label: "Business", monthlyPrices: {} },
   },
   services: {
     VISA: { currency: "USD", amount: 165, label: "Visa Umroh Reguler", enabled: true, divideByPax: false },
@@ -164,6 +164,16 @@ describe("calculateBudget", () => {
 
     it("GARUDA airline → flightIdr = 17,000,000", () => {
       const result = calculateBudget({ ...baseParams, airline: "GARUDA" }, mockPricing)
+      expect(result.flightIdr).toBe(17_000_000)
+    })
+
+    it("travelMonth with airline monthly override → flightIdr uses monthly IDR", () => {
+      const result = calculateBudget({ ...baseParams, travelMonth: 2 }, mockPricing)
+      expect(result.flightIdr).toBe(18_500_000)
+    })
+
+    it("travelMonth without airline monthly override → flightIdr falls back to base IDR", () => {
+      const result = calculateBudget({ ...baseParams, airline: "GARUDA", travelMonth: 2 }, mockPricing)
       expect(result.flightIdr).toBe(17_000_000)
     })
   })
