@@ -47,7 +47,8 @@ vi.mock("@/lib/budget/calculate", () => ({
   calculateBudget: vi.fn(),
 }))
 
-import type { EstimateParams } from "@/types"
+import type { EstimateParams, PricingConfig } from "@/types"
+import { estimateTitle, validateEstimateHotelIds, validateEstimateParamsShape } from "@/lib/estimate/params"
 
 const validParams: EstimateParams = {
   nightsMadinah: 4,
@@ -62,46 +63,36 @@ const validParams: EstimateParams = {
 
 describe("Estimate params validation", () => {
   it("valid params pass validation shape", () => {
-    const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
-    const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"]
-    const AIRLINE_TIERS = ["BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
-    const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"]
+    expect(validateEstimateParamsShape(validParams)).toBe(true)
+    expect(validateEstimateParamsShape({ ...validParams, madinahHotelId: "kayan-hotel", makkahHotelId: "olayan-ajyad", travelMonth: 11 })).toBe(true)
+    expect(validateEstimateParamsShape({})).toBe(false)
+    expect(validateEstimateParamsShape({ ...validParams, hotelTier: "INVALID" })).toBe(false)
+    expect(validateEstimateParamsShape({ ...validParams, services: ["VISA", "UNKNOWN_KEY"] })).toBe(false)
+    expect(validateEstimateParamsShape({ ...validParams, pax: "one" })).toBe(false)
+    expect(validateEstimateParamsShape({ ...validParams, travelMonth: 13 })).toBe(false)
+  })
 
-    function validateParams(p: unknown): p is EstimateParams {
-      if (!p || typeof p !== "object") return false
-      const o = p as Record<string, unknown>
-      return (
-        typeof o.nightsMadinah === "number" &&
-        typeof o.nightsMakkah === "number" &&
-        typeof o.pax === "number" &&
-        HOTEL_TIERS.includes(o.hotelTier as string) &&
-        ROOM_TYPES.includes(o.roomType as string) &&
-        AIRLINE_TIERS.includes(o.airline as string) &&
-        Array.isArray(o.services) &&
-        (o.services as string[]).every((s) => SERVICE_KEYS.includes(s)) &&
-        typeof o.fullboard === "boolean"
-      )
-    }
+  it("validates selected hotel IDs against the correct city", () => {
+    const pricing = {
+      hotelOptions: {
+        MADINAH: [{ id: "kayan-hotel", city: "MADINAH", tier: "STANDARD", sarPerNight: 700, label: "Kayan Hotel", sublabel: "", monthlyPrices: {} }],
+        MAKKAH: [{ id: "olayan-ajyad", city: "MAKKAH", tier: "STANDARD", sarPerNight: 950, label: "Olayan Ajyad", sublabel: "", monthlyPrices: {} }],
+      },
+    } as PricingConfig
 
-    expect(validateParams(validParams)).toBe(true)
-    expect(validateParams({})).toBe(false)
-    expect(validateParams({ ...validParams, hotelTier: "INVALID" })).toBe(false)
-    expect(validateParams({ ...validParams, services: ["VISA", "UNKNOWN_KEY"] })).toBe(false)
-    expect(validateParams({ ...validParams, pax: "one" })).toBe(false)
+    expect(validateEstimateHotelIds({ ...validParams, madinahHotelId: "kayan-hotel", makkahHotelId: "olayan-ajyad" }, pricing)).toBe(true)
+    expect(validateEstimateHotelIds({ ...validParams, makkahHotelId: "kayan-hotel" }, pricing)).toBe(false)
+    expect(validateEstimateHotelIds({ ...validParams, madinahHotelId: "olayan-ajyad" }, pricing)).toBe(false)
   })
 
   it("auto-title is generated correctly from hotelTier and nights", () => {
     const params = validParams
-    const hotelTierLabel = params.hotelTier.charAt(0) + params.hotelTier.slice(1).toLowerCase()
-    const title = `Estimasi ${hotelTierLabel} ${params.nightsMadinah}+${params.nightsMakkah} malam`
-    expect(title).toBe("Estimasi Standard 4+9 malam")
+    expect(estimateTitle(params)).toBe("Estimasi Standard 4+9 malam")
   })
 
   it("auto-title for PELATARAN tier formats correctly", () => {
     const params = { ...validParams, hotelTier: "PELATARAN" as const, nightsMadinah: 3, nightsMakkah: 10 }
-    const hotelTierLabel = params.hotelTier.charAt(0) + params.hotelTier.slice(1).toLowerCase()
-    const title = `Estimasi ${hotelTierLabel} ${params.nightsMadinah}+${params.nightsMakkah} malam`
-    expect(title).toBe("Estimasi Pelataran 3+10 malam")
+    expect(estimateTitle(params)).toBe("Estimasi Pelataran 3+10 malam")
   })
 
   it("pagination offset calculation", () => {

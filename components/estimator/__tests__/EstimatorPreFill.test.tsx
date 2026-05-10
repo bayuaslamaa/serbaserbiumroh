@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import type { PricingConfig } from "@/types"
 import { DEFAULT_PARAMS } from "@/types"
@@ -32,6 +32,16 @@ const mockPricing: PricingConfig = {
       PELATARAN: { sarPerNight: 3500, label: "Pelataran Haram", sublabel: "Pelataran", monthlyPrices: {} },
       PREMIUM: { sarPerNight: 6000, label: "Premium Makkah", sublabel: "5★", monthlyPrices: {} },
     },
+  },
+  hotelOptions: {
+    MADINAH: [
+      { id: "kayan-hotel", city: "MADINAH", tier: "STANDARD", sarPerNight: 700, label: "Kayan Hotel", sublabel: "standard Madinah", monthlyPrices: { 11: 900 } },
+      { id: "dallah-taiba", city: "MADINAH", tier: "PREMIUM", sarPerNight: 1600, label: "Dallah Taiba", sublabel: "premium Madinah", monthlyPrices: {} },
+    ],
+    MAKKAH: [
+      { id: "olayan-ajyad", city: "MAKKAH", tier: "STANDARD", sarPerNight: 950, label: "Olayan Ajyad", sublabel: "standard Ajyad", monthlyPrices: { 11: 1250 } },
+      { id: "voco-makkah", city: "MAKKAH", tier: "PREMIUM", sarPerNight: 600, label: "Voco", sublabel: "upper Makkah shuttle", monthlyPrices: {} },
+    ],
   },
   airlines: {
     BUDGET: { idr: 12500000, label: "Lion Air" },
@@ -89,6 +99,50 @@ describe("ParamsPanel — storySource badge", () => {
     )
     expect(container.querySelector("[data-badge]")).toBeNull()
     expect(screen.queryByText(/berdasarkan cerita/)).toBeNull()
+  })
+
+  it("renders imported hotel options per city", () => {
+    render(
+      <ParamsPanel
+        params={DEFAULT_PARAMS}
+        pricing={mockPricing}
+        onChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Hotel Madinah")).toBeDefined()
+    expect(screen.getByText("Hotel Makkah")).toBeDefined()
+    expect(screen.getByText("Kayan Hotel")).toBeDefined()
+    expect(screen.getByText("Olayan Ajyad")).toBeDefined()
+    expect(screen.getByText("Dallah Taiba")).toBeDefined()
+    expect(screen.getByText("Voco")).toBeDefined()
+  })
+
+  it("updates the city-specific hotel ID when an imported hotel is selected", () => {
+    const onChange = vi.fn()
+    render(
+      <ParamsPanel
+        params={DEFAULT_PARAMS}
+        pricing={mockPricing}
+        onChange={onChange}
+      />
+    )
+
+    fireEvent.click(screen.getByText("Olayan Ajyad"))
+    expect(onChange).toHaveBeenCalledWith({ hotelTier: "STANDARD", makkahHotelId: "olayan-ajyad" })
+  })
+
+  it("updates seasonal hotel badges when travelMonth is selected", () => {
+    render(
+      <ParamsPanel
+        params={{ ...DEFAULT_PARAMS, travelMonth: 11 }}
+        pricing={mockPricing}
+        onChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("SAR 900/mlm Madinah")).toBeDefined()
+    expect(screen.getByText("SAR 1250/mlm Makkah")).toBeDefined()
   })
 })
 

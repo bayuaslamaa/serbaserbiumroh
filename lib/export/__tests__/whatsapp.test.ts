@@ -16,6 +16,22 @@ const params: EstimateParams = {
 const breakdown: BudgetBreakdown = {
   hotelMadinahIdr: 3_055_000,
   hotelMakkahIdr: 13_747_500,
+  hotelMadinahDetail: {
+    label: "Kayan Hotel",
+    tier: "STANDARD",
+    sarPerNight: 650,
+    nights: 4,
+    roomPax: 4,
+    roomMultiplier: 1,
+  },
+  hotelMakkahDetail: {
+    label: "Olayan Ajyad",
+    tier: "STANDARD",
+    sarPerNight: 1300,
+    nights: 9,
+    roomPax: 4,
+    roomMultiplier: 1,
+  },
   servicesIdr: 4_582_000,
   serviceItems: [
     { key: "VISA", label: "Visa Umroh Reguler", amountDisplay: "$165", idr: 2_854_500, divideByPax: false },
@@ -35,9 +51,11 @@ describe("generateWhatsAppText", () => {
     expect(text).toContain("🕋 *ESTIMASI BIAYA UMROH*")
   })
 
-  it("contains hotel tier", () => {
+  it("contains selected hotel names", () => {
     const text = generateWhatsAppText(params, breakdown)
-    expect(text).toContain("STANDARD")
+    expect(text).toContain("Kayan Hotel")
+    expect(text).toContain("Olayan Ajyad")
+    expect(text).toContain("SAR 650 × 4 malam ÷ 4 org/kamar")
   })
 
   it("contains formatted total per person", () => {

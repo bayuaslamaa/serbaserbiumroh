@@ -11,6 +11,11 @@ function rp(amount: number): string {
   return `Rp ${amount.toLocaleString("id-ID")}`
 }
 
+function hotelFormula(detail: BudgetBreakdown["hotelMadinahDetail"]): string {
+  const multiplier = detail.roomMultiplier === 1 ? "" : ` × ${detail.roomMultiplier}`
+  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam${multiplier} ÷ ${detail.roomPax} org/kamar`
+}
+
 export function generateWhatsAppText(
   params: EstimateParams,
   breakdown: BudgetBreakdown,
@@ -23,7 +28,8 @@ export function generateWhatsAppText(
   lines.push("━━━━━━━━━━━━━━━━━")
   lines.push(`📅 Madinah: ${params.nightsMadinah} malam | Makkah: ${params.nightsMakkah} malam`)
   lines.push(`👥 Jamaah: ${params.pax} orang (${params.roomType})`)
-  lines.push(`🏨 Hotel: ${params.hotelTier}`)
+  lines.push(`🏨 Hotel Madinah: ${breakdown.hotelMadinahDetail.label}`)
+  lines.push(`🏨 Hotel Makkah: ${breakdown.hotelMakkahDetail.label}`)
   lines.push(`✈️ Pesawat: ${AIRLINE_LABELS[params.airline] ?? params.airline}`)
   lines.push("")
   lines.push("💰 *RINCIAN PER ORANG*")
@@ -34,7 +40,9 @@ export function generateWhatsAppText(
   }
 
   lines.push(row("Hotel Madinah:", rp(breakdown.hotelMadinahIdr)))
+  lines.push(`  ${hotelFormula(breakdown.hotelMadinahDetail)}`)
   lines.push(row("Hotel Makkah:", rp(breakdown.hotelMakkahIdr)))
+  lines.push(`  ${hotelFormula(breakdown.hotelMakkahDetail)}`)
 
   for (const svc of breakdown.serviceItems) {
     const label = `${svc.label}:`

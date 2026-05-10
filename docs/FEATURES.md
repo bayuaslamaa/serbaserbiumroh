@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-05-03
+> Last updated: 2026-05-09
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -56,14 +56,20 @@ sarPerNight × nights × roomMultiplier / paxPerRoom × sarRate
 - Airline pricing follows the same fallback model: monthly IDR override first, then base IDR
 - Enables Ramadan / school holiday pricing without changing base rates
 
+**Concrete hotel selection:**
+- Estimates may carry `madinahHotelId` and `makkahHotelId` in addition to legacy `hotelTier`
+- Selected city hotel IDs override the tier fallback for calculation
+- Legacy tier-only estimates still calculate from `pricing.hotels[city][tier]`
+- Hotel breakdown metadata includes selected label, SAR/night, nights, room multiplier, and pax-per-room divisor
+
 **Service fees:**
 - Multi-currency: SAR, USD, or IDR
 - `divideByPax = true` — group-shared costs (transport, tour) are divided per person for per-pax display; group total remains correct (`perPax × pax = original cost`)
 - Disabled services are excluded from totals
 
-**Output fields:** `hotelMadinahIdr`, `hotelMakkahIdr`, `servicesIdr`, `serviceItems[]`, `flightIdr`, `totalIdrPax`, `totalIdrGrp`, `sarRate`, `usdRate`
+**Output fields:** `hotelMadinahIdr`, `hotelMakkahIdr`, `hotelMadinahDetail`, `hotelMakkahDetail`, `servicesIdr`, `serviceItems[]`, `flightIdr`, `totalIdrPax`, `totalIdrGrp`, `sarRate`, `usdRate`
 
-**Files:** `lib/budget/calculate.ts`, `lib/budget/__tests__/calculate.test.ts` (20 tests)
+**Files:** `lib/budget/calculate.ts`, `lib/budget/__tests__/calculate.test.ts` (25 tests)
 
 ---
 
@@ -75,8 +81,10 @@ Converts freeform Bahasa Indonesia input into structured `EstimateParams` using 
 - Returns `{ params: EstimateParams, notes: string }` — notes explain assumptions made
 - `ParseError` thrown on non-JSON responses or missing required fields
 - Wraps API errors with `"Anthropic API error: …"` message
+- Prompt includes imported Makkah and Madinah hotel option IDs when available
+- If a requested hotel is unavailable locally, parser selects a same-city same-tier comparable option and records the substitution in notes
 
-**Files:** `lib/ai/parse.ts`, `lib/ai/prompt.ts`, `lib/ai/__tests__/parse.test.ts` (9 tests)
+**Files:** `lib/ai/parse.ts`, `lib/ai/prompt.ts`, `lib/ai/__tests__/parse.test.ts` (16 tests)
 
 ---
 
@@ -103,7 +111,8 @@ Two export formats for sharing estimates:
 - **Night steppers** — Madinah and Makkah night counts (1–30)
 - **Pax stepper** — number of participants (1–200)
 - **Travel month selector** — 2×6 grid of month buttons; selecting a month updates hotel price badges dynamically; clicking again deselects (→ base price)
-- **Hotel tier** — RadioCardGrid with SAR/malam badge (updates per month selection)
+- **Hotel Madinah** — city-specific imported hotel options with tier and SAR/malam badge
+- **Hotel Makkah** — city-specific imported hotel options with tier and SAR/malam badge
 - **Room type** — RadioCardGrid (Quad / Triple / Double / Single)
 - **Airline** — RadioCardGrid with IDR price badge
 - **Additional services** — checkbox grid (Visa, Siskopatuh, Tasreh, Transport, Tour Makkah, Tour Madinah)
@@ -235,20 +244,21 @@ All changes are saved immediately (no publish step).
 
 ## 11. Test Coverage
 
-233 tests across 24 test files (Vitest + Testing Library).
+247 tests across 24 test files (Vitest + Testing Library).
 
 | File | Tests | Area |
 |------|-------|------|
-| `lib/budget/__tests__/calculate.test.ts` | 22 | Budget engine: hotel, services, totals, hotel and airline monthly pricing, exchange rates |
-| `lib/ai/__tests__/parse.test.ts` | 9 | AI parsing: happy paths, error paths, API failures |
+| `lib/budget/__tests__/calculate.test.ts` | 25 | Budget engine: hotel, services, totals, concrete hotel selection, hotel and airline monthly pricing, exchange rates |
+| `lib/ai/__tests__/parse.test.ts` | 16 | AI parsing: happy paths, hotel IDs/fallbacks, error paths, API failures |
 | `lib/export/__tests__/whatsapp.test.ts` | 9 | WhatsApp export formatting |
 | `app/api/admin/pricing/__tests__/route.test.ts` | 14 | Admin PATCH validation logic |
 | `app/api/admin/pricing/__tests__/airline-import-route.test.ts` | 9 | Airline import preview/confirm routes |
 | `lib/admin/__tests__/airline-pricing-import.test.ts` | 11 | Airline CSV parser/template/validation |
-| `app/api/estimate/__tests__/route.test.ts` | 6 | Estimate API route |
+| `app/api/estimate/__tests__/route.test.ts` | 7 | Estimate API route and params validation |
 | `lib/db/__tests__/schema.test.ts` | 11 | DB schema types |
 | `components/dashboard/__tests__/EstimateCard.test.tsx` | 7 | EstimateCard rendering |
 | `components/estimator/__tests__/BudgetBreakdown.test.tsx` | 6 | BudgetBreakdown rendering |
+| `components/estimator/__tests__/EstimatorPreFill.test.tsx` | 12 | Estimator pre-fill and hotel option rendering |
 | `lib/export/__tests__/pdf.test.ts` | 3 | PDF export |
 | `lib/auth.__tests__/auth.test.ts` | 5 | Auth logic (bcrypt, role) |
 

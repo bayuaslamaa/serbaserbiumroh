@@ -5,6 +5,22 @@ import type { BudgetBreakdown as Breakdown } from "@/types"
 const breakdown: Breakdown = {
   hotelMadinahIdr: 3_055_000,
   hotelMakkahIdr: 13_747_500,
+  hotelMadinahDetail: {
+    label: "Standard Madinah",
+    tier: "STANDARD",
+    sarPerNight: 650,
+    nights: 4,
+    roomPax: 4,
+    roomMultiplier: 1,
+  },
+  hotelMakkahDetail: {
+    label: "Safwa Tower 3",
+    tier: "STANDARD",
+    sarPerNight: 1300,
+    nights: 9,
+    roomPax: 4,
+    roomMultiplier: 1,
+  },
   servicesIdr: 4_582_000,
   serviceItems: [
     { key: "VISA", label: "Visa Umroh Reguler", amountDisplay: "$165", idr: 2_854_500, divideByPax: false },
@@ -21,8 +37,10 @@ const breakdown: Breakdown = {
 describe("BudgetBreakdown", () => {
   it("renders hotel lines", () => {
     render(<BudgetBreakdown breakdown={breakdown} pax={1} />)
-    expect(screen.getByText("Hotel Madinah")).toBeDefined()
-    expect(screen.getByText("Hotel Makkah")).toBeDefined()
+    expect(screen.getByText("Hotel Madinah - Standard Madinah")).toBeDefined()
+    expect(screen.getByText("Hotel Makkah - Safwa Tower 3")).toBeDefined()
+    expect(screen.getByText("SAR 650 × 4 malam ÷ 4 orang/kamar")).toBeDefined()
+    expect(screen.getByText("SAR 1.300 × 9 malam ÷ 4 orang/kamar")).toBeDefined()
   })
 
   it("renders service items with display amounts", () => {

@@ -1,6 +1,6 @@
 "use client"
 
-import type { EstimateParams, PricingConfig } from "@/types"
+import type { City, EstimateParams, HotelOptionConfig, HotelTier, PricingConfig } from "@/types"
 import { RadioCardGrid } from "./RadioCardGrid"
 import { Stepper } from "./Stepper"
 import { ServiceCheckboxGrid } from "./ServiceCheckboxGrid"
@@ -27,13 +27,66 @@ function resolveMonthlyHotelSar(
   return config.sarPerNight
 }
 
-export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPanelProps) {
-  const hotelOptions = (["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const).map((tier) => ({
-    value: tier,
-    label: pricing.hotels.MAKKAH[tier].label,
-    sublabel: pricing.hotels.MAKKAH[tier].sublabel,
-    badge: `${sarLabel(resolveMonthlyHotelSar(pricing.hotels.MAKKAH[tier], params.travelMonth))} Makkah`,
+function fallbackHotelOptions(pricing: PricingConfig, city: City): HotelOptionConfig[] {
+  return (["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const).map((tier) => ({
+    id: `${city}:${tier}`,
+    city,
+    tier,
+    sarPerNight: pricing.hotels[city][tier].sarPerNight,
+    label: pricing.hotels[city][tier].label,
+    sublabel: pricing.hotels[city][tier].sublabel,
+    monthlyPrices: pricing.hotels[city][tier].monthlyPrices,
   }))
+}
+
+function cityLabel(city: City): string {
+  return city === "MAKKAH" ? "Makkah" : "Madinah"
+}
+
+export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPanelProps) {
+  const cityHotelOptions: Record<City, HotelOptionConfig[]> = {
+    MADINAH: pricing.hotelOptions?.MADINAH?.length
+      ? pricing.hotelOptions.MADINAH
+      : fallbackHotelOptions(pricing, "MADINAH"),
+    MAKKAH: pricing.hotelOptions?.MAKKAH?.length
+      ? pricing.hotelOptions.MAKKAH
+      : fallbackHotelOptions(pricing, "MAKKAH"),
+  }
+
+  function selectedHotelValue(city: City): string {
+    const explicitId = city === "MAKKAH" ? params.makkahHotelId : params.madinahHotelId
+    if (explicitId && cityHotelOptions[city].some((option) => option.id === explicitId)) {
+      return explicitId
+    }
+    return (
+      cityHotelOptions[city].find((option) => option.tier === params.hotelTier)?.id ??
+      cityHotelOptions[city][0]?.id ??
+      ""
+    )
+  }
+
+  function handleHotelChange(city: City, hotelId: string) {
+    const hotel = cityHotelOptions[city].find((option) => option.id === hotelId)
+    if (!hotel) return
+
+    const patch: Partial<EstimateParams> = { hotelTier: hotel.tier as HotelTier }
+    const isConcreteHotel = pricing.hotelOptions?.[city]?.some((option) => option.id === hotel.id) ?? false
+    if (city === "MAKKAH") {
+      patch.makkahHotelId = isConcreteHotel ? hotel.id : undefined
+    } else {
+      patch.madinahHotelId = isConcreteHotel ? hotel.id : undefined
+    }
+    onChange(patch)
+  }
+
+  function hotelRadioOptions(city: City) {
+    return cityHotelOptions[city].map((hotel) => ({
+      value: hotel.id,
+      label: hotel.label,
+      sublabel: `${hotel.tier} - ${hotel.sublabel}`,
+      badge: `${sarLabel(resolveMonthlyHotelSar(hotel, params.travelMonth))} ${cityLabel(city)}`,
+    }))
+  }
 
   const roomOptions = (["QUAD", "TRIPLE", "DOUBLE", "SINGLE"] as const).map((rt) => {
     const rm = pricing.roomMultipliers[rt]
@@ -121,16 +174,19 @@ export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPa
         )}
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
-          Kategori Hotel
-        </h3>
-        <RadioCardGrid
-          options={hotelOptions}
-          value={params.hotelTier}
-          onChange={(v) => onChange({ hotelTier: v as EstimateParams["hotelTier"] })}
-        />
-      </section>
+      {(["MADINAH", "MAKKAH"] as const).map((city) => (
+        <section key={city} className="flex flex-col gap-3">
+          <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
+            Hotel {cityLabel(city)}
+          </h3>
+          <RadioCardGrid
+            options={hotelRadioOptions(city)}
+            value={selectedHotelValue(city)}
+            onChange={(v) => handleHotelChange(city, v)}
+            cols={2}
+          />
+        </section>
+      ))}
 
       <section className="flex flex-col gap-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>

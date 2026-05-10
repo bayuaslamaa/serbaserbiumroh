@@ -5,8 +5,16 @@ import type {
   PricingConfig,
   ServiceKey,
   HotelPriceConfig,
+  City,
+  HotelTier,
   AirlinePriceConfig,
 } from "@/types"
+
+type ResolvedHotelConfig = HotelPriceConfig & {
+  id?: string
+  city: City
+  tier: HotelTier
+}
 
 function formatAmountDisplay(currency: string, amount: number): string {
   if (currency === "USD") return `$${amount}`
@@ -23,6 +31,26 @@ function resolveHotelSar(config: HotelPriceConfig, travelMonth?: number): number
   return config.sarPerNight
 }
 
+function resolveCityHotel(
+  pricing: PricingConfig,
+  city: City,
+  selectedId: string | undefined,
+  fallbackTier: HotelTier
+): ResolvedHotelConfig {
+  const selected = pricing.hotelOptions?.[city]?.find((hotel) => hotel.id === selectedId)
+  if (selected) return selected
+
+  const fallback = pricing.hotels[city][fallbackTier]
+  return {
+    city,
+    tier: fallbackTier,
+    sarPerNight: fallback.sarPerNight,
+    label: fallback.label,
+    sublabel: fallback.sublabel,
+    monthlyPrices: fallback.monthlyPrices,
+  }
+}
+
 function resolveAirlineIdr(config: AirlinePriceConfig, travelMonth?: number): number {
   if (travelMonth != null) {
     const monthly = config.monthlyPrices?.[travelMonth]
@@ -35,15 +63,17 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   const sarRate = pricing.rates.SAR
   const usdRate = pricing.rates.USD
 
-  const madinahHotel = pricing.hotels.MADINAH[params.hotelTier]
-  const makkahHotel = pricing.hotels.MAKKAH[params.hotelTier]
+  const madinahHotel = resolveCityHotel(pricing, "MADINAH", params.madinahHotelId, params.hotelTier)
+  const makkahHotel = resolveCityHotel(pricing, "MAKKAH", params.makkahHotelId, params.hotelTier)
   const room = pricing.roomMultipliers[params.roomType]
+  const madinahSarPerNight = resolveHotelSar(madinahHotel, params.travelMonth)
+  const makkahSarPerNight = resolveHotelSar(makkahHotel, params.travelMonth)
 
   const hotelMadinahIdr = Math.round(
-    (resolveHotelSar(madinahHotel, params.travelMonth) * params.nightsMadinah * room.multiplier / room.paxPerRoom) * sarRate
+    (madinahSarPerNight * params.nightsMadinah * room.multiplier / room.paxPerRoom) * sarRate
   )
   const hotelMakkahIdr = Math.round(
-    (resolveHotelSar(makkahHotel, params.travelMonth) * params.nightsMakkah * room.multiplier / room.paxPerRoom) * sarRate
+    (makkahSarPerNight * params.nightsMakkah * room.multiplier / room.paxPerRoom) * sarRate
   )
 
   const serviceItems: BudgetBreakdown["serviceItems"] = []
@@ -83,6 +113,24 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   return {
     hotelMadinahIdr,
     hotelMakkahIdr,
+    hotelMadinahDetail: {
+      id: madinahHotel.id,
+      label: madinahHotel.label,
+      tier: madinahHotel.tier,
+      sarPerNight: madinahSarPerNight,
+      nights: params.nightsMadinah,
+      roomPax: room.paxPerRoom,
+      roomMultiplier: room.multiplier,
+    },
+    hotelMakkahDetail: {
+      id: makkahHotel.id,
+      label: makkahHotel.label,
+      tier: makkahHotel.tier,
+      sarPerNight: makkahSarPerNight,
+      nights: params.nightsMakkah,
+      roomPax: room.paxPerRoom,
+      roomMultiplier: room.multiplier,
+    },
     servicesIdr,
     serviceItems,
     flightIdr,
@@ -123,13 +171,24 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
   }
 
   const hotelsMap: PricingConfig["hotels"] = {} as PricingConfig["hotels"]
+  const hotelOptionsMap: NonNullable<PricingConfig["hotelOptions"]> = {
+    MAKKAH: [],
+    MADINAH: [],
+  }
   for (const h of hotels) {
     if (!hotelsMap[h.city]) hotelsMap[h.city] = {} as PricingConfig["hotels"][typeof h.city]
-    hotelsMap[h.city][h.tier] = {
+    const config = {
+      id: h.id,
+      city: h.city,
+      tier: h.tier,
       sarPerNight: h.sarPerNight,
       label: h.label,
       sublabel: h.sublabel,
       monthlyPrices: monthlyByHotelId[h.id] ?? {},
+    }
+    hotelOptionsMap[h.city].push(config)
+    if (!hotelsMap[h.city][h.tier]) {
+      hotelsMap[h.city][h.tier] = config
     }
   }
 
@@ -183,6 +242,7 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
   return {
     rates: ratesMap,
     hotels: hotelsMap,
+    hotelOptions: hotelOptionsMap,
     airlines: airlinesMap,
     airlineOptions: airlineOptionsMap,
     services: servicesMap,

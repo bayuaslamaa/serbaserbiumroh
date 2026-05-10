@@ -29,6 +29,16 @@ const mockPricing: PricingConfig = {
       PREMIUM: { sarPerNight: 6000, label: "Premium Makkah", sublabel: "5★", monthlyPrices: {} },
     },
   },
+  hotelOptions: {
+    MADINAH: [
+      { id: "kayan-hotel", city: "MADINAH", tier: "STANDARD", sarPerNight: 700, label: "Kayan Hotel", sublabel: "standard Madinah", monthlyPrices: {} },
+      { id: "dallah-taiba", city: "MADINAH", tier: "PREMIUM", sarPerNight: 1600, label: "Dallah Taiba", sublabel: "premium Madinah", monthlyPrices: {} },
+    ],
+    MAKKAH: [
+      { id: "olayan-ajyad", city: "MAKKAH", tier: "STANDARD", sarPerNight: 950, label: "Olayan Ajyad", sublabel: "standard Ajyad", monthlyPrices: {} },
+      { id: "voco-makkah", city: "MAKKAH", tier: "PREMIUM", sarPerNight: 600, label: "Voco", sublabel: "upper Makkah shuttle", monthlyPrices: {} },
+    ],
+  },
   airlines: {
     BUDGET: { idr: 12500000, label: "Lion Air" },
     STANDARD: { idr: 14500000, label: "Batik Air" },
@@ -60,6 +70,8 @@ const defaultParams = {
   nightsMakkah: 9,
   pax: 1,
   hotelTier: "STANDARD",
+  madinahHotelId: null,
+  makkahHotelId: null,
   roomType: "QUAD",
   airline: "STANDARD",
   services: ["VISA", "SISKOPATUH", "TRANSPORT"],
@@ -112,6 +124,80 @@ describe("parseEstimate", () => {
     const result = await parseEstimate("tour makkah madinah", mockPricing)
     expect(result.params.services).toContain("TOUR_MAKKAH")
     expect(result.params.services).toContain("TOUR_MADINAH")
+  })
+
+  it("happy path: mentioned month is preserved as travelMonth", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, travelMonth: 11 }))
+    const result = await parseEstimate("umroh bulan november 2 pax", mockPricing)
+    expect(result.params.travelMonth).toBe(11)
+  })
+
+  it("ignores invalid travelMonth values from Claude", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, travelMonth: 13 }))
+    const result = await parseEstimate("umroh bulan tidak jelas", mockPricing)
+    expect(result.params.travelMonth).toBeUndefined()
+  })
+
+  it("asks Claude to emit travelMonth when a month is mentioned", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh bulan november 2 pax", mockPricing)
+
+    const system = mockCreate.mock.calls[0][0].system as Array<{ text: string }>
+    expect(system[0].text).toContain('"travelMonth": integer | null')
+    expect(system[0].text).toContain('"november"/"nov"')
+  })
+
+  it("preserves valid city hotel IDs returned by Claude", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        madinahHotelId: "kayan-hotel",
+        makkahHotelId: "olayan-ajyad",
+        travelMonth: 11,
+      })
+    )
+    const result = await parseEstimate("olayan ajyad makkah kayan hotel madinah bulan november", mockPricing)
+    expect(result.params.madinahHotelId).toBe("kayan-hotel")
+    expect(result.params.makkahHotelId).toBe("olayan-ajyad")
+    expect(result.params.travelMonth).toBe(11)
+  })
+
+  it("matches hotel labels when Claude returns names instead of IDs", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        madinahHotel: "Kayan",
+        makkahHotel: "Olayan Ajyad",
+      })
+    )
+    const result = await parseEstimate("makkah olayan ajyad madinah kayan", mockPricing)
+    expect(result.params.madinahHotelId).toBe("kayan-hotel")
+    expect(result.params.makkahHotelId).toBe("olayan-ajyad")
+  })
+
+  it("falls back to same-tier city hotel when requested hotel is absent", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        madinahHotel: "Hotel Tidak Ada",
+        makkahHotel: "Hotel Juga Tidak Ada",
+      })
+    )
+    const result = await parseEstimate("hotel tidak ada", mockPricing)
+    expect(result.params.madinahHotelId).toBe("kayan-hotel")
+    expect(result.params.makkahHotelId).toBe("olayan-ajyad")
+    expect(result.notes).toContain("memakai opsi setara STANDARD")
+  })
+
+  it("includes hotel options and IDs in the system prompt", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh hotel olayan ajyad", mockPricing)
+
+    const system = mockCreate.mock.calls[0][0].system as Array<{ text: string }>
+    expect(system[0].text).toContain('"madinahHotelId": string | null')
+    expect(system[0].text).toContain('"makkahHotelId": string | null')
+    expect(system[1].text).toContain("id=olayan-ajyad")
+    expect(system[1].text).toContain("id=kayan-hotel")
   })
 
   it("happy path: vague input → pax defaults to 1, notes non-empty", async () => {

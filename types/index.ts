@@ -17,6 +17,8 @@ export interface EstimateParams {
   nightsMakkah: number
   pax: number
   hotelTier: HotelTier
+  madinahHotelId?: string
+  makkahHotelId?: string
   roomType: RoomType
   airline: AirlineTier
   services: ServiceKey[]
@@ -28,6 +30,8 @@ export interface EstimateParams {
 export interface BudgetBreakdown {
   hotelMadinahIdr: number
   hotelMakkahIdr: number
+  hotelMadinahDetail: HotelCostDetail
+  hotelMakkahDetail: HotelCostDetail
   servicesIdr: number
   serviceItems: {
     key: ServiceKey
@@ -56,6 +60,22 @@ export interface HotelPriceConfig {
   monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override
 }
 
+export interface HotelOptionConfig extends HotelPriceConfig {
+  id: string
+  city: City
+  tier: HotelTier
+}
+
+export interface HotelCostDetail {
+  id?: string
+  label: string
+  tier: HotelTier
+  sarPerNight: number
+  nights: number
+  roomPax: number
+  roomMultiplier: number
+}
+
 export interface AirlinePriceConfig {
   id?: string
   tier?: AirlineTier
@@ -77,6 +97,7 @@ export interface ServiceFeeConfig {
 export interface PricingConfig {
   rates: Record<string, number> // { SAR: 4700, USD: 17300 }
   hotels: Record<City, Record<HotelTier, HotelPriceConfig>>
+  hotelOptions?: Record<City, HotelOptionConfig[]>
   airlines: Record<AirlineTier, AirlinePriceConfig>
   airlineOptions?: Record<AirlineTier, AirlinePriceConfig[]>
   services: Record<ServiceKey, ServiceFeeConfig>

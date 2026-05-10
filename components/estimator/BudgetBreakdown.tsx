@@ -11,10 +11,24 @@ interface BudgetBreakdownProps {
   pax: number
 }
 
+function hotelFormula(detail: Breakdown["hotelMadinahDetail"]): string {
+  const multiplier =
+    detail.roomMultiplier === 1 ? "" : ` × ${detail.roomMultiplier}`
+  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam${multiplier} ÷ ${detail.roomPax} orang/kamar`
+}
+
 export function BudgetBreakdown({ breakdown, pax }: BudgetBreakdownProps) {
-  const rows: { label: string; value: string; shared?: boolean }[] = [
-    { label: "Hotel Madinah", value: formatIdr(breakdown.hotelMadinahIdr) },
-    { label: "Hotel Makkah", value: formatIdr(breakdown.hotelMakkahIdr) },
+  const rows: { label: string; value: string; shared?: boolean; sublabel?: string }[] = [
+    {
+      label: `Hotel Madinah - ${breakdown.hotelMadinahDetail.label}`,
+      value: formatIdr(breakdown.hotelMadinahIdr),
+      sublabel: hotelFormula(breakdown.hotelMadinahDetail),
+    },
+    {
+      label: `Hotel Makkah - ${breakdown.hotelMakkahDetail.label}`,
+      value: formatIdr(breakdown.hotelMakkahIdr),
+      sublabel: hotelFormula(breakdown.hotelMakkahDetail),
+    },
     ...breakdown.serviceItems.map((s) => ({
       label: `${s.label} (${s.amountDisplay})`,
       value: formatIdr(s.idr),
@@ -37,15 +51,22 @@ export function BudgetBreakdown({ breakdown, pax }: BudgetBreakdownProps) {
 
       <div className="flex flex-col gap-2">
         {rows.map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-4">
-            <span className="text-sm flex items-center gap-1.5" style={{ color: "var(--color-text-muted)" }}>
-              {row.label}
-              {row.shared && (
-                <span
-                  className="text-xs px-1 rounded"
-                  style={{ background: "rgba(201,168,76,0.15)", color: "var(--color-gold)" }}
-                >
-                  ÷{pax} org
+          <div key={row.label} className="flex items-start justify-between gap-4">
+            <span className="text-sm flex flex-col gap-0.5" style={{ color: "var(--color-text-muted)" }}>
+              <span className="flex items-center gap-1.5">
+                {row.label}
+                {row.shared && (
+                  <span
+                    className="text-xs px-1 rounded"
+                    style={{ background: "rgba(201,168,76,0.15)", color: "var(--color-gold)" }}
+                  >
+                    ÷{pax} org
+                  </span>
+                )}
+              </span>
+              {row.sublabel && (
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                  {row.sublabel}
                 </span>
               )}
             </span>

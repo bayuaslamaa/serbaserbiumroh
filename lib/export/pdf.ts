@@ -16,7 +16,9 @@ const styles = StyleSheet.create({
   section: { marginBottom: 16 },
   sectionTitle: { fontSize: 11, color: GOLD, fontFamily: "Helvetica-Bold", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 },
   row: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, borderBottomWidth: 0.5, borderBottomColor: "#1e3a2a" },
+  rowLabelWrap: { flexDirection: "column", maxWidth: "70%" },
   label: { fontSize: 10, color: MUTED },
+  sublabel: { fontSize: 8, color: MUTED, marginTop: 1 },
   value: { fontSize: 10, color: WHITE },
   totalRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, marginTop: 8, borderTopWidth: 1, borderTopColor: GOLD },
   totalLabel: { fontSize: 13, color: MUTED, fontFamily: "Helvetica-Bold" },
@@ -34,6 +36,11 @@ const styles = StyleSheet.create({
 
 function rp(amount: number): string {
   return `Rp ${amount.toLocaleString("id-ID")}`
+}
+
+function hotelFormula(detail: BudgetBreakdown["hotelMadinahDetail"]): string {
+  const multiplier = detail.roomMultiplier === 1 ? "" : ` x ${detail.roomMultiplier}`
+  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} x ${detail.nights} malam${multiplier} / ${detail.roomPax} org/kamar`
 }
 
 const ROOM_LABELS: Record<string, string> = { QUAD: "Quad (4 org/kamar)", TRIPLE: "Triple (3 org/kamar)", DOUBLE: "Double (2 org/kamar)", SINGLE: "Single" }
@@ -85,13 +92,21 @@ export async function generatePDF(
           View,
           { style: styles.infoRow },
           createElement(View, { style: styles.infoItem },
-            createElement(Text, { style: styles.infoLabel }, "HOTEL"),
-            createElement(Text, { style: styles.infoValue }, params.hotelTier)
+            createElement(Text, { style: styles.infoLabel }, "HOTEL MADINAH"),
+            createElement(Text, { style: styles.infoValue }, breakdown.hotelMadinahDetail.label)
+          ),
+          createElement(View, { style: styles.infoItem },
+            createElement(Text, { style: styles.infoLabel }, "HOTEL MAKKAH"),
+            createElement(Text, { style: styles.infoValue }, breakdown.hotelMakkahDetail.label)
           ),
           createElement(View, { style: styles.infoItem },
             createElement(Text, { style: styles.infoLabel }, "KAMAR"),
             createElement(Text, { style: styles.infoValue }, ROOM_LABELS[params.roomType] ?? params.roomType)
-          ),
+          )
+        ),
+        createElement(
+          View,
+          { style: styles.infoRow },
           createElement(View, { style: styles.infoItem },
             createElement(Text, { style: styles.infoLabel }, "MASKAPAI"),
             createElement(Text, { style: styles.infoValue }, AIRLINE_LABELS[params.airline] ?? params.airline)
@@ -106,13 +121,23 @@ export async function generatePDF(
         createElement(
           View,
           { style: styles.row },
-          createElement(Text, { style: styles.label }, "Hotel Madinah"),
+          createElement(
+            View,
+            { style: styles.rowLabelWrap },
+            createElement(Text, { style: styles.label }, `Hotel Madinah - ${breakdown.hotelMadinahDetail.label}`),
+            createElement(Text, { style: styles.sublabel }, hotelFormula(breakdown.hotelMadinahDetail))
+          ),
           createElement(Text, { style: styles.value }, rp(breakdown.hotelMadinahIdr))
         ),
         createElement(
           View,
           { style: styles.row },
-          createElement(Text, { style: styles.label }, "Hotel Makkah"),
+          createElement(
+            View,
+            { style: styles.rowLabelWrap },
+            createElement(Text, { style: styles.label }, `Hotel Makkah - ${breakdown.hotelMakkahDetail.label}`),
+            createElement(Text, { style: styles.sublabel }, hotelFormula(breakdown.hotelMakkahDetail))
+          ),
           createElement(Text, { style: styles.value }, rp(breakdown.hotelMakkahIdr))
         ),
         ...breakdown.serviceItems.map((svc) =>

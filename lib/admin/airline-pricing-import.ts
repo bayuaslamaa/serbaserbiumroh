@@ -35,8 +35,8 @@ export const AIRLINE_PRICING_IMPORT_TEMPLATE = [
   AIRLINE_PRICING_IMPORT_HEADERS.join(","),
   [
     "BUDGET",
-    '"Lion Air, AirAsia"',
-    '"Transit, contoh budget"',
+    '"Lion Air, AirAsia, Scoot, IndiGo, VietJet"',
+    '"Transit, 1-2 stops via regional hubs"',
     "12500000",
     "true",
     "13500000",
@@ -54,8 +54,8 @@ export const AIRLINE_PRICING_IMPORT_TEMPLATE = [
   ].join(","),
   [
     "STANDARD",
-    '"Batik Air, Saudia"',
-    "Contoh tier standard",
+    '"Batik Air, Saudia, Qatar, Etihad, Emirates"',
+    '"Full-service, direct and premium transit"',
     "14500000",
     "true",
     "16000000",
@@ -74,7 +74,7 @@ export const AIRLINE_PRICING_IMPORT_TEMPLATE = [
   [
     "GARUDA",
     "Garuda Indonesia",
-    "Penerbangan langsung",
+    '"Direct flight premium from major hubs"',
     "17000000",
     "true",
     "18500000",
@@ -93,7 +93,7 @@ export const AIRLINE_PRICING_IMPORT_TEMPLATE = [
   [
     "BUSINESS",
     "Business Class",
-    "Semua maskapai",
+    '"Flat-bed luxury cabin across all airlines"',
     "25000000",
     "true",
     "28000000",

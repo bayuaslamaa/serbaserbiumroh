@@ -4,29 +4,9 @@ import { db } from "@/lib/db"
 import { estimates } from "@/lib/db/schema"
 import { fetchPricingConfig } from "@/lib/budget/calculate"
 import { calculateBudget } from "@/lib/budget/calculate"
+import { estimateTitle, validateEstimateHotelIds, validateEstimateParamsShape } from "@/lib/estimate/params"
 import { eq, desc, count } from "drizzle-orm"
 import type { EstimateParams } from "@/types"
-
-const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
-const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"]
-const AIRLINE_TIERS = ["BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
-const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"]
-
-function validateParams(p: unknown): p is EstimateParams {
-  if (!p || typeof p !== "object") return false
-  const o = p as Record<string, unknown>
-  return (
-    typeof o.nightsMadinah === "number" &&
-    typeof o.nightsMakkah === "number" &&
-    typeof o.pax === "number" &&
-    HOTEL_TIERS.includes(o.hotelTier as string) &&
-    ROOM_TYPES.includes(o.roomType as string) &&
-    AIRLINE_TIERS.includes(o.airline as string) &&
-    Array.isArray(o.services) &&
-    (o.services as string[]).every((s) => SERVICE_KEYS.includes(s)) &&
-    typeof o.fullboard === "boolean"
-  )
-}
 
 export async function GET(req: NextRequest) {
   const session = await auth()
@@ -69,18 +49,21 @@ export async function POST(req: NextRequest) {
   if (typeof body.rawInput !== "string" || body.rawInput.trim().length === 0) {
     return NextResponse.json({ error: "rawInput is required" }, { status: 400 })
   }
-  if (!validateParams(body.params)) {
+  if (!validateEstimateParamsShape(body.params)) {
     return NextResponse.json({ error: "params is invalid" }, { status: 400 })
   }
 
   const params = body.params as EstimateParams
-  const hotelTierLabel = params.hotelTier.charAt(0) + params.hotelTier.slice(1).toLowerCase()
+  const pricing = await fetchPricingConfig(db)
+  if (!validateEstimateHotelIds(params, pricing)) {
+    return NextResponse.json({ error: "hotel selection is invalid" }, { status: 400 })
+  }
+
   const title =
     typeof body.title === "string" && body.title.trim().length > 0
       ? body.title.trim()
-      : `Estimasi ${hotelTierLabel} ${params.nightsMadinah}+${params.nightsMakkah} malam`
+      : estimateTitle(params)
 
-  const pricing = await fetchPricingConfig(db)
   const breakdown = calculateBudget(params, pricing)
 
   const [estimate] = await db

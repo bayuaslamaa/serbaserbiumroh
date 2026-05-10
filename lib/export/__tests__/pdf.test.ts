@@ -27,6 +27,22 @@ const params: EstimateParams = {
 const breakdown: BudgetBreakdown = {
   hotelMadinahIdr: 3_055_000,
   hotelMakkahIdr: 13_747_500,
+  hotelMadinahDetail: {
+    label: "Kayan Hotel",
+    tier: "STANDARD",
+    sarPerNight: 650,
+    nights: 4,
+    roomPax: 4,
+    roomMultiplier: 1,
+  },
+  hotelMakkahDetail: {
+    label: "Olayan Ajyad",
+    tier: "STANDARD",
+    sarPerNight: 1300,
+    nights: 9,
+    roomPax: 4,
+    roomMultiplier: 1,
+  },
   servicesIdr: 4_382_000,
   serviceItems: [
     { key: "VISA", label: "Visa Umroh Reguler", amountDisplay: "$165", idr: 2_854_500, divideByPax: false },

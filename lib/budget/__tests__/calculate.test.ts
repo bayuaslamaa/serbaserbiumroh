@@ -18,6 +18,16 @@ const mockPricing: PricingConfig = {
       PREMIUM: { sarPerNight: 6000, label: "Premium Makkah", sublabel: "5★", monthlyPrices: {} },
     },
   },
+  hotelOptions: {
+    MADINAH: [
+      { id: "madinah-economy", city: "MADINAH", tier: "ECONOMY", sarPerNight: 450, label: "Ekonomi Madinah", sublabel: "2-3★", monthlyPrices: {} },
+      { id: "kayan-hotel", city: "MADINAH", tier: "STANDARD", sarPerNight: 700, label: "Kayan Hotel", sublabel: "4★", monthlyPrices: { 11: 900 } },
+    ],
+    MAKKAH: [
+      { id: "makkah-standard", city: "MAKKAH", tier: "STANDARD", sarPerNight: 1300, label: "Safwa Tower 3", sublabel: "3★", monthlyPrices: {} },
+      { id: "olayan-ajyad", city: "MAKKAH", tier: "STANDARD", sarPerNight: 950, label: "Olayan Ajyad", sublabel: "Ajyad standard", monthlyPrices: { 11: 1250 } },
+    ],
+  },
   airlines: {
     BUDGET: { idr: 12500000, label: "Lion Air", monthlyPrices: {} },
     STANDARD: { idr: 14500000, label: "Batik Air", monthlyPrices: { 2: 18500000 } },
@@ -77,6 +87,30 @@ describe("calculateBudget", () => {
       const params = { ...baseParams, roomType: "TRIPLE" as const }
       const result = calculateBudget(params, mockPricing)
       expect(result.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1.25 / 3) * 4700))
+    })
+
+    it("selected city hotel IDs override the shared tier fallback", () => {
+      const result = calculateBudget(
+        { ...baseParams, madinahHotelId: "kayan-hotel", makkahHotelId: "olayan-ajyad" },
+        mockPricing
+      )
+
+      expect(result.hotelMadinahIdr).toBe(Math.round(700 * 4 / 4 * 4700))
+      expect(result.hotelMakkahIdr).toBe(Math.round(950 * 9 / 4 * 4700))
+      expect(result.hotelMadinahDetail.label).toBe("Kayan Hotel")
+      expect(result.hotelMakkahDetail.label).toBe("Olayan Ajyad")
+    })
+
+    it("unknown selected hotel IDs fall back to the tier price", () => {
+      const result = calculateBudget(
+        { ...baseParams, madinahHotelId: "missing", makkahHotelId: "missing" },
+        mockPricing
+      )
+
+      expect(result.hotelMadinahIdr).toBe(3_055_000)
+      expect(result.hotelMakkahIdr).toBe(13_747_500)
+      expect(result.hotelMadinahDetail.label).toBe("Standard Madinah")
+      expect(result.hotelMakkahDetail.label).toBe("Safwa Tower 3")
     })
   })
 
@@ -197,6 +231,18 @@ describe("calculateBudget", () => {
       // ECONOMY has empty monthlyPrices
       const result = calculateBudget({ ...baseParams, hotelTier: "ECONOMY", travelMonth: 3 }, mockPricing)
       expect(result.hotelMakkahIdr).toBe(Math.round(800 * 9 * 1.0 / 4 * 4700))
+    })
+
+    it("travelMonth applies monthly overrides for selected hotel IDs", () => {
+      const result = calculateBudget(
+        { ...baseParams, travelMonth: 11, madinahHotelId: "kayan-hotel", makkahHotelId: "olayan-ajyad" },
+        mockPricing
+      )
+
+      expect(result.hotelMadinahIdr).toBe(Math.round(900 * 4 / 4 * 4700))
+      expect(result.hotelMakkahIdr).toBe(Math.round(1250 * 9 / 4 * 4700))
+      expect(result.hotelMadinahDetail.sarPerNight).toBe(900)
+      expect(result.hotelMakkahDetail.sarPerNight).toBe(1250)
     })
   })
 
