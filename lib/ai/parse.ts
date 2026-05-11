@@ -4,7 +4,7 @@ import { buildSystemPrompt } from "./prompt"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
 const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"] as const
-const AIRLINE_TIERS = ["BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const
+const AIRLINE_TIERS = ["NONE", "BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const
 const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
 
 const CITY_HOTEL_FIELDS: Record<City, { id: "madinahHotelId" | "makkahHotelId"; label: string[] }> = {
@@ -147,6 +147,48 @@ function validateParams(raw: Record<string, unknown>, pricing: PricingConfig): {
   return { params, extraNotes }
 }
 
+const NO_FLIGHT_PATTERNS = [
+  /tanpa\s+(?:tiket\s+)?(?:pesawat|penerbangan)/i,
+  /tiket\s+(?:diurus\s+)?sendiri/i,
+  /(?:no|without)\s+flight/i,
+]
+
+function explicitlyRequestsNoFlight(input: string): boolean {
+  return NO_FLIGHT_PATTERNS.some((pattern) => pattern.test(input))
+}
+
+function extractTotalTripDays(input: string): number | undefined {
+  if (/\bmalam\b/i.test(input)) return undefined
+
+  const match = input.match(/\b(\d{1,2})\s*(?:hari|days?|d)\b/i)
+  if (!match) return undefined
+
+  const days = Number(match[1])
+  return Number.isInteger(days) && days >= 5 && days <= 30 ? days : undefined
+}
+
+function applyDeterministicCorrections(
+  input: string,
+  params: EstimateParams,
+  notes: string[]
+): EstimateParams {
+  const corrected: EstimateParams = { ...params }
+
+  if (corrected.airline === "NONE" && !explicitlyRequestsNoFlight(input)) {
+    corrected.airline = "STANDARD"
+    notes.push("Penerbangan dikembalikan ke STANDARD karena input tidak menyebut tanpa tiket/penerbangan.")
+  }
+
+  const totalDays = extractTotalTripDays(input)
+  if (totalDays != null && corrected.nightsMadinah + corrected.nightsMakkah !== totalDays) {
+    corrected.nightsMadinah = Math.min(4, totalDays - 1)
+    corrected.nightsMakkah = totalDays - corrected.nightsMadinah
+    notes.push(`Durasi ${totalDays} hari diterapkan sebagai ${corrected.nightsMadinah} malam Madinah + ${corrected.nightsMakkah} malam Makkah.`)
+  }
+
+  return corrected
+}
+
 export async function parseEstimate(
   input: string,
   pricing: PricingConfig
@@ -178,9 +220,11 @@ export async function parseEstimate(
   }
 
   const { params, extraNotes } = validateParams(parsed, pricing)
-  const notes = [typeof parsed.notes === "string" ? parsed.notes : "", ...extraNotes]
+  const notesList = [typeof parsed.notes === "string" ? parsed.notes : "", ...extraNotes]
+  const correctedParams = applyDeterministicCorrections(input, params, notesList)
+  const notes = notesList
     .filter((note) => note.trim().length > 0)
     .join(" ")
 
-  return { params, notes }
+  return { params: correctedParams, notes }
 }

@@ -3,6 +3,7 @@ export type City = "MAKKAH" | "MADINAH"
 export type HotelTier = "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM"
 export type RoomType = "QUAD" | "TRIPLE" | "DOUBLE" | "SINGLE"
 export type AirlineTier = "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"
+export type EstimateAirline = AirlineTier | "NONE"
 export type ServiceKey =
   | "VISA"
   | "SISKOPATUH"
@@ -20,7 +21,7 @@ export interface EstimateParams {
   madinahHotelId?: string
   makkahHotelId?: string
   roomType: RoomType
-  airline: AirlineTier
+  airline: EstimateAirline
   services: ServiceKey[]
   fullboard: boolean
   travelMonth?: number // 1-12, optional — falls back to base sarPerNight when omitted

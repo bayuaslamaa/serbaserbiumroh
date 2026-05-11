@@ -31,6 +31,12 @@ describe("NavBar", () => {
     expect(screen.getByRole("link", { name: "Hotel Nusuk" })).toBeDefined()
   })
 
+  it("renders FAQ link when session is null", async () => {
+    mockAuth.mockResolvedValue(null)
+    render(await NavBar({}))
+    expect(screen.getByRole("link", { name: "FAQ" })).toBeDefined()
+  })
+
   it("renders without crashing when session is null (unauthenticated)", async () => {
     mockAuth.mockResolvedValue(null)
     render(await NavBar({}))

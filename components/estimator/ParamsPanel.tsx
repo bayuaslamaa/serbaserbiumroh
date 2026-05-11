@@ -98,11 +98,19 @@ export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPa
     }
   })
 
-  const airlineOptions = (["BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const).map((a) => ({
-    value: a,
-    label: pricing.airlines[a].label,
-    badge: `Rp ${(pricing.airlines[a].idr / 1_000_000).toFixed(1)}jt`,
-  }))
+  const airlineOptions = [
+    {
+      value: "NONE",
+      label: "Tanpa penerbangan",
+      sublabel: "Tiket diurus sendiri",
+      badge: "Rp 0",
+    },
+    ...(["BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const).map((a) => ({
+      value: a,
+      label: pricing.airlines[a].label,
+      badge: `Rp ${(pricing.airlines[a].idr / 1_000_000).toFixed(1)}jt`,
+    })),
+  ]
 
   return (
     <div

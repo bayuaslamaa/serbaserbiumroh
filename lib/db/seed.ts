@@ -7,6 +7,8 @@ import {
   roomMultipliers,
   hotelMonthlyPrices,
   airlineMonthlyPrices,
+  faqGroups,
+  faqItems,
 } from "./schema"
 import { normalizeHotelPricingImportKey } from "../admin/hotel-pricing-import"
 import { normalizeAirlinePricingImportKey } from "../admin/airline-pricing-import"
@@ -266,6 +268,40 @@ async function seed() {
   )
   await db.insert(airlineMonthlyPrices).values(airlineMonthlyRows).onConflictDoNothing()
   console.log("✓ Airline monthly prices seeded")
+
+  await db
+    .insert(faqGroups)
+    .values([
+      { id: "faq-group-general", name: "Umum", sortOrder: 0 },
+      { id: "faq-group-budget", name: "Estimasi Biaya", sortOrder: 10 },
+    ])
+    .onConflictDoNothing()
+
+  await db
+    .insert(faqItems)
+    .values([
+      {
+        id: "faq-item-umroh-mandiri-start",
+        groupId: "faq-group-general",
+        question: "Apa yang dibantu oleh Umroh Planner?",
+        answer:
+          "Umroh Planner membantu membuat estimasi biaya awal berdasarkan hotel, jumlah malam, jumlah jamaah, maskapai, dan layanan tambahan. Hasilnya tetap perlu divalidasi ulang sebelum transaksi.",
+        sortOrder: 0,
+        isPublished: true,
+      },
+      {
+        id: "faq-item-price-accuracy",
+        groupId: "faq-group-budget",
+        question: "Apakah estimasi biaya dijamin sama dengan harga final?",
+        answer:
+          "Tidak. Estimasi mengikuti data harga yang tersedia di sistem. Harga hotel, tiket, visa, dan layanan bisa berubah sewaktu-waktu mengikuti musim, ketersediaan kamar, kurs, dan aturan vendor.",
+        sortOrder: 0,
+        isPublished: true,
+      },
+    ])
+    .onConflictDoNothing()
+
+  console.log("✓ FAQ seeded")
 
   console.log("✅ Seeding complete!")
   process.exit(0)

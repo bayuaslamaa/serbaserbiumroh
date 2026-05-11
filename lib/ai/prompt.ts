@@ -11,7 +11,7 @@ JSON schema:
   "madinahHotelId": string | null,
   "makkahHotelId": string | null,
   "roomType": "QUAD"|"TRIPLE"|"DOUBLE"|"SINGLE",
-  "airline": "BUDGET"|"STANDARD"|"GARUDA"|"BUSINESS",
+  "airline": "NONE"|"BUDGET"|"STANDARD"|"GARUDA"|"BUSINESS",
   "travelMonth": integer | null,
   "services": ["VISA","SISKOPATUH","TASREH","TRANSPORT","TOUR_MAKKAH","TOUR_MADINAH"],
   "fullboard": boolean,
@@ -25,6 +25,7 @@ Extraction rules:
 - If a requested hotel is not listed, choose a same-city comparable hotel by same tier/level from Current pricing reference and explain the substitution in notes.
 - "Garuda"/"direct"/"langsung" → airline: "GARUDA"
 - "lion air"/"air asia"/"budget" → airline: "BUDGET"
+- "tanpa penerbangan"/"tanpa tiket"/"no flight"/"tiket sendiri" → airline: "NONE"
 - If month is mentioned, set travelMonth to 1-12. Examples: "januari"/"jan"=1, "februari"/"feb"=2, "maret"/"mar"=3, "april"/"apr"=4, "mei"=5, "juni"/"jun"=6, "juli"/"jul"=7, "agustus"/"agu"=8, "september"/"sep"=9, "oktober"/"okt"=10, "november"/"nov"=11, "desember"/"des"=12
 - If date range given (e.g. "15-25 Sept"), compute nights = end - start per city
 - If total days only, split evenly unless ratio stated

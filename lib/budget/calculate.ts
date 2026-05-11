@@ -106,7 +106,9 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
     })
   }
 
-  const flightIdr = resolveAirlineIdr(pricing.airlines[params.airline], params.travelMonth)
+  const flightIdr = params.airline === "NONE"
+    ? 0
+    : resolveAirlineIdr(pricing.airlines[params.airline], params.travelMonth)
   const totalIdrPax = hotelMadinahIdr + hotelMakkahIdr + servicesIdr + flightIdr
   const totalIdrGrp = totalIdrPax * params.pax
 

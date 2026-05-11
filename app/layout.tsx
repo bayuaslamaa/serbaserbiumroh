@@ -18,7 +18,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: "Umroh Budget Estimator",
-  description: "Estimasi biaya umroh dengan AI — cepat, akurat, mudah disesuaikan",
+  description: "Estimasi biaya umroh — cepat, akurat, mudah disesuaikan",
 }
 
 export default function RootLayout({

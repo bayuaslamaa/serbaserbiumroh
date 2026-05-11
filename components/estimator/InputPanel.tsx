@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
 const EXAMPLES = [
-  "Umroh 9 malam Makkah + 4 malam Madinah, hotel standard kamar quad, Garuda",
-  "Pelataran Nabawi + Haram, 2 orang, triple, tour Makkah & Madinah",
-  "Paket ekonomi lion air, double room, 12 hari",
+  "12 hari, 2 pax, Nov, Madinah 4 mlm Kayan, Makkah 8 mlm Olayan Ajyad, double, fullboard",
+  "9 hari, 4 pax, Mar, hotel standard Makkah+Madinah, quad, Saudia, visa+transport",
+  "14 hari, 2 pax, Ramadhan, hotel pelataran, double, Garuda, visa+siskopatuh+tasreh",
 ]
+
+const PLACEHOLDER =
+  "Contoh: Umroh 12 hari untuk 2 orang bulan November. Madinah 4 malam di Kayan Hotel, Makkah 8 malam di Olayan Ajyad, kamar double, fullboard, Saudia, tambah visa+siskopatuh+transport, tanpa tour."
 
 interface InputPanelProps {
   value: string
@@ -30,12 +33,12 @@ export function InputPanel({ value, onChange, onParse, loading }: InputPanelProp
           Deskripsi Perjalanan
         </h2>
         <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-          Ceritakan rencana umroh Anda, biarkan AI mengisi detailnya.
+          Ceritakan rencana umroh Anda, biarkan sistem kami mengisi detailnya.
         </p>
       </div>
 
       <Textarea
-        placeholder="Contoh: Umroh 9 malam Makkah + 4 malam Madinah, hotel standard, kamar quad, penerbangan Garuda..."
+        placeholder={PLACEHOLDER}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="min-h-[120px] resize-y"

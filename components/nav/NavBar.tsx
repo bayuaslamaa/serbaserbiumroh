@@ -48,6 +48,13 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
               Hotel Nusuk
             </Link>
             <Link
+              href="/faq"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              FAQ
+            </Link>
+            <Link
               href="/dashboard"
               className="text-sm transition-colors hover:text-[var(--color-text)]"
               style={{ color: "var(--color-text-muted)" }}
@@ -83,6 +90,13 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
                   style={{ color: "var(--color-text-muted)" }}
                 >
                   Hotel Nusuk
+                </Link>
+                <Link
+                  href="/admin/content/faqs"
+                  className="text-sm transition-colors hover:text-[var(--color-text)]"
+                  style={{ color: "var(--color-text-muted)" }}
+                >
+                  FAQ
                 </Link>
               </>
             )}

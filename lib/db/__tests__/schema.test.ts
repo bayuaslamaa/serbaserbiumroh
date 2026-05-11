@@ -11,6 +11,8 @@ import {
   pilgrimStories,
   storyItineraryDays,
   hotelListings,
+  faqGroups,
+  faqItems,
 } from "@/lib/db/schema"
 
 describe("schema table definitions", () => {
@@ -107,5 +109,23 @@ describe("schema table definitions", () => {
     expect(cols).toContain("tier")
     expect(cols).toContain("slug")
     expect(cols).toContain("name")
+  })
+
+  it("faqGroups table has ordering fields", () => {
+    const cols = Object.keys(faqGroups)
+    expect(cols).toContain("id")
+    expect(cols).toContain("name")
+    expect(cols).toContain("sortOrder")
+    expect(cols).toContain("createdAt")
+  })
+
+  it("faqItems table has group, rich answer, ordering, and publish fields", () => {
+    const cols = Object.keys(faqItems)
+    expect(cols).toContain("id")
+    expect(cols).toContain("groupId")
+    expect(cols).toContain("question")
+    expect(cols).toContain("answer")
+    expect(cols).toContain("sortOrder")
+    expect(cols).toContain("isPublished")
   })
 })

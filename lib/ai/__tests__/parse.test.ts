@@ -114,6 +114,27 @@ describe("parseEstimate", () => {
     expect(result.params.airline).toBe("BUDGET")
   })
 
+  it("happy path: tanpa penerbangan → airline NONE", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, airline: "NONE" }))
+    const result = await parseEstimate("tanpa penerbangan, tiket sendiri", mockPricing)
+    expect(result.params.airline).toBe("NONE")
+  })
+
+  it("corrects airline NONE when input did not explicitly exclude flights", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, airline: "NONE" }))
+    const result = await parseEstimate("2 pax dewasa hotel pelataran untuk 12 hari", mockPricing)
+    expect(result.params.airline).toBe("STANDARD")
+    expect(result.notes).toContain("input tidak menyebut tanpa tiket")
+  })
+
+  it("corrects total hari into explicit Madinah and Makkah nights", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, nightsMadinah: 4, nightsMakkah: 9 }))
+    const result = await parseEstimate("3 dewasa 1 anak umur 7 tahun 20 hari bulan desember", mockPricing)
+    expect(result.params.nightsMadinah).toBe(4)
+    expect(result.params.nightsMakkah).toBe(16)
+    expect(result.notes).toContain("Durasi 20 hari")
+  })
+
   it("happy path: tour makkah madinah → services include TOUR_MAKKAH and TOUR_MADINAH", async () => {
     mockCreate.mockResolvedValueOnce(
       claudeResponse({

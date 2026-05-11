@@ -160,11 +160,11 @@ export function EstimatorClient({
       const body = isEdit
         ? { params: state.params, title: saveTitle.trim() || null }
         : {
-            rawInput: state.rawInput || "(diedit manual)",
-            params: state.params,
-            aiNotes: state.aiNotes || null,
-            title: saveTitle.trim() || null,
-          }
+          rawInput: state.rawInput || "(diedit manual)",
+          params: state.params,
+          aiNotes: state.aiNotes || null,
+          title: saveTitle.trim() || null,
+        }
 
       const res = await fetch(url, {
         method,
@@ -197,7 +197,7 @@ export function EstimatorClient({
           style={{ borderColor: "var(--color-gold-muted)", background: "rgba(201,168,76,0.08)" }}
         >
           <p className="text-sm" style={{ color: "var(--color-text)" }}>
-            <span className="font-semibold" style={{ color: "var(--color-gold)" }}>Catatan AI: </span>
+            <span className="font-semibold" style={{ color: "var(--color-gold)" }}>Catatan: </span>
             {state.aiNotes}
           </p>
           <button

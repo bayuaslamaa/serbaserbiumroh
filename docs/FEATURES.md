@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-05-09
+> Last updated: 2026-05-10
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -35,6 +35,8 @@ Managed with Drizzle ORM + Neon PostgreSQL. All PKs are CUID2 strings.
 | `users` | Auth users with `role` enum (USER / ADMIN) |
 | `accounts`, `sessions`, `verification_tokens` | Auth.js adapter tables |
 | `estimates` | Saved estimate snapshots (JSONB params + totals) |
+| `faq_groups` | Admin-managed FAQ categories with display ordering |
+| `faq_items` | Admin-managed Q&A items with rich answers, ordering, and publish status |
 
 Enums: `city` (MAKKAH, MADINAH), `hotel_tier` (ECONOMY, STANDARD, PELATARAN, PREMIUM), `airline_tier` (BUDGET, STANDARD, GARUDA, BUSINESS), `service_key`, `role`.
 
@@ -131,6 +133,7 @@ Two export formats for sharing estimates:
 
 - **Estimate list** (`/dashboard`) — cards showing saved estimates with title, date, and per-pax total
 - **Estimate detail** (`/estimate/[id]`) — full breakdown with export buttons
+- **FAQ preview** — up to seven published FAQ items shown on the dashboard, with a link to the full FAQ page
 - `EstimateCard` and `EstimateList` components
 
 **Files:** `app/(dashboard)/dashboard/page.tsx`, `app/(dashboard)/estimate/[id]/page.tsx`, `components/dashboard/`
@@ -204,6 +207,17 @@ All changes are saved immediately (no publish step).
 ### Admin User List (`/admin/users`)
 - View all registered users with role
 
+### FAQ Management (`/admin/content/faqs`)
+- CRUD FAQ groups with explicit display order
+- CRUD FAQ Q&A items with group, sort order, publish/draft status, and Markdown-style rich answers
+- Publish/unpublish from the table without editing the full item
+- Prevent deleting groups that still contain FAQ items
+- **CSV bulk import** — upload/paste FAQ rows, preview create/update/invalid/conflict rows, then confirm valid rows
+  - Template columns: group, question, answer
+  - Missing groups are created during confirm
+  - Existing FAQs are matched by normalized question and updated instead of duplicated
+  - Imported new FAQs stay draft; publish status and ordering are managed in the admin UI
+
 ### Components
 - `InlineEditCell` — click-to-edit cell with save/cancel
 - `PricingTable` — full admin pricing dashboard
@@ -214,7 +228,7 @@ All changes are saved immediately (no publish step).
 
 ## 9. Navigation
 
-- `NavBar` — session-aware; shows Dashboard and estimate links for all users; shows Admin links only when `role === ADMIN`
+- `NavBar` — session-aware; shows Dashboard, public FAQ, and estimate links for all users; shows Admin links only when `role === ADMIN`
 - Sign-out button
 
 **Files:** `components/nav/NavBar.tsx`
@@ -239,6 +253,14 @@ All changes are saved immediately (no publish step).
 | `GET` | `/api/estimate/[id]` | User (owner) | Get saved estimate |
 | `GET` | `/api/estimate/[id]/export` | User (owner) | Export as PDF or WhatsApp text |
 | `POST` | `/api/estimate/parse` | User | Parse freeform text → EstimateParams (no save) |
+| `GET` | `/api/admin/faqs` | Admin | List FAQ items |
+| `POST` | `/api/admin/faqs` | Admin | Create FAQ item |
+| `GET/PUT/DELETE` | `/api/admin/faqs/[id]` | Admin | Read, update, or delete FAQ item |
+| `GET/POST` | `/api/admin/faqs/groups` | Admin | List or create FAQ groups |
+| `PUT/DELETE` | `/api/admin/faqs/groups/[id]` | Admin | Update or delete FAQ group |
+| `GET` | `/api/admin/faqs/import/template` | Admin | Download FAQ CSV template |
+| `POST` | `/api/admin/faqs/import/preview` | Admin | Preview FAQ CSV create/update/invalid/conflict rows without writes |
+| `POST` | `/api/admin/faqs/import/confirm` | Admin | Confirm valid FAQ CSV rows, creating missing groups and draft FAQ items |
 
 ---
 

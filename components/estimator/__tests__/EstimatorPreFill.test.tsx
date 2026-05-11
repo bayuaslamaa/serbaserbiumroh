@@ -118,6 +118,19 @@ describe("ParamsPanel — storySource badge", () => {
     expect(screen.getByText("Voco")).toBeDefined()
   })
 
+  it("renders no-flight airline option", () => {
+    render(
+      <ParamsPanel
+        params={DEFAULT_PARAMS}
+        pricing={mockPricing}
+        onChange={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText("Tanpa penerbangan")).toBeDefined()
+    expect(screen.getByText("Tiket diurus sendiri")).toBeDefined()
+  })
+
   it("updates the city-specific hotel ID when an imported hotel is selected", () => {
     const onChange = vi.fn()
     render(

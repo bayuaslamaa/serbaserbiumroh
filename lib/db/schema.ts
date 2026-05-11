@@ -272,6 +272,33 @@ export const hotelListings = pgTable("hotel_listings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
+// --- FAQ Groups ---
+export const faqGroups = pgTable("faq_groups", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  name: text("name").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+})
+
+// --- FAQ Items ---
+export const faqItems = pgTable("faq_items", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  groupId: text("group_id")
+    .notNull()
+    .references(() => faqGroups.id),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  sortOrder: integer("sort_order").notNull().default(0),
+  isPublished: boolean("is_published").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+})
+
 // --- Inferred types ---
 export type ExchangeRate = typeof exchangeRates.$inferSelect
 export type HotelPrice = typeof hotelPrices.$inferSelect
@@ -291,3 +318,7 @@ export type StoryPackingItem = typeof storyPackingItems.$inferSelect
 export type NewStoryPackingItem = typeof storyPackingItems.$inferInsert
 export type HotelListing = typeof hotelListings.$inferSelect
 export type NewHotelListing = typeof hotelListings.$inferInsert
+export type FaqGroup = typeof faqGroups.$inferSelect
+export type NewFaqGroup = typeof faqGroups.$inferInsert
+export type FaqItem = typeof faqItems.$inferSelect
+export type NewFaqItem = typeof faqItems.$inferInsert

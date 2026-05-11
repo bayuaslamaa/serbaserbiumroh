@@ -5,18 +5,23 @@ import { estimates } from "@/lib/db/schema"
 import { eq, desc } from "drizzle-orm"
 import { EstimateList } from "@/components/dashboard/EstimateList"
 import { Button } from "@/components/ui/button"
+import { FaqPreview } from "@/components/faq/FaqPreview"
+import { getPublishedFaqPreview } from "@/lib/faq"
 
 export const metadata = { title: "Dashboard" }
 
 export default async function DashboardPage() {
   const session = await requireAuth()
 
-  const initialEstimates = await db
-    .select()
-    .from(estimates)
-    .where(eq(estimates.userId, session.user.id))
-    .orderBy(desc(estimates.createdAt))
-    .limit(20)
+  const [initialEstimates, faqItems] = await Promise.all([
+    db
+      .select()
+      .from(estimates)
+      .where(eq(estimates.userId, session.user.id))
+      .orderBy(desc(estimates.createdAt))
+      .limit(20),
+    getPublishedFaqPreview(7),
+  ])
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -37,7 +42,10 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      <EstimateList initialEstimates={initialEstimates} />
+      <div className="space-y-8">
+        <EstimateList initialEstimates={initialEstimates} />
+        <FaqPreview items={faqItems} title="FAQ Umroh Mandiri" />
+      </div>
     </div>
   )
 }

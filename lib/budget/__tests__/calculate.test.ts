@@ -201,6 +201,11 @@ describe("calculateBudget", () => {
       expect(result.flightIdr).toBe(17_000_000)
     })
 
+    it("NONE airline → flightIdr = 0", () => {
+      const result = calculateBudget({ ...baseParams, airline: "NONE" }, mockPricing)
+      expect(result.flightIdr).toBe(0)
+    })
+
     it("travelMonth with airline monthly override → flightIdr uses monthly IDR", () => {
       const result = calculateBudget({ ...baseParams, travelMonth: 2 }, mockPricing)
       expect(result.flightIdr).toBe(18_500_000)
