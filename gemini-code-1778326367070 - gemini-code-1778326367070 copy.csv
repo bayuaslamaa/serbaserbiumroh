@@ -1,0 +1,64 @@
+city,tier,label,sublabel,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+MADINAH,STANDARD,Emaar Group,OTA recommended - 2027 updated - standard Madinah group,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Peninsula Worth,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,PREMIUM,Pullman Zam Zam,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,STANDARD,New Madinah,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Mokhtara Diamond Al Masi,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Grand Zowar,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Zowar al Alami,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,PELATARAN,SAJA,OTA recommended - 2027 updated - closer Madinah option,450,540,900,990,580,800,450,500,500,450,450,450,540
+MADINAH,STANDARD,Al Mokhtara al Gharbi,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Diyafa al Mukhtara,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Madinah Deluxe Aram,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,STANDARD,Artal Taiba,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,PREMIUM,Madinah Hilton,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,STANDARD,Astoneast Taiba,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,PELATARAN,Saja al Madinah,OTA recommended - 2027 updated - closer Madinah option,450,540,900,990,580,800,450,500,500,450,450,450,540
+MADINAH,ECONOMY,ODEST,OTA recommended - 2027 updated - economy Madinah,150,160,240,270,170,250,150,160,160,150,150,150,160
+MADINAH,STANDARD,Ajyal al Madina,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,PELATARAN,Bosphorus,OTA recommended - 2027 updated - closer Madinah option,450,540,900,990,580,800,450,500,500,450,450,450,540
+MADINAH,PREMIUM,Dallah Taiba,OTA recommended - 2027 updated - premium Madinah 4 star near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,PELATARAN,Golden Tulip,OTA recommended - 2027 updated - upper midscale Madinah,450,540,900,990,580,800,450,500,500,450,450,450,540
+MADINAH,PELATARAN,Tulip in Daar,OTA recommended - 2027 updated - upper midscale Madinah,450,540,900,990,580,800,450,500,500,450,450,450,540
+MADINAH,PREMIUM,Maden Taiba,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,ECONOMY,Diyar AlSaliheen,OTA recommended - 2027 updated - economy Madinah,150,160,240,270,170,250,150,160,160,150,150,150,160
+MADINAH,STANDARD,Elaf Group,OTA recommended - 2027 updated - standard Madinah group,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,PREMIUM,Taiba Front,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,PREMIUM,Al Ritz Al Madinah,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,PREMIUM,Millennium al Aqeeq,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,PREMIUM,Movenpick,OTA recommended - 2027 updated - premium near Nabawi,650,810,1430,1620,910,1200,650,720,720,650,650,650,810
+MADINAH,ECONOMY,Abraj al Marzam,OTA recommended - 2027 updated - economy Madinah,150,160,240,270,170,250,150,160,160,150,150,150,160
+MADINAH,ECONOMY,Marjan Rose,OTA recommended - 2027 updated - economy Madinah,150,160,240,270,170,250,150,160,160,150,150,150,160
+MADINAH,ECONOMY,Nusk al Hijrah,OTA recommended - 2027 updated - economy Madinah,150,160,240,270,170,250,150,160,160,150,150,150,160
+MADINAH,STANDARD,Nusk al Madinah,OTA recommended - 2027 updated - standard Madinah,250,290,450,500,300,450,250,260,260,250,250,250,290
+MADINAH,ECONOMY,Gacine Hotel,OTA recommended - 2027 updated - economy Madinah,150,160,240,270,170,250,150,160,160,150,150,150,160
+MAKKAH,PELATARAN,Elaf Group,OTA recommended - 2027 updated - closer Makkah group,600,750,1500,1680,840,1500,600,660,660,600,600,600,750
+MAKKAH,STANDARD,Manazel Ajyad,OTA recommended - 2027 updated - standard Makkah Ajyad,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,PELATARAN,Makarem Ajyad,OTA recommended - 2027 updated - upper Makkah Ajyad,600,750,1500,1680,840,1500,600,660,660,600,600,600,750
+MAKKAH,STANDARD,Al Ebaa,OTA recommended - 2027 updated - standard Makkah,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Emaar Group,OTA recommended - 2027 updated - standard Makkah group,300,620,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Al Shahba,OTA recommended - 2027 updated - standard Makkah,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Mahd ar Resala,OTA recommended - 2027 updated - standard Makkah,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,ECONOMY,Afraa Hotel,OTA recommended - 2027 updated - economy Makkah,150,170,270,300,180,250,150,160,160,150,150,150,170
+MAKKAH,PREMIUM,Pullman Zam-Zam,OTA recommended - 2027 updated - premium tower near Haram,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,ECONOMY,Maysal al Talaqo,OTA recommended - 2027 updated - economy Makkah,150,170,270,300,180,250,150,160,160,150,150,150,170
+MAKKAH,PREMIUM,Movenpick,OTA recommended - 2027 updated - premium tower near Haram,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Makkah Tower,OTA recommended - 2027 updated - premium tower near Haram,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Safwa Tower 1,OTA recommended - 2027 updated - premium tower near Haram,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Safwa Orchid,OTA recommended - 2027 updated - premium tower near Haram,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Makkah Hotel Tower,OTA recommended - 2027 updated - premium tower near Haram,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,PELATARAN,Violet,OTA recommended - 2027 updated - upper midscale Makkah,600,750,1500,1680,840,1500,600,660,660,600,600,600,750
+MAKKAH,PREMIUM,Anjum,OTA recommended - 2027 updated - premium Makkah 5 star,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Millennium,OTA recommended - 2027 updated - premium Makkah,850,1100,2380,2720,1280,2100,850,980,980,850,850,850,1100
+MAKKAH,STANDARD,Ibis,OTA recommended - 2027 updated - standard Makkah branded,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Mercure,OTA recommended - 2027 updated - standard Makkah branded,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Al fouad Tower,OTA recommended - 2027 updated - standard Makkah tower,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,PELATARAN,Voco,OTA recommended - 2027 updated - upper Makkah 4 star shuttle,600,750,1500,1680,840,1500,600,660,660,600,600,600,750
+MAKKAH,STANDARD,Novotel Thakher,OTA recommended - 2027 updated - standard Makkah 4 star shuttle,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Miaad al Majd,OTA recommended - 2027 updated - standard Makkah,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Alayam Elite,OTA recommended - 2027 updated - standard Makkah,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,SAJA,OTA recommended - 2027 updated - standard Makkah,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Al Hidayah Tower,OTA recommended - 2027 updated - standard Makkah tower,300,360,660,750,390,600,300,330,330,300,300,300,360
+MAKKAH,ECONOMY,Al Kiswah Tower,OTA recommended - 2027 updated - economy Makkah tower,150,170,270,300,180,250,150,160,160,150,150,150,170
+MAKKAH,ECONOMY,Saif al Majid,OTA recommended - 2027 updated - economy Makkah,150,170,270,300,180,250,150,160,160,150,150,150,170
+MAKKAH,ECONOMY,Palestine Hotel,OTA recommended - 2027 updated - economy Makkah,150,170,270,300,180,250,150,160,160,150,150,150,170

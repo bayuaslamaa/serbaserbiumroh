@@ -22,6 +22,8 @@ const breakdown: BudgetBreakdown = {
     sarPerNight: 650,
     nights: 4,
     roomPax: 4,
+    roomCount: 1,
+    totalPax: 4,
     roomMultiplier: 1,
   },
   hotelMakkahDetail: {
@@ -30,6 +32,8 @@ const breakdown: BudgetBreakdown = {
     sarPerNight: 1300,
     nights: 9,
     roomPax: 4,
+    roomCount: 1,
+    totalPax: 4,
     roomMultiplier: 1,
   },
   servicesIdr: 4_582_000,
@@ -55,7 +59,7 @@ describe("generateWhatsAppText", () => {
     const text = generateWhatsAppText(params, breakdown)
     expect(text).toContain("Kayan Hotel")
     expect(text).toContain("Olayan Ajyad")
-    expect(text).toContain("SAR 650 × 4 malam ÷ 4 org/kamar")
+    expect(text).toContain("SAR 650 × 4 malam × 1 kamar ÷ 4 org (4 org/kamar)")
   })
 
   it("contains formatted total per person", () => {

@@ -28,6 +28,7 @@ export const HOTEL_PRICING_IMPORT_HEADERS = [
   "tier",
   "label",
   "sublabel",
+  "distance",
   "base_sar_per_night",
   ...MONTH_COLUMNS.map(({ column }) => column),
 ] as const
@@ -39,6 +40,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "ECONOMY",
     "Makkah Economy Example",
     "Contoh tier ECONOMY",
+    "shuttle area",
     "900",
     "900",
     "900",
@@ -58,6 +60,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "STANDARD",
     "Safwa Tower 3",
     "3 star dekat Haram",
+    "250m jalan kaki",
     "1300",
     "1300",
     "1300",
@@ -77,6 +80,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "PELATARAN",
     "Makkah Pelataran Example",
     "Contoh tier PELATARAN",
+    "pelataran/ring 1",
     "1800",
     "1800",
     "1800",
@@ -96,6 +100,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "PREMIUM",
     "Makkah Premium Example",
     "Contoh tier PREMIUM",
+    "ring 1 tower",
     "2600",
     "2600",
     "2600",
@@ -115,6 +120,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "ECONOMY",
     "Madinah Economy Example",
     "Contoh tier ECONOMY",
+    "shuttle area",
     "450",
     "450",
     "450",
@@ -134,6 +140,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "STANDARD",
     "Grand Plaza Badr Maqam",
     "4 star dekat Nabawi",
+    "300m jalan kaki",
     "650",
     "650",
     "650",
@@ -153,6 +160,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "PELATARAN",
     "Madinah Pelataran Example",
     "Contoh tier PELATARAN",
+    "pelataran/ring 1",
     "1100",
     "1100",
     "1100",
@@ -172,6 +180,7 @@ export const HOTEL_PRICING_IMPORT_TEMPLATE = [
     "PREMIUM",
     "Madinah Premium Example",
     "Contoh tier PREMIUM",
+    "ring 1 dekat Nabawi",
     "1800",
     "1800",
     "1800",
@@ -203,6 +212,7 @@ export interface ParsedHotelPricingImportData {
   tier: HotelTier
   label: string
   sublabel: string
+  distance: string | null
   sarPerNight: number
   monthlyPrices: Record<number, number>
   matchKey: string
@@ -321,6 +331,7 @@ function parseRecord(record: Record<string, string>, rowNumber: number): HotelPr
   const tier = normalizeEnumValue(record.tier)
   const label = (record.label ?? "").trim()
   const sublabel = (record.sublabel ?? "").trim()
+  const distance = normalizeOptionalText(record.distance)
   const sarPerNight = parsePositiveInteger(record.base_sar_per_night)
 
   if (!CITIES.includes(city as City)) errors.push("city must be MAKKAH or MADINAH")
@@ -356,6 +367,7 @@ function parseRecord(record: Record<string, string>, rowNumber: number): HotelPr
     tier: tier as HotelTier,
     label,
     sublabel,
+    distance,
     sarPerNight,
     monthlyPrices,
     matchKey: normalizeHotelPricingImportKey({
@@ -370,6 +382,11 @@ function parseRecord(record: Record<string, string>, rowNumber: number): HotelPr
 
 function normalizeEnumValue(value: string | undefined): string {
   return (value ?? "").trim().toUpperCase()
+}
+
+function normalizeOptionalText(value: string | undefined): string | null {
+  const normalized = (value ?? "").trim()
+  return normalized.length > 0 ? normalized : null
 }
 
 function parsePositiveInteger(value: string | undefined): number | null {

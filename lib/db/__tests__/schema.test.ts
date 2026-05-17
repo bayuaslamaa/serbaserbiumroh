@@ -8,6 +8,7 @@ import {
   roomMultipliers,
   users,
   estimates,
+  activityLogs,
   pilgrimStories,
   storyItineraryDays,
   hotelListings,
@@ -34,6 +35,7 @@ describe("schema table definitions", () => {
     expect(cols).toContain("sarPerNight")
     expect(cols).toContain("label")
     expect(cols).toContain("sublabel")
+    expect(cols).toContain("distance")
   })
 
   it("airlinePrices table has expected columns", () => {
@@ -83,6 +85,20 @@ describe("schema table definitions", () => {
     expect(cols).toContain("totalIdrGrp")
     expect(cols).toContain("rawInput")
     expect(cols).toContain("userId")
+  })
+
+  it("activityLogs table has generic logging columns", () => {
+    const cols = Object.keys(activityLogs)
+    expect(cols).toContain("userId")
+    expect(cols).toContain("flow")
+    expect(cols).toContain("event")
+    expect(cols).toContain("status")
+    expect(cols).toContain("entityType")
+    expect(cols).toContain("entityId")
+    expect(cols).toContain("input")
+    expect(cols).toContain("output")
+    expect(cols).toContain("error")
+    expect(cols).toContain("metadata")
   })
 
   it("pilgrimStories table has expected columns", () => {

@@ -1,0 +1,1 @@
+ALTER TABLE "hotel_prices" ADD COLUMN "distance" text;

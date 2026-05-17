@@ -40,7 +40,7 @@ function rp(amount: number): string {
 
 function hotelFormula(detail: BudgetBreakdown["hotelMadinahDetail"]): string {
   const multiplier = detail.roomMultiplier === 1 ? "" : ` x ${detail.roomMultiplier}`
-  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} x ${detail.nights} malam${multiplier} / ${detail.roomPax} org/kamar`
+  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} x ${detail.nights} malam x ${detail.roomCount} kamar${multiplier} / ${detail.totalPax} org (${detail.roomPax} org/kamar)`
 }
 
 const ROOM_LABELS: Record<string, string> = { QUAD: "Quad (4 org/kamar)", TRIPLE: "Triple (3 org/kamar)", DOUBLE: "Double (2 org/kamar)", SINGLE: "Single" }

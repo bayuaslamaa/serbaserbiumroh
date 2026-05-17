@@ -43,7 +43,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   const now = new Date()
 
   if (category === "hotel") {
-    const { city, tier, label, sublabel, sarPerNight } = body
+    const { city, tier, label, sublabel, distance, sarPerNight } = body
     if (!CITIES.includes(city as string)) {
       return NextResponse.json({ error: "invalid city" }, { status: 400 })
     }
@@ -56,6 +56,9 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
     if (typeof sublabel !== "string") {
       return NextResponse.json({ error: "sublabel required" }, { status: 400 })
     }
+    if (distance !== undefined && distance !== null && typeof distance !== "string") {
+      return NextResponse.json({ error: "distance must be a string" }, { status: 400 })
+    }
     if (typeof sarPerNight !== "number" || sarPerNight <= 0) {
       return NextResponse.json({ error: "sarPerNight must be a positive number" }, { status: 400 })
     }
@@ -67,6 +70,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
         tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
         label: label.trim(),
         sublabel: sublabel.trim(),
+        distance: typeof distance === "string" && distance.trim() ? distance.trim() : null,
         importKey: normalizeHotelPricingImportKey({
           city: city as "MAKKAH" | "MADINAH",
           tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
@@ -179,7 +183,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   }
 
   if (category === "hotel") {
-    const { hotelId, city, tier, sarPerNight } = body
+    const { hotelId, city, tier, sarPerNight, label, sublabel, distance } = body
     if (!CITIES.includes(city as string)) {
       return NextResponse.json({ error: "invalid city" }, { status: 400 })
     }
@@ -189,9 +193,31 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     if (typeof sarPerNight !== "number" || sarPerNight <= 0) {
       return NextResponse.json({ error: "sarPerNight must be a positive number" }, { status: 400 })
     }
+    if (label !== undefined && (typeof label !== "string" || !label.trim())) {
+      return NextResponse.json({ error: "label required" }, { status: 400 })
+    }
+    if (sublabel !== undefined && typeof sublabel !== "string") {
+      return NextResponse.json({ error: "sublabel required" }, { status: 400 })
+    }
+    if (distance !== undefined && distance !== null && typeof distance !== "string") {
+      return NextResponse.json({ error: "distance must be a string" }, { status: 400 })
+    }
+    const updates: Partial<typeof hotelPrices.$inferInsert> & { updatedAt: Date } = { sarPerNight, updatedAt: now }
+    if (typeof label === "string") {
+      updates.label = label.trim()
+      updates.importKey = normalizeHotelPricingImportKey({
+        city: city as "MAKKAH" | "MADINAH",
+        tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
+        label: label.trim(),
+      })
+    }
+    if (typeof sublabel === "string") updates.sublabel = sublabel.trim()
+    if (distance !== undefined) {
+      updates.distance = typeof distance === "string" && distance.trim() ? distance.trim() : null
+    }
     const [updated] = await db
       .update(hotelPrices)
-      .set({ sarPerNight, updatedAt: now })
+      .set(updates)
       .where(
         typeof hotelId === "string" && hotelId
           ? eq(hotelPrices.id, hotelId)

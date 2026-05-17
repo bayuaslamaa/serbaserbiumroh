@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-05-10
+> Last updated: 2026-05-12
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -50,7 +50,7 @@ Pure function `calculateBudget(params, pricing)` — no side effects, fully unit
 
 **Hotel cost formula:**
 ```
-sarPerNight × nights × roomMultiplier / paxPerRoom × sarRate
+sarPerNight × nights × roomMultiplier × ceil(pax / paxPerRoom) × sarRate / pax
 ```
 
 **Monthly pricing (Approach B):**
@@ -71,7 +71,7 @@ sarPerNight × nights × roomMultiplier / paxPerRoom × sarRate
 
 **Output fields:** `hotelMadinahIdr`, `hotelMakkahIdr`, `hotelMadinahDetail`, `hotelMakkahDetail`, `servicesIdr`, `serviceItems[]`, `flightIdr`, `totalIdrPax`, `totalIdrGrp`, `sarRate`, `usdRate`
 
-**Files:** `lib/budget/calculate.ts`, `lib/budget/__tests__/calculate.test.ts` (25 tests)
+**Files:** `lib/budget/calculate.ts`, `lib/budget/__tests__/calculate.test.ts` (26 tests)
 
 ---
 
@@ -85,8 +85,9 @@ Converts freeform Bahasa Indonesia input into structured `EstimateParams` using 
 - Wraps API errors with `"Anthropic API error: …"` message
 - Prompt includes imported Makkah and Madinah hotel option IDs when available
 - If a requested hotel is unavailable locally, parser selects a same-city same-tier comparable option and records the substitution in notes
+- Distance/proximity metadata helps rank comparable hotel choices for prompts like "ring 1", "jalan kaki", "dekat Haram", or "dekat Nabawi"
 
-**Files:** `lib/ai/parse.ts`, `lib/ai/prompt.ts`, `lib/ai/__tests__/parse.test.ts` (16 tests)
+**Files:** `lib/ai/parse.ts`, `lib/ai/prompt.ts`, `lib/ai/__tests__/parse.test.ts` (21 tests)
 
 ---
 
@@ -154,10 +155,12 @@ All changes are saved immediately (no publish step).
 
 **Hotel Prices**
 - Inline-edit base SAR/malam per city×tier row
+- Inline-edit optional distance/proximity metadata per hotel pricing row
 - Expandable monthly price grid (12 months × 2 cities × 4 tiers)
 - Inline-edit individual month prices
 - **CSV bulk import** — upload one-hotel-per-row CSV, preview create/update/invalid/conflict rows, then confirm valid rows
-  - Template columns: city, tier, label, sublabel, base SAR/malam, Jan–Dec SAR overrides
+  - Template columns: city, tier, label, sublabel, distance, base SAR/malam, Jan–Dec SAR overrides
+  - Distance is a human-readable note relative to Masjidil Haram for Makkah or Masjid Nabawi for Madinah, used for AI hotel matching/ranking
   - Template includes examples for every supported tier: ECONOMY, STANDARD, PELATARAN, PREMIUM
   - Blank monthly override cells fall back to the base SAR/malam value
   - Existing rows are matched by city + tier + normalized label to prevent duplicates
@@ -166,6 +169,7 @@ All changes are saved immediately (no publish step).
   - City select (MAKKAH / MADINAH)
   - Tier select (ECONOMY / STANDARD / PELATARAN / PREMIUM)
   - Label and sublabel text inputs
+  - Optional distance text input
   - SAR/malam base price input
   - Auto-seeds 12 monthly price rows at the base rate on save
 - `POST /api/admin/pricing/hotel-import/preview` (validate CSV and show preview; no writes)
@@ -266,12 +270,12 @@ All changes are saved immediately (no publish step).
 
 ## 11. Test Coverage
 
-247 tests across 24 test files (Vitest + Testing Library).
+290 tests across 31 test files (Vitest + Testing Library).
 
 | File | Tests | Area |
 |------|-------|------|
-| `lib/budget/__tests__/calculate.test.ts` | 25 | Budget engine: hotel, services, totals, concrete hotel selection, hotel and airline monthly pricing, exchange rates |
-| `lib/ai/__tests__/parse.test.ts` | 16 | AI parsing: happy paths, hotel IDs/fallbacks, error paths, API failures |
+| `lib/budget/__tests__/calculate.test.ts` | 26 | Budget engine: hotel, services, totals, concrete hotel selection, hotel and airline monthly pricing, exchange rates |
+| `lib/ai/__tests__/parse.test.ts` | 21 | AI parsing: happy paths, hotel IDs/fallbacks, distance-aware matching, error paths, API failures |
 | `lib/export/__tests__/whatsapp.test.ts` | 9 | WhatsApp export formatting |
 | `app/api/admin/pricing/__tests__/route.test.ts` | 14 | Admin PATCH validation logic |
 | `app/api/admin/pricing/__tests__/airline-import-route.test.ts` | 9 | Airline import preview/confirm routes |

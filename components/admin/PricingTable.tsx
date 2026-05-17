@@ -66,6 +66,7 @@ type AddHotelForm = {
   tier: "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM"
   label: string
   sublabel: string
+  distance: string
   sarPerNight: string
 }
 
@@ -91,6 +92,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
     tier: "STANDARD",
     label: "",
     sublabel: "",
+    distance: "",
     sarPerNight: "",
   })
   const [addHotelError, setAddHotelError] = useState("")
@@ -163,6 +165,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
           tier: addHotelForm.tier,
           label: addHotelForm.label,
           sublabel: addHotelForm.sublabel,
+          distance: addHotelForm.distance,
           sarPerNight: sarValue,
         }),
       })
@@ -173,7 +176,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
       const { hotel, monthlyPrices: mp } = await res.json()
       setHotels((prev) => [...prev, { ...hotel, monthlyPrices: mp }])
       setAddHotelOpen(false)
-      setAddHotelForm({ city: "MAKKAH", tier: "STANDARD", label: "", sublabel: "", sarPerNight: "" })
+      setAddHotelForm({ city: "MAKKAH", tier: "STANDARD", label: "", sublabel: "", distance: "", sarPerNight: "" })
     } catch (err: unknown) {
       setAddHotelError(err instanceof Error ? err.message : "Terjadi kesalahan")
     } finally {
@@ -544,7 +547,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                             {row.status}
                           </td>
                           <td className="py-1 pr-2" style={{ color: "var(--color-text)" }}>
-                            {row.data ? `${row.data.city} ${row.data.tier} - ${row.data.label}` : "—"}
+                            {row.data ? `${row.data.city} ${row.data.tier} - ${row.data.label}${row.data.distance ? ` (${row.data.distance})` : ""}` : "—"}
                           </td>
                           <td className="py-1 pr-2" style={{ color: "var(--color-text-muted)" }}>
                             {row.errors.length > 0 ? row.errors.join("; ") : row.status === "update" ? "Akan memperbarui data existing" : "Siap import"}
@@ -613,7 +616,18 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                   style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
                 />
               </label>
-              <label className="flex flex-col gap-1 col-span-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Jarak</span>
+                <input
+                  type="text"
+                  value={addHotelForm.distance}
+                  onChange={(e) => setAddHotelForm((f) => ({ ...f, distance: e.target.value }))}
+                  placeholder="cth. 250m jalan kaki"
+                  className="rounded border px-2 py-1.5 text-sm bg-transparent"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                />
+              </label>
+              <label className="flex flex-col gap-1">
                 <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>SAR/malam (dasar)</span>
                 <input
                   type="number"
@@ -648,6 +662,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Kota</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Kategori</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Nama</th>
+                <th className={TH} style={{ color: "var(--color-text-muted)" }}>Jarak</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>SAR/Malam (Dasar)</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Harga Bulanan</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Diperbarui</th>
@@ -662,6 +677,23 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                       <td className={TD} style={{ color: "var(--color-text)" }}>{h.city}</td>
                       <td className={TD} style={{ color: "var(--color-text)" }}>{h.tier}</td>
                       <td className={TD} style={{ color: "var(--color-text)" }}>{h.label}</td>
+                      <td className={TD}>
+                        <InlineEditCell
+                          value={h.distance ?? ""}
+                          type="text"
+                          formatter={(v) => String(v).trim() || "-"}
+                          onSave={async (newVal) => {
+                            const { hotel } = await patch("hotel", {
+                              hotelId: h.id,
+                              city: h.city,
+                              tier: h.tier,
+                              sarPerNight: h.sarPerNight,
+                              distance: String(newVal),
+                            })
+                            setHotels((prev) => prev.map((x) => x.id === h.id ? { ...hotel, monthlyPrices: h.monthlyPrices } : x))
+                          }}
+                        />
+                      </td>
                       <td className={TD}>
                         <InlineEditCell
                           value={h.sarPerNight}
@@ -686,7 +718,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                     </tr>
                     {isExpanded && (
                       <tr key={`${h.id}-monthly`} className="border-t" style={{ borderColor: "var(--color-border)", background: "rgba(0,0,0,0.15)" }}>
-                        <td colSpan={6} className="px-3 py-3">
+                        <td colSpan={7} className="px-3 py-3">
                           <div className="text-xs font-semibold mb-2" style={{ color: "var(--color-text-muted)" }}>
                             Harga per Bulan — {h.city} {h.tier}
                           </div>

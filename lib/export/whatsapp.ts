@@ -13,7 +13,7 @@ function rp(amount: number): string {
 
 function hotelFormula(detail: BudgetBreakdown["hotelMadinahDetail"]): string {
   const multiplier = detail.roomMultiplier === 1 ? "" : ` × ${detail.roomMultiplier}`
-  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam${multiplier} ÷ ${detail.roomPax} org/kamar`
+  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam × ${detail.roomCount} kamar${multiplier} ÷ ${detail.totalPax} org (${detail.roomPax} org/kamar)`
 }
 
 export function generateWhatsAppText(

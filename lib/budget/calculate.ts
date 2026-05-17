@@ -59,6 +59,22 @@ function resolveAirlineIdr(config: AirlinePriceConfig, travelMonth?: number): nu
   return config.idr
 }
 
+function calculateHotelIdrPerPerson(
+  sarPerNight: number,
+  nights: number,
+  roomMultiplier: number,
+  roomPax: number,
+  pax: number,
+  sarRate: number
+): { idrPerPerson: number; roomCount: number } {
+  const roomCount = Math.max(1, Math.ceil(pax / roomPax))
+  const totalIdr = sarPerNight * nights * roomMultiplier * roomCount * sarRate
+  return {
+    idrPerPerson: Math.round(totalIdr / pax),
+    roomCount,
+  }
+}
+
 export function calculateBudget(params: EstimateParams, pricing: PricingConfig): BudgetBreakdown {
   const sarRate = pricing.rates.SAR
   const usdRate = pricing.rates.USD
@@ -69,12 +85,25 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   const madinahSarPerNight = resolveHotelSar(madinahHotel, params.travelMonth)
   const makkahSarPerNight = resolveHotelSar(makkahHotel, params.travelMonth)
 
-  const hotelMadinahIdr = Math.round(
-    (madinahSarPerNight * params.nightsMadinah * room.multiplier / room.paxPerRoom) * sarRate
+  const madinahHotelCost = calculateHotelIdrPerPerson(
+    madinahSarPerNight,
+    params.nightsMadinah,
+    room.multiplier,
+    room.paxPerRoom,
+    params.pax,
+    sarRate
   )
-  const hotelMakkahIdr = Math.round(
-    (makkahSarPerNight * params.nightsMakkah * room.multiplier / room.paxPerRoom) * sarRate
+  const makkahHotelCost = calculateHotelIdrPerPerson(
+    makkahSarPerNight,
+    params.nightsMakkah,
+    room.multiplier,
+    room.paxPerRoom,
+    params.pax,
+    sarRate
   )
+
+  const hotelMadinahIdr = madinahHotelCost.idrPerPerson
+  const hotelMakkahIdr = makkahHotelCost.idrPerPerson
 
   const serviceItems: BudgetBreakdown["serviceItems"] = []
   let servicesIdr = 0
@@ -122,6 +151,8 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       sarPerNight: madinahSarPerNight,
       nights: params.nightsMadinah,
       roomPax: room.paxPerRoom,
+      roomCount: madinahHotelCost.roomCount,
+      totalPax: params.pax,
       roomMultiplier: room.multiplier,
     },
     hotelMakkahDetail: {
@@ -131,6 +162,8 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       sarPerNight: makkahSarPerNight,
       nights: params.nightsMakkah,
       roomPax: room.paxPerRoom,
+      roomCount: makkahHotelCost.roomCount,
+      totalPax: params.pax,
       roomMultiplier: room.multiplier,
     },
     servicesIdr,
@@ -186,6 +219,7 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
       sarPerNight: h.sarPerNight,
       label: h.label,
       sublabel: h.sublabel,
+      distance: h.distance,
       monthlyPrices: monthlyByHotelId[h.id] ?? {},
     }
     hotelOptionsMap[h.city].push(config)

@@ -31,11 +31,13 @@ const mockPricing: PricingConfig = {
   },
   hotelOptions: {
     MADINAH: [
-      { id: "kayan-hotel", city: "MADINAH", tier: "STANDARD", sarPerNight: 700, label: "Kayan Hotel", sublabel: "standard Madinah", monthlyPrices: {} },
+      { id: "kayan-hotel", city: "MADINAH", tier: "STANDARD", sarPerNight: 700, label: "Kayan Hotel", sublabel: "standard Madinah", distance: "900m", monthlyPrices: {} },
+      { id: "taiba-front", city: "MADINAH", tier: "STANDARD", sarPerNight: 900, label: "Taiba Front", sublabel: "standard Madinah", distance: "ring 1 dekat Nabawi", monthlyPrices: {} },
       { id: "dallah-taiba", city: "MADINAH", tier: "PREMIUM", sarPerNight: 1600, label: "Dallah Taiba", sublabel: "premium Madinah", monthlyPrices: {} },
     ],
     MAKKAH: [
-      { id: "olayan-ajyad", city: "MAKKAH", tier: "STANDARD", sarPerNight: 950, label: "Olayan Ajyad", sublabel: "standard Ajyad", monthlyPrices: {} },
+      { id: "olayan-ajyad", city: "MAKKAH", tier: "STANDARD", sarPerNight: 950, label: "Olayan Ajyad", sublabel: "standard Ajyad", distance: "1.2 km shuttle", monthlyPrices: {} },
+      { id: "safwa-close", city: "MAKKAH", tier: "STANDARD", sarPerNight: 1350, label: "Safwa Close", sublabel: "standard Makkah", distance: "250m jalan kaki", monthlyPrices: {} },
       { id: "voco-makkah", city: "MAKKAH", tier: "PREMIUM", sarPerNight: 600, label: "Voco", sublabel: "upper Makkah shuttle", monthlyPrices: {} },
     ],
   },
@@ -210,6 +212,28 @@ describe("parseEstimate", () => {
     expect(result.notes).toContain("memakai opsi setara STANDARD")
   })
 
+  it("uses distance ranking for missing requested hotels when input asks for walking distance", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        madinahHotel: "Hotel Dekat Nabawi Tidak Ada",
+        makkahHotel: "Hotel Dekat Haram Tidak Ada",
+      })
+    )
+    const result = await parseEstimate("hotel jalan kaki dekat haram dan dekat nabawi", mockPricing)
+    expect(result.params.madinahHotelId).toBe("taiba-front")
+    expect(result.params.makkahHotelId).toBe("safwa-close")
+    expect(result.notes).toContain("Taiba Front (ring 1 dekat Nabawi)")
+    expect(result.notes).toContain("Safwa Close (250m jalan kaki)")
+  })
+
+  it("selects close options when proximity is requested without hotel names", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    const result = await parseEstimate("umroh 2 pax hotel ring 1 jalan kaki", mockPricing)
+    expect(result.params.madinahHotelId).toBe("taiba-front")
+    expect(result.params.makkahHotelId).toBe("safwa-close")
+  })
+
   it("includes hotel options and IDs in the system prompt", async () => {
     mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
     await parseEstimate("umroh hotel olayan ajyad", mockPricing)
@@ -217,8 +241,10 @@ describe("parseEstimate", () => {
     const system = mockCreate.mock.calls[0][0].system as Array<{ text: string }>
     expect(system[0].text).toContain('"madinahHotelId": string | null')
     expect(system[0].text).toContain('"makkahHotelId": string | null')
+    expect(system[0].text).toContain("Hotel distance is relative")
     expect(system[1].text).toContain("id=olayan-ajyad")
     expect(system[1].text).toContain("id=kayan-hotel")
+    expect(system[1].text).toContain("distance=250m jalan kaki")
   })
 
   it("happy path: vague input → pax defaults to 1, notes non-empty", async () => {

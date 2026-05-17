@@ -4,6 +4,10 @@ Use this prompt with another model or research assistant to refine:
 
 - `docs/templates/hotel-pricing-import-ota-recommended-draft.csv`
 
+Use this file as the canonical import schema reference:
+
+- `docs/templates/hotel-pricing-import-template.csv`
+
 The goal is to produce an admin-reviewable hotel pricing CSV for the Umroh budget estimator. The CSV is not a booking guarantee, not an OTA sync, and not a final supplier quote. It is a researched draft that an admin will preview and confirm before importing.
 
 ## Prompt
@@ -19,7 +23,7 @@ Output requirement:
 Return a complete CSV with the exact same columns and one row per hotel:
 
 ```csv
-city,tier,label,sublabel,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+city,tier,label,sublabel,distance,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
 ```
 
 Do not add columns. Do not remove columns. Do not return markdown tables. Return only CSV content plus a short notes section after the CSV if needed.
@@ -37,6 +41,35 @@ For each hotel row, estimate realistic SAR/night pricing for 2027 by month using
 - Other credible OTA or hotel listing pages
 
 If live prices are unavailable, use nearby comparable hotels in the same city, tier, distance band, and brand class.
+
+Also research the `distance` column for each hotel. This is a human-readable proximity note relative to Masjidil Haram for Makkah hotels and Masjid Nabawi for Madinah hotels. Acceptable values include examples like `pelataran`, `ring 1`, `250m`, `0.7 km`, `5 min walk`, `jalan kaki`, or `shuttle area`. If exact distance is unclear, use a conservative distance band or proximity phrase rather than inventing precision.
+
+### Deep Research Requirements for `distance`
+
+For every row, actively research distance/proximity instead of treating it as optional filler.
+
+Use the best available evidence in this priority order:
+
+1. Official hotel website or official hotel listing.
+2. Google hotel/business profile snippets.
+3. OTA listing details from Agoda, Booking.com, Trip.com, Expedia, or similar.
+4. Repeated traveler-review signals that clearly mention walking distance or shuttle area.
+5. Comparable nearby hotels in the same district/brand class if direct evidence is unavailable.
+
+Distance anchors:
+
+- `MAKKAH`: distance is relative to Masjidil Haram / Kaaba / Haram courtyard.
+- `MADINAH`: distance is relative to Masjid Nabawi / Prophet's Mosque.
+
+Prefer these normalized distance styles:
+
+- `pelataran/ring 1` for courtyard or immediate mosque-front/tower properties.
+- `100m jalan kaki`, `250m jalan kaki`, `0.5 km jalan kaki`, or similar when a numeric distance is credible.
+- `5 min walk` only if the source uses walking-time language and numeric meters are not available.
+- `shuttle area`, `>1 km shuttle`, or `farther/shuttle` for hotels that are not reliable walking-distance options.
+- Blank only when there is no usable evidence and no comparable distance band can be inferred.
+
+Do not put long source explanations in the `distance` cell. Keep evidence and caveats in Source Notes.
 
 ## Calendar Assumptions
 
@@ -103,6 +136,8 @@ Preserve import safety:
 - Keep `city` as `MAKKAH` or `MADINAH`.
 - Keep all price cells positive integers.
 - Keep labels non-empty.
+- Keep `distance` concise and human-readable. Do not claim exact walking access unless there is a credible source or strong OTA/listing signal.
+- Keep `distance` useful for matching prompts like "pelataran", "ring 1", "jalan kaki", "dekat haram", and "dekat nabawi".
 - Avoid duplicate keys after normalization: `city + tier + lower(trimmed label)`.
 - Do not include commas inside any CSV field unless the field is properly quoted.
 - Do not invent exact live availability. If evidence is weak, provide a reasoned estimate and mark it in notes.
@@ -116,6 +151,8 @@ After the CSV, include a short notes section with:
 - Which hotels were estimated from comparable properties.
 - Any tier changes made and why.
 - Any hotel names that may need normalization or manual confirmation.
+- Which distance values are direct evidence versus comparable estimates.
+- Which hotels still need manual distance confirmation before admin import.
 
 Keep source notes concise. Do not paste long excerpts from websites.
 
@@ -123,8 +160,9 @@ Keep source notes concise. Do not paste long excerpts from websites.
 
 Before returning the CSV, verify:
 
-- Every row has exactly 17 columns.
+- Every row has exactly 18 columns.
 - Every monthly price is a positive integer.
+- Every row has a concise `distance` value, or a clear blank if distance could not be researched.
 - January, February, March, April, and December reflect 2027 seasonality.
 - There are no duplicate normalized keys.
 - The output can be imported by the existing admin CSV preview flow.

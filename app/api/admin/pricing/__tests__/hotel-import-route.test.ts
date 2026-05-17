@@ -197,7 +197,7 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
     const { POST } = await import("../hotel-import/confirm/route")
 
     const res = await POST(
-      request("city,tier,label,sublabel,base_sar_per_night\nMAKKAH,STANDARD,Safwa Tower 3,Near Haram,1400\n")
+      request("city,tier,label,sublabel,distance,base_sar_per_night\nMAKKAH,STANDARD,Safwa Tower 3,Near Haram,250m jalan kaki,1400\n")
     )
 
     expect(res.status).toBe(200)
@@ -212,6 +212,11 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
       },
     ])
     expect(spies.update).toHaveBeenCalledWith(hotelPrices)
+    expect(spies.updateSet).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distance: "250m jalan kaki",
+      })
+    )
     expect(spies.hotelValues).not.toHaveBeenCalled()
     expect(spies.deleteFn).toHaveBeenCalledWith(hotelMonthlyPrices)
     expect(spies.monthlyValues.mock.calls[0][0]).toHaveLength(12)
@@ -224,7 +229,7 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
     const { POST } = await import("../hotel-import/confirm/route")
 
     const res = await POST(
-      request("city,tier,label,sublabel,base_sar_per_night\nMADINAH,PREMIUM,Hotel Royal,Near Nabawi,3500\n")
+      request("city,tier,label,sublabel,distance,base_sar_per_night\nMADINAH,PREMIUM,Hotel Royal,Near Nabawi,ring 1 dekat Nabawi,3500\n")
     )
 
     expect((res.body as any).applied).toBe(1)
@@ -242,6 +247,7 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
         city: "MADINAH",
         tier: "PREMIUM",
         label: "Hotel Royal",
+        distance: "ring 1 dekat Nabawi",
         importKey: "MADINAH:PREMIUM:hotel royal",
       })
     )

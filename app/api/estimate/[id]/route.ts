@@ -6,6 +6,7 @@ import { fetchPricingConfig, calculateBudget } from "@/lib/budget/calculate"
 import { validateEstimateHotelIds, validateEstimateParamsShape } from "@/lib/estimate/params"
 import { eq } from "drizzle-orm"
 import type { EstimateParams } from "@/types"
+import { errorMessage, logActivity } from "@/lib/logging/activity-log"
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -59,11 +60,49 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
 
   if (body.params !== undefined) {
     if (!validateEstimateParamsShape(body.params)) {
+      await logActivity(db, {
+        userId: session.user.id,
+        flow: "estimate",
+        event: "estimate_update",
+        status: "ERROR",
+        entityType: "estimate",
+        entityId: id,
+        input: { params: body.params, title: body.title },
+        error: "params is invalid",
+        metadata: { stage: "validation" },
+      })
       return NextResponse.json({ error: "params is invalid" }, { status: 400 })
     }
     const newParams = body.params as EstimateParams
-    const pricing = await fetchPricingConfig(db)
+    let pricing
+    try {
+      pricing = await fetchPricingConfig(db)
+    } catch (err) {
+      await logActivity(db, {
+        userId: session.user.id,
+        flow: "estimate",
+        event: "estimate_update",
+        status: "ERROR",
+        entityType: "estimate",
+        entityId: id,
+        input: { params: newParams, title: body.title },
+        error: errorMessage(err),
+        metadata: { stage: "pricing_config" },
+      })
+      return NextResponse.json({ error: "Failed to load pricing config" }, { status: 503 })
+    }
     if (!validateEstimateHotelIds(newParams, pricing)) {
+      await logActivity(db, {
+        userId: session.user.id,
+        flow: "estimate",
+        event: "estimate_update",
+        status: "ERROR",
+        entityType: "estimate",
+        entityId: id,
+        input: { params: newParams, title: body.title },
+        error: "hotel selection is invalid",
+        metadata: { stage: "validation" },
+      })
       return NextResponse.json({ error: "hotel selection is invalid" }, { status: 400 })
     }
     const breakdown = calculateBudget(newParams, pricing)
@@ -72,11 +111,43 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     updates.totalIdrGrp = breakdown.totalIdrGrp
   }
 
-  const [updated] = await db
-    .update(estimates)
-    .set(updates)
-    .where(eq(estimates.id, id))
-    .returning()
+  let updated
+  try {
+    ;[updated] = await db
+      .update(estimates)
+      .set(updates)
+      .where(eq(estimates.id, id))
+      .returning()
+  } catch (err) {
+    await logActivity(db, {
+      userId: session.user.id,
+      flow: "estimate",
+      event: "estimate_update",
+      status: "ERROR",
+      entityType: "estimate",
+      entityId: id,
+      input: { params: body.params, title: body.title },
+      error: errorMessage(err),
+      metadata: { stage: "database_update" },
+    })
+    return NextResponse.json({ error: "Failed to update estimate" }, { status: 500 })
+  }
+
+  await logActivity(db, {
+    userId: session.user.id,
+    flow: "estimate",
+    event: "estimate_update",
+    status: "SUCCESS",
+    entityType: "estimate",
+    entityId: id,
+    input: { params: body.params, title: body.title },
+    output: {
+      estimateId: updated.id,
+      totalIdrPax: updated.totalIdrPax,
+      totalIdrGrp: updated.totalIdrGrp,
+    },
+    metadata: { source: "estimate_form" },
+  })
 
   return NextResponse.json({ estimate: updated })
 }

@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk"
-import type { City, EstimateParams, HotelOptionConfig, HotelTier, PricingConfig } from "@/types"
+import type { City, EstimateParams, HotelOptionConfig, HotelPriceConfig, HotelTier, PricingConfig } from "@/types"
 import { buildSystemPrompt } from "./prompt"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
@@ -32,11 +32,64 @@ function hotelMatchesRequest(hotel: HotelOptionConfig, requested: string): boole
   return haystack.includes(needle) || needle.includes(normalizeHotelLabel(hotel.label))
 }
 
+function hasProximityIntent(input: string, city: City): boolean {
+  const normalized = normalizeHotelLabel(input)
+  const general = /\b(pelataran|ring 1|jalan kaki|dekat|pinggir masjid|walking distance|walking|walk)\b/i.test(input)
+  const makkah = /\b(haram|masjidil haram|near haram)\b/i.test(input)
+  const madinah = /\b(nabawi|masjid nabawi|near nabawi)\b/i.test(input)
+
+  if (makkah || madinah) return city === "MAKKAH" ? makkah : madinah
+  return general || normalized.includes("ring 1")
+}
+
+function extractDistanceMeters(value: string): number | undefined {
+  const normalized = value.toLowerCase().replace(/,/g, ".")
+  const km = normalized.match(/(\d+(?:\.\d+)?)\s*(?:km|kilometer)\b/)
+  if (km) return Math.round(Number(km[1]) * 1000)
+
+  const meter = normalized.match(/(\d+(?:\.\d+)?)\s*(?:m|meter|metre)\b/)
+  if (meter) return Math.round(Number(meter[1]))
+
+  const minuteWalk = normalized.match(/(\d+(?:\.\d+)?)\s*(?:min|menit)/)
+  if (minuteWalk) return Math.round(Number(minuteWalk[1]) * 80)
+}
+
+function distanceScore(hotel: HotelOptionConfig): number {
+  const text = `${hotel.distance ?? ""} ${hotel.sublabel} ${hotel.label}`.toLowerCase()
+  const meters = extractDistanceMeters(text)
+  let score = meters ?? 3_000
+
+  if (/\b(pelataran|ring 1|pinggir)\b/.test(text)) score = Math.min(score, 80)
+  if (/\b(jalan kaki|walking|walk|dekat|near)\b/.test(text)) score = Math.min(score, 500)
+  if (/\b(shuttle|bus|bis|thakher|aziziyah)\b/.test(text)) score = Math.max(score, 2_500)
+
+  return score
+}
+
+function rankComparableHotels(
+  options: HotelOptionConfig[],
+  fallback: HotelPriceConfig,
+  useDistance: boolean
+): HotelOptionConfig[] {
+  return options.slice().sort((a, b) => {
+    if (useDistance) {
+      const distanceDelta = distanceScore(a) - distanceScore(b)
+      if (distanceDelta !== 0) return distanceDelta
+    }
+
+    const priceDelta = Math.abs(a.sarPerNight - fallback.sarPerNight) - Math.abs(b.sarPerNight - fallback.sarPerNight)
+    if (priceDelta !== 0) return priceDelta
+
+    return 0
+  })
+}
+
 function findComparableHotel(
   pricing: PricingConfig,
   city: City,
   tier: HotelTier,
-  requestedLabel?: string
+  requestedLabel?: string,
+  sourceInput = ""
 ): HotelOptionConfig | undefined {
   const options = pricing.hotelOptions?.[city] ?? []
   if (requestedLabel) {
@@ -44,13 +97,13 @@ function findComparableHotel(
     if (exact) return exact
   }
 
-  const sameTier = options.filter((hotel) => hotel.tier === tier)
-  if (sameTier.length > 0) return sameTier[0]
-
+  const useDistance = hasProximityIntent(`${sourceInput} ${requestedLabel ?? ""}`, city)
   const fallback = pricing.hotels[city][tier]
-  return options
-    .slice()
-    .sort((a, b) => Math.abs(a.sarPerNight - fallback.sarPerNight) - Math.abs(b.sarPerNight - fallback.sarPerNight))[0]
+  const sameTier = options.filter((hotel) => hotel.tier === tier)
+  if (sameTier.length > 0 && !useDistance) return sameTier[0]
+  if (sameTier.length > 0) return rankComparableHotels(sameTier, fallback, useDistance)[0]
+
+  return rankComparableHotels(options, fallback, useDistance)[0]
 }
 
 function getRequestedHotelLabel(raw: Record<string, unknown>, city: City): string | undefined {
@@ -64,7 +117,8 @@ function resolveHotelId(
   raw: Record<string, unknown>,
   pricing: PricingConfig,
   city: City,
-  tier: HotelTier
+  tier: HotelTier,
+  sourceInput: string
 ): { id?: string; note?: string } {
   const idField = CITY_HOTEL_FIELDS[city].id
   const requestedId = raw[idField]
@@ -77,7 +131,7 @@ function resolveHotelId(
   }
 
   if (requestedLabel || (typeof requestedId === "string" && requestedId.trim().length > 0)) {
-    const comparable = findComparableHotel(pricing, city, tier, requestedLabel)
+    const comparable = findComparableHotel(pricing, city, tier, requestedLabel, sourceInput)
     if (!comparable) return {}
 
     if (requestedLabel && hotelMatchesRequest(comparable, requestedLabel)) {
@@ -88,14 +142,19 @@ function resolveHotelId(
     const requested = requestedLabel ?? String(requestedId)
     return {
       id: comparable.id,
-      note: `Hotel ${requested} ${cityLabel} tidak ada di daftar harga; memakai opsi setara ${comparable.tier}: ${comparable.label}.`,
+      note: `Hotel ${requested} ${cityLabel} tidak ada di daftar harga; memakai opsi setara ${comparable.tier}: ${comparable.label}${comparable.distance ? ` (${comparable.distance})` : ""}.`,
     }
+  }
+
+  if (hasProximityIntent(sourceInput, city)) {
+    const comparable = findComparableHotel(pricing, city, tier, undefined, sourceInput)
+    if (comparable) return { id: comparable.id }
   }
 
   return {}
 }
 
-function validateParams(raw: Record<string, unknown>, pricing: PricingConfig): { params: EstimateParams; extraNotes: string[] } {
+function validateParams(raw: Record<string, unknown>, pricing: PricingConfig, sourceInput: string): { params: EstimateParams; extraNotes: string[] } {
   const missing: string[] = []
 
   if (typeof raw.nightsMadinah !== "number") missing.push("nightsMadinah")
@@ -137,8 +196,8 @@ function validateParams(raw: Record<string, unknown>, pricing: PricingConfig): {
   }
 
   const extraNotes: string[] = []
-  const madinahHotel = resolveHotelId(raw, pricing, "MADINAH", hotelTier)
-  const makkahHotel = resolveHotelId(raw, pricing, "MAKKAH", hotelTier)
+  const madinahHotel = resolveHotelId(raw, pricing, "MADINAH", hotelTier, sourceInput)
+  const makkahHotel = resolveHotelId(raw, pricing, "MAKKAH", hotelTier, sourceInput)
   if (madinahHotel.id) params.madinahHotelId = madinahHotel.id
   if (makkahHotel.id) params.makkahHotelId = makkahHotel.id
   if (madinahHotel.note) extraNotes.push(madinahHotel.note)
@@ -219,7 +278,7 @@ export async function parseEstimate(
     throw new ParseError(`Claude returned non-JSON response: ${raw.slice(0, 200)}`)
   }
 
-  const { params, extraNotes } = validateParams(parsed, pricing)
+  const { params, extraNotes } = validateParams(parsed, pricing, input)
   const notesList = [typeof parsed.notes === "string" ? parsed.notes : "", ...extraNotes]
   const correctedParams = applyDeterministicCorrections(input, params, notesList)
   const notes = notesList

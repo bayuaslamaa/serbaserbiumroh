@@ -53,7 +53,7 @@ const mockPricing: PricingConfig = {
 const baseParams: EstimateParams = {
   nightsMadinah: 4,
   nightsMakkah: 9,
-  pax: 1,
+  pax: 4,
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "STANDARD",
@@ -84,9 +84,28 @@ describe("calculateBudget", () => {
 
     it("TRIPLE room (paxPerRoom=3, mult=1.25), STANDARD Madinah 4 nights", () => {
       // 650 × 4 × 1.25 / 3 = 1083.33... SAR → Math.round(1083.33 × 4700) = Math.round(5,091,666.66) = 5,091,667
-      const params = { ...baseParams, roomType: "TRIPLE" as const }
+      const params = { ...baseParams, pax: 3, roomType: "TRIPLE" as const }
       const result = calculateBudget(params, mockPricing)
       expect(result.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1.25 / 3) * 4700))
+    })
+
+    it("rounds hotel room count up from pax and divides total room cost per person", () => {
+      const result = calculateBudget({ ...baseParams, pax: 5, roomType: "QUAD" }, mockPricing)
+
+      expect(result.hotelMadinahDetail.roomCount).toBe(2)
+      expect(result.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1.0 * 2 * 4700) / 5))
+      expect(result.hotelMakkahDetail.roomCount).toBe(2)
+      expect(result.hotelMakkahIdr).toBe(Math.round((1300 * 9 * 1.0 * 2 * 4700) / 5))
+    })
+
+    it("keeps per-person hotel cost stable when pax exactly fills additional rooms", () => {
+      const fourPax = calculateBudget({ ...baseParams, pax: 4, roomType: "QUAD" }, mockPricing)
+      const eightPax = calculateBudget({ ...baseParams, pax: 8, roomType: "QUAD" }, mockPricing)
+
+      expect(fourPax.hotelMadinahDetail.roomCount).toBe(1)
+      expect(eightPax.hotelMadinahDetail.roomCount).toBe(2)
+      expect(eightPax.hotelMadinahIdr).toBe(fourPax.hotelMadinahIdr)
+      expect(eightPax.hotelMakkahIdr).toBe(fourPax.hotelMakkahIdr)
     })
 
     it("selected city hotel IDs override the shared tier fallback", () => {
@@ -128,7 +147,7 @@ describe("calculateBudget", () => {
     })
 
     it("TRANSPORT (SAR 325, rate 4700) → 1,527,500 IDR for pax=1", () => {
-      const result = calculateBudget({ ...baseParams, services: ["TRANSPORT"] }, mockPricing)
+      const result = calculateBudget({ ...baseParams, pax: 1, services: ["TRANSPORT"] }, mockPricing)
       expect(result.servicesIdr).toBe(1_527_500) // Math.round(325 * 4700)
       expect(result.serviceItems[0].amountDisplay).toBe("SAR 325")
       expect(result.serviceItems[0].divideByPax).toBe(true)

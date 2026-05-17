@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { beforeEach, vi } from "vitest"
 import { BudgetBreakdown } from "../BudgetBreakdown"
 import type { BudgetBreakdown as Breakdown } from "@/types"
 
@@ -11,6 +12,8 @@ const breakdown: Breakdown = {
     sarPerNight: 650,
     nights: 4,
     roomPax: 4,
+    roomCount: 1,
+    totalPax: 4,
     roomMultiplier: 1,
   },
   hotelMakkahDetail: {
@@ -19,6 +22,8 @@ const breakdown: Breakdown = {
     sarPerNight: 1300,
     nights: 9,
     roomPax: 4,
+    roomCount: 1,
+    totalPax: 4,
     roomMultiplier: 1,
   },
   servicesIdr: 4_582_000,
@@ -35,12 +40,21 @@ const breakdown: Breakdown = {
 }
 
 describe("BudgetBreakdown", () => {
+  beforeEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    })
+  })
+
   it("renders hotel lines", () => {
     render(<BudgetBreakdown breakdown={breakdown} pax={1} />)
     expect(screen.getByText("Hotel Madinah - Standard Madinah")).toBeDefined()
     expect(screen.getByText("Hotel Makkah - Safwa Tower 3")).toBeDefined()
-    expect(screen.getByText("SAR 650 × 4 malam ÷ 4 orang/kamar")).toBeDefined()
-    expect(screen.getByText("SAR 1.300 × 9 malam ÷ 4 orang/kamar")).toBeDefined()
+    expect(screen.getByText("SAR 650 × 4 malam × 1 kamar ÷ 4 orang (4 orang/kamar)")).toBeDefined()
+    expect(screen.getByText("SAR 1.300 × 9 malam × 1 kamar ÷ 4 orang (4 orang/kamar)")).toBeDefined()
   })
 
   it("renders service items with display amounts", () => {
@@ -72,5 +86,32 @@ describe("BudgetBreakdown", () => {
     render(<BudgetBreakdown breakdown={breakdown} pax={1} />)
     expect(screen.getByText(/SAR 1 = Rp 4\.700/)).toBeDefined()
     expect(screen.getByText(/USD 1 = Rp 17\.300/)).toBeDefined()
+  })
+
+  it("copies the visible estimate summary", async () => {
+    const groupBreakdown = {
+      ...breakdown,
+      hotelMadinahDetail: { ...breakdown.hotelMadinahDetail, roomCount: 2, totalPax: 5 },
+      hotelMakkahDetail: { ...breakdown.hotelMakkahDetail, roomCount: 2, totalPax: 5 },
+      totalIdrGrp: breakdown.totalIdrPax * 5,
+    }
+    render(<BudgetBreakdown breakdown={groupBreakdown} pax={5} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Salin rincian estimasi" }))
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining("Estimasi Biaya Umroh")
+      )
+    })
+    const copied = (navigator.clipboard.writeText as any).mock.calls[0][0] as string
+    expect(copied).toContain("Rincian per orang:")
+    expect(copied).toContain("- Hotel Madinah - Standard Madinah: Rp 3.055.000")
+    expect(copied).toContain("  - Hitungan: SAR 650 × 4 malam × 2 kamar ÷ 5 orang (4 orang/kamar)")
+    expect(copied).toContain("- Visa Umroh Reguler ($165): Rp 2.854.500")
+    expect(copied).toContain("- Transportasi (SAR 325): Rp 1.527.500 / orang (biaya bersama dibagi 5 orang)")
+    expect(copied).toContain("- Total 5 orang: Rp 179.422.500")
+    expect(copied).toContain("- Harga sewaktu-waktu dapat berubah.")
+    expect(await screen.findByRole("button", { name: "Salin rincian estimasi" })).toHaveTextContent("Tersalin")
   })
 })

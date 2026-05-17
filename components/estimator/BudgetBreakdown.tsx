@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import type { BudgetBreakdown as Breakdown } from "@/types"
 
 function formatIdr(amount: number): string {
@@ -11,14 +12,42 @@ interface BudgetBreakdownProps {
   pax: number
 }
 
+type BreakdownRow = { label: string; value: string; shared?: boolean; sublabel?: string }
+
 function hotelFormula(detail: Breakdown["hotelMadinahDetail"]): string {
   const multiplier =
     detail.roomMultiplier === 1 ? "" : ` × ${detail.roomMultiplier}`
-  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam${multiplier} ÷ ${detail.roomPax} orang/kamar`
+  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam × ${detail.roomCount} kamar${multiplier} ÷ ${detail.totalPax} orang (${detail.roomPax} orang/kamar)`
+}
+
+function buildCopyText(rows: BreakdownRow[], breakdown: Breakdown, pax: number): string {
+  const lines = ["Estimasi Biaya Umroh", "", "Rincian per orang:"]
+
+  rows.forEach((row) => {
+    const shared = row.shared ? ` / orang (biaya bersama dibagi ${pax} orang)` : ""
+    lines.push(`- ${row.label}: ${row.value}${shared}`)
+    if (row.sublabel) lines.push(`  - Hitungan: ${row.sublabel}`)
+    lines.push("")
+  })
+
+  lines.push("Total:")
+  lines.push(`- Per orang: ${formatIdr(breakdown.totalIdrPax)}`)
+  if (pax > 1) {
+    lines.push(`- Total ${pax} orang: ${formatIdr(breakdown.totalIdrGrp)}`)
+  }
+
+  lines.push("")
+  lines.push("Catatan:")
+  lines.push(`- Kurs: SAR 1 = Rp ${breakdown.sarRate.toLocaleString("id-ID")} | USD 1 = Rp ${breakdown.usdRate.toLocaleString("id-ID")}`)
+  lines.push("- Estimasi belum termasuk biaya tak terduga.")
+  lines.push("- Harga sewaktu-waktu dapat berubah.")
+
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim()
 }
 
 export function BudgetBreakdown({ breakdown, pax }: BudgetBreakdownProps) {
-  const rows: { label: string; value: string; shared?: boolean; sublabel?: string }[] = [
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle")
+  const rows: BreakdownRow[] = [
     {
       label: `Hotel Madinah - ${breakdown.hotelMadinahDetail.label}`,
       value: formatIdr(breakdown.hotelMadinahIdr),
@@ -37,17 +66,41 @@ export function BudgetBreakdown({ breakdown, pax }: BudgetBreakdownProps) {
     { label: "Penerbangan", value: formatIdr(breakdown.flightIdr) },
   ]
 
+  async function copyEstimate() {
+    try {
+      await navigator.clipboard.writeText(buildCopyText(rows, breakdown, pax))
+      setCopyStatus("copied")
+      window.setTimeout(() => setCopyStatus("idle"), 1800)
+    } catch {
+      setCopyStatus("error")
+    }
+  }
+
   return (
     <div
       className="rounded-xl border p-5 flex flex-col gap-4"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
-      <h2
-        className="text-lg font-bold"
-        style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
-      >
-        Rincian Biaya
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          className="text-lg font-bold"
+          style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
+        >
+          Rincian Biaya
+        </h2>
+        <button
+          type="button"
+          onClick={copyEstimate}
+          className="text-xs px-3 py-1.5 rounded border transition-colors"
+          style={{
+            borderColor: copyStatus === "copied" ? "var(--color-gold)" : "var(--color-border)",
+            color: copyStatus === "error" ? "#ef4444" : copyStatus === "copied" ? "var(--color-gold)" : "var(--color-text-muted)",
+          }}
+          aria-label="Salin rincian estimasi"
+        >
+          {copyStatus === "copied" ? "Tersalin" : copyStatus === "error" ? "Gagal" : "Salin"}
+        </button>
+      </div>
 
       <div className="flex flex-col gap-2">
         {rows.map((row) => (

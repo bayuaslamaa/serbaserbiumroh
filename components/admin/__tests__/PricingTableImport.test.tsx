@@ -18,6 +18,7 @@ const hotel = {
   sarPerNight: 1300,
   label: "Safwa Tower 3",
   sublabel: "Near Haram",
+  distance: "250m jalan kaki",
   updatedAt: baseDate,
   monthlyPrices: Array.from({ length: 12 }, (_, i) => ({
     id: `mp-${i + 1}`,
@@ -150,7 +151,7 @@ describe("PricingTable hotel CSV import", () => {
               rowNumber: 2,
               status: "create",
               errors: [],
-              data: { city: "MAKKAH", tier: "STANDARD", label: "Safwa Tower 3" },
+              data: { city: "MAKKAH", tier: "STANDARD", label: "Safwa Tower 3", distance: "250m jalan kaki" },
             },
             {
               rowNumber: 3,
@@ -173,8 +174,19 @@ describe("PricingTable hotel CSV import", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Invalid")).toBeInTheDocument()
+      expect(screen.getByText("MAKKAH STANDARD - Safwa Tower 3 (250m jalan kaki)")).toBeInTheDocument()
       expect(screen.getByText("city must be MAKKAH or MADINAH")).toBeInTheDocument()
     })
+  })
+
+  it("shows hotel distance in the table and manual add form", () => {
+    render(<PricingTable {...props} />)
+
+    expect(screen.getByText("Jarak")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "250m jalan kaki" })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Tambah Hotel" }))
+    expect(screen.getByPlaceholderText("cth. 250m jalan kaki")).toBeInTheDocument()
   })
 
   it("keeps confirm disabled until preview returns writable rows without conflicts", async () => {

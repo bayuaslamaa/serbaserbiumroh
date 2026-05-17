@@ -59,6 +59,7 @@ export const hotelPrices = pgTable("hotel_prices", {
   sarPerNight: integer("sar_per_night").notNull(),
   label: text("label").notNull(), // e.g. "Safwa Tower 3"
   sublabel: text("sublabel").notNull(), // e.g. "3★, dekat Haram"
+  distance: text("distance"), // e.g. "250m", "ring 1", "jalan kaki"
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
@@ -204,6 +205,24 @@ export const estimates = pgTable("estimates", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
+// --- Activity Logs ---
+export const activityLogs = pgTable("activity_logs", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+  flow: text("flow").notNull(), // e.g. "estimate"
+  event: text("event").notNull(), // e.g. "ai_parse", "estimate_save"
+  status: text("status").notNull(), // "SUCCESS" | "ERROR" | future statuses
+  entityType: text("entity_type"),
+  entityId: text("entity_id"),
+  input: jsonb("input"),
+  output: jsonb("output"),
+  error: text("error"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+})
+
 // --- Pilgrim Stories ---
 export const pilgrimStories = pgTable("pilgrim_stories", {
   id: text("id")
@@ -310,6 +329,8 @@ export type RoomMultiplier = typeof roomMultipliers.$inferSelect
 export type User = typeof users.$inferSelect
 export type Estimate = typeof estimates.$inferSelect
 export type NewEstimate = typeof estimates.$inferInsert
+export type ActivityLog = typeof activityLogs.$inferSelect
+export type NewActivityLog = typeof activityLogs.$inferInsert
 export type PilgrimStory = typeof pilgrimStories.$inferSelect
 export type NewPilgrimStory = typeof pilgrimStories.$inferInsert
 export type StoryItineraryDay = typeof storyItineraryDays.$inferSelect

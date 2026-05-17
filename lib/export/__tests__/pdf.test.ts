@@ -33,6 +33,8 @@ const breakdown: BudgetBreakdown = {
     sarPerNight: 650,
     nights: 4,
     roomPax: 4,
+    roomCount: 1,
+    totalPax: 4,
     roomMultiplier: 1,
   },
   hotelMakkahDetail: {
@@ -41,6 +43,8 @@ const breakdown: BudgetBreakdown = {
     sarPerNight: 1300,
     nights: 9,
     roomPax: 4,
+    roomCount: 1,
+    totalPax: 4,
     roomMultiplier: 1,
   },
   servicesIdr: 4_382_000,

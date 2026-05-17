@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { fetchPricingConfig } from "@/lib/budget/calculate"
 import { parseEstimate, ParseError } from "@/lib/ai/parse"
+import { errorMessage, logActivity } from "@/lib/logging/activity-log"
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -29,17 +30,53 @@ export async function POST(req: NextRequest) {
   try {
     pricing = await fetchPricingConfig(db)
   } catch (err) {
+    await logActivity(db, {
+      userId: session.user.id,
+      flow: "estimate",
+      event: "ai_parse",
+      status: "ERROR",
+      input: { rawInput: input },
+      error: errorMessage(err),
+      metadata: { stage: "pricing_config" },
+    })
     return NextResponse.json({ error: "Failed to load pricing config" }, { status: 503 })
   }
 
   try {
     const { params, notes } = await parseEstimate(input, pricing)
+    await logActivity(db, {
+      userId: session.user.id,
+      flow: "estimate",
+      event: "ai_parse",
+      status: "SUCCESS",
+      input: { rawInput: input },
+      output: { params, notes },
+      metadata: { source: "estimate_form" },
+    })
     return NextResponse.json({ params, notes })
   } catch (err) {
     if (err instanceof ParseError) {
+      await logActivity(db, {
+        userId: session.user.id,
+        flow: "estimate",
+        event: "ai_parse",
+        status: "ERROR",
+        input: { rawInput: input },
+        error: err.message,
+        metadata: { stage: "parse_validation" },
+      })
       return NextResponse.json({ error: err.message }, { status: 422 })
     }
     console.error("[parse] Anthropic error:", err instanceof Error ? err.message : err)
+    await logActivity(db, {
+      userId: session.user.id,
+      flow: "estimate",
+      event: "ai_parse",
+      status: "ERROR",
+      input: { rawInput: input },
+      error: errorMessage(err),
+      metadata: { stage: "ai_service" },
+    })
     return NextResponse.json({ error: "AI service unavailable" }, { status: 503 })
   }
 }

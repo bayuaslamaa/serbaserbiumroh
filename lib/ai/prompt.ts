@@ -20,6 +20,8 @@ JSON schema:
 
 Extraction rules:
 - "pelataran"/"dekat masjid"/"pinggir masjid" → hotelTier: "PELATARAN"
+- Hotel distance is relative to Masjidil Haram for Makkah options and Masjid Nabawi for Madinah options.
+- If the user asks for "pelataran", "ring 1", "jalan kaki", "dekat", "near haram", "near nabawi", or "walking distance", prefer close hotel options from Current pricing reference when available.
 - If the user requests a specific Makkah hotel and it appears in Current pricing reference, set makkahHotelId to that option id.
 - If the user requests a specific Madinah hotel and it appears in Current pricing reference, set madinahHotelId to that option id.
 - If a requested hotel is not listed, choose a same-city comparable hotel by same tier/level from Current pricing reference and explain the substitution in notes.
@@ -57,11 +59,13 @@ function buildDynamicPricingBlock(pricing: PricingConfig): string {
   if (pricing.hotelOptions) {
     lines.push("Madinah hotel options:")
     for (const h of pricing.hotelOptions.MADINAH ?? []) {
-      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}, note=${h.sublabel}`)
+      const distance = h.distance ? `, distance=${h.distance}` : ""
+      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}${distance}, note=${h.sublabel}`)
     }
     lines.push("Makkah hotel options:")
     for (const h of pricing.hotelOptions.MAKKAH ?? []) {
-      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}, note=${h.sublabel}`)
+      const distance = h.distance ? `, distance=${h.distance}` : ""
+      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}${distance}, note=${h.sublabel}`)
     }
   }
   lines.push("Airlines (IDR/pax):")

@@ -58,6 +58,7 @@ export interface HotelPriceConfig {
   sarPerNight: number
   label: string
   sublabel: string
+  distance?: string | null
   monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override
 }
 
@@ -74,6 +75,8 @@ export interface HotelCostDetail {
   sarPerNight: number
   nights: number
   roomPax: number
+  roomCount: number
+  totalPax: number
   roomMultiplier: number
 }
 
