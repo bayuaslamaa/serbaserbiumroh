@@ -5,6 +5,7 @@ import { desc } from "drizzle-orm"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { StoriesTableActions } from "./StoriesTableActions"
+import { StoryImportPanel } from "@/components/admin/stories/StoryImportPanel"
 
 export const metadata = { title: "Admin — Cerita Jamaah" }
 
@@ -50,6 +51,8 @@ export default async function AdminStoriesPage() {
           + Buat Cerita
         </Link>
       </div>
+
+      <StoryImportPanel />
 
       <div
         className="rounded-lg border overflow-x-auto"

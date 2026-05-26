@@ -14,6 +14,9 @@ interface BudgetBreakdownProps {
 
 type BreakdownRow = { label: string; value: string; shared?: boolean; sublabel?: string }
 
+const SOFT_SELLING_NOTE =
+  "Jika Kakak benar-benar serius transaksi ke kami, bisa kami hitungkan estimasi yang lebih detail dan akurat. WA: 085172117757 / 085161134844"
+
 function hotelFormula(detail: Breakdown["hotelMadinahDetail"]): string {
   const multiplier =
     detail.roomMultiplier === 1 ? "" : ` × ${detail.roomMultiplier}`
@@ -41,6 +44,7 @@ function buildCopyText(rows: BreakdownRow[], breakdown: Breakdown, pax: number):
   lines.push(`- Kurs: SAR 1 = Rp ${breakdown.sarRate.toLocaleString("id-ID")} | USD 1 = Rp ${breakdown.usdRate.toLocaleString("id-ID")}`)
   lines.push("- Estimasi belum termasuk biaya tak terduga.")
   lines.push("- Harga sewaktu-waktu dapat berubah.")
+  lines.push(`- ${SOFT_SELLING_NOTE}`)
 
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim()
 }
@@ -168,6 +172,17 @@ export function BudgetBreakdown({ breakdown, pax }: BudgetBreakdownProps) {
         <br />
         *Estimasi belum termasuk biaya tak terduga. Harga sewaktu-waktu dapat berubah.
       </div>
+
+      <p
+        className="rounded-lg border px-3 py-2 text-xs leading-relaxed"
+        style={{
+          borderColor: "rgba(201,168,76,0.28)",
+          background: "rgba(201,168,76,0.08)",
+          color: "var(--color-text-muted)",
+        }}
+      >
+        {SOFT_SELLING_NOTE}
+      </p>
     </div>
   )
 }

@@ -88,6 +88,12 @@ describe("BudgetBreakdown", () => {
     expect(screen.getByText(/USD 1 = Rp 17\.300/)).toBeDefined()
   })
 
+  it("renders the soft selling contact note", () => {
+    render(<BudgetBreakdown breakdown={breakdown} pax={1} />)
+    expect(screen.getByText(/Jika Kakak benar-benar serius transaksi ke kami/)).toBeDefined()
+    expect(screen.getByText(/085172117757 \/ 085161134844/)).toBeDefined()
+  })
+
   it("copies the visible estimate summary", async () => {
     const groupBreakdown = {
       ...breakdown,
@@ -112,6 +118,8 @@ describe("BudgetBreakdown", () => {
     expect(copied).toContain("- Transportasi (SAR 325): Rp 1.527.500 / orang (biaya bersama dibagi 5 orang)")
     expect(copied).toContain("- Total 5 orang: Rp 179.422.500")
     expect(copied).toContain("- Harga sewaktu-waktu dapat berubah.")
+    expect(copied).toContain("- Jika Kakak benar-benar serius transaksi ke kami")
+    expect(copied).toContain("WA: 085172117757 / 085161134844")
     expect(await screen.findByRole("button", { name: "Salin rincian estimasi" })).toHaveTextContent("Tersalin")
   })
 })
