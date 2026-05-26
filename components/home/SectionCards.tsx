@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Hotel, Calculator } from 'lucide-react'
 
 const sections = [
@@ -26,6 +27,8 @@ const sections = [
     description: 'Hitung estimasi biaya umroh mandiri dengan AI berbasis data riil',
     href: '/estimate/new',
     icon: Calculator,
+    disabled: true,
+    badge: 'Coming Soon',
   },
 ]
 
@@ -38,15 +41,33 @@ export function SectionCards() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {sections.map((section) => {
           const Icon = section.icon
-          return (
-            <Link key={section.href} href={section.href}>
-              <Card
-                className="h-full hover:border-yellow-600 transition-colors cursor-pointer"
-                style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)' }}
-              >
+          
+          const CardContentComp = (
+            <Card
+              className={`h-full transition-colors flex flex-col justify-between ${
+                section.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-yellow-600 cursor-pointer'
+              }`}
+              style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)' }}
+            >
+              <div>
                 <CardHeader className="pb-2">
-                  <Icon className="w-6 h-6 mb-2" style={{ color: 'var(--color-gold)' }} />
-                  <CardTitle className="text-sm" style={{ color: 'var(--color-gold)' }}>
+                  <div className="flex items-center justify-between mb-2">
+                    <Icon className="w-6 h-6" style={{ color: 'var(--color-gold)' }} />
+                    {section.badge && (
+                      <Badge
+                        variant="outline"
+                        style={{
+                          borderColor: 'var(--color-gold)',
+                          color: 'var(--color-gold)',
+                          fontSize: '9px',
+                          padding: '0 6px',
+                        }}
+                      >
+                        {section.badge}
+                      </Badge>
+                    )}
+                  </div>
+                  <CardTitle className="text-sm font-bold" style={{ color: 'var(--color-gold)' }}>
                     {section.title}
                   </CardTitle>
                 </CardHeader>
@@ -55,7 +76,21 @@ export function SectionCards() {
                     {section.description}
                   </p>
                 </CardContent>
-              </Card>
+              </div>
+            </Card>
+          )
+
+          if (section.disabled) {
+            return (
+              <div key={section.title}>
+                {CardContentComp}
+              </div>
+            )
+          }
+
+          return (
+            <Link key={section.href} href={section.href}>
+              {CardContentComp}
             </Link>
           )
         })}

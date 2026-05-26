@@ -1,8 +1,7 @@
 import { db } from '@/lib/db'
-import { hotelListings, hotelPrices, exchangeRates } from '@/lib/db/schema'
+import { hotelPrices, hotelMonthlyPrices, exchangeRates } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
-import { HotelFilters } from '@/components/hotel-nusuk/HotelFilters'
-import { buildHotelNusukPriceMap } from '@/lib/hotel-nusuk/pricing'
+import { HotelPriceList, type HotelWithMonthlyPrices } from '@/components/hotel-nusuk/HotelPriceList'
 
 export const revalidate = 3600
 
@@ -12,19 +11,53 @@ export const metadata = {
 }
 
 export default async function HotelNusukPage() {
-  const [hotels, prices, rateRows] = await Promise.all([
+  const [hotels, monthlyPrices, rateRows] = await Promise.all([
     db
       .select()
-      .from(hotelListings)
-      .where(eq(hotelListings.isPublished, true))
-      .orderBy(asc(hotelListings.city), asc(hotelListings.name)),
-    db.select().from(hotelPrices),
+      .from(hotelPrices)
+      .orderBy(asc(hotelPrices.city), asc(hotelPrices.label)),
+    db.select().from(hotelMonthlyPrices),
     db.select().from(exchangeRates).where(eq(exchangeRates.currency, 'SAR')),
   ])
 
   const sarToIdrRate = rateRows[0]?.rateToIdr ?? 4700
 
-  const priceMap = buildHotelNusukPriceMap(prices, sarToIdrRate)
+  // Group monthly price overrides by hotelPriceId
+  const monthlyPricesByHotelId: Record<string, Record<number, number>> = {}
+  for (const mp of monthlyPrices) {
+    if (!monthlyPricesByHotelId[mp.hotelPriceId]) {
+      monthlyPricesByHotelId[mp.hotelPriceId] = {}
+    }
+    monthlyPricesByHotelId[mp.hotelPriceId][mp.month] = mp.sarPerNight
+  }
+
+  // Map each hotel to its 12-month pricing structure
+  const mappedHotels: HotelWithMonthlyPrices[] = hotels.map((h) => {
+    const monthlyPricesDetail = Array.from({ length: 12 }, (_, i) => {
+      const month = i + 1
+      const overrideSar = monthlyPricesByHotelId[h.id]?.[month]
+      const isOverride = overrideSar !== undefined && overrideSar !== null
+      const sar = isOverride ? overrideSar : h.sarPerNight
+      const idr = sar * sarToIdrRate
+      return {
+        month,
+        sar,
+        idr,
+        isOverride,
+      }
+    })
+
+    return {
+      id: h.id,
+      city: h.city,
+      tier: h.tier,
+      label: h.label,
+      sublabel: h.sublabel,
+      distance: h.distance,
+      sarPerNight: h.sarPerNight,
+      monthlyPrices: monthlyPricesDetail,
+    }
+  })
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -38,12 +71,12 @@ export default async function HotelNusukPage() {
         Direktori hotel umroh dengan estimasi harga IDR terkini
       </p>
 
-      {hotels.length === 0 ? (
+      {mappedHotels.length === 0 ? (
         <p className="text-sm text-center py-12" style={{ color: 'var(--color-text-muted)' }}>
           Belum ada data hotel.
         </p>
       ) : (
-        <HotelFilters hotels={hotels} priceMap={priceMap} />
+        <HotelPriceList hotels={mappedHotels} exchangeRate={sarToIdrRate} />
       )}
     </div>
   )

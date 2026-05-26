@@ -77,13 +77,11 @@ export function HotelCard({ hotel, priceIdrPerNight }: HotelCardProps) {
             ? formatIdrPerNight(priceIdrPerNight)
             : 'Hubungi admin untuk harga'}
         </p>
-        <Link
-          href={`/estimate/new?city=${hotel.city}&tier=${hotel.tier}`}
-          className="text-xs underline"
-          style={{ color: 'var(--color-gold)' }}
+        <span
+          className="text-xs text-[var(--color-text-muted)] cursor-not-allowed italic"
         >
-          Hitung dengan hotel ini
-        </Link>
+          Estimasi segera hadir
+        </span>
       </CardContent>
     </Card>
   )

@@ -1,0 +1,260 @@
+'use client'
+
+import { useState } from 'react'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { CalendarDays, Search, MapPin, Building, Ruler } from 'lucide-react'
+
+export interface MonthlyPriceDetail {
+  month: number
+  sar: number
+  idr: number
+  isOverride: boolean
+}
+
+export interface HotelWithMonthlyPrices {
+  id: string
+  city: 'MAKKAH' | 'MADINAH'
+  tier: 'ECONOMY' | 'STANDARD' | 'PELATARAN' | 'PREMIUM'
+  label: string
+  sublabel: string
+  distance: string | null
+  sarPerNight: number
+  monthlyPrices: MonthlyPriceDetail[]
+}
+
+interface HotelPriceListProps {
+  hotels: HotelWithMonthlyPrices[]
+  exchangeRate: number
+}
+
+const CITIES = ['MAKKAH', 'MADINAH'] as const
+const TIERS = ['ECONOMY', 'STANDARD', 'PELATARAN', 'PREMIUM'] as const
+
+const MONTH_NAMES = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+  'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
+]
+
+function formatCompactIdr(amount: number): string {
+  if (amount >= 1_000_000) {
+    const val = amount / 1_000_000
+    // Keep 1 decimal place if it has a decimal part, otherwise round
+    const formatted = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)
+    return `Rp ${formatted}jt`
+  }
+  if (amount >= 1_000) {
+    return `Rp ${(amount / 1_000).toFixed(0)}rb`
+  }
+  return `Rp ${amount}`
+}
+
+function formatFullIdr(amount: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(amount)
+}
+
+export function HotelPriceList({ hotels, exchangeRate }: HotelPriceListProps) {
+  const [city, setCity] = useState<string>('Semua')
+  const [tier, setTier] = useState<string>('Semua')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+
+  const filtered = hotels.filter((hotel) => {
+    if (city !== 'Semua' && hotel.city !== city) return false
+    if (tier !== 'Semua' && hotel.tier !== tier) return false
+    if (
+      searchQuery.trim() !== '' &&
+      !hotel.label.toLowerCase().includes(searchQuery.toLowerCase())
+    ) {
+      return false
+    }
+    return true
+  })
+
+  return (
+    <div className="space-y-6">
+      {/* Search and Filters panel */}
+      <div className="flex flex-col md:flex-row gap-4 p-4 rounded-lg border bg-[var(--color-surface)] border-[var(--color-border)]">
+        {/* Search input */}
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
+          <Input
+            placeholder="Cari nama hotel..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-3 flex-wrap">
+          <Select value={city} onValueChange={setCity}>
+            <SelectTrigger
+              className="w-40"
+              style={{
+                borderColor: 'var(--color-border)',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                color: 'var(--color-text)',
+              }}
+            >
+              <SelectValue placeholder="Kota" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Semua">Semua Kota</SelectItem>
+              {CITIES.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={tier} onValueChange={setTier}>
+            <SelectTrigger
+              className="w-40"
+              style={{
+                borderColor: 'var(--color-border)',
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                color: 'var(--color-text)',
+              }}
+            >
+              <SelectValue placeholder="Tier" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Semua">Semua Tier</SelectItem>
+              {TIERS.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Header Info */}
+      <div className="flex justify-between items-center text-xs text-[var(--color-text-muted)] px-1">
+        <span>Menampilkan {filtered.length} dari {hotels.length} hotel</span>
+        <span>Kurs acuan: 1 SAR = {formatFullIdr(exchangeRate)}</span>
+      </div>
+
+      {/* Grid of hotel cards */}
+      {filtered.length === 0 ? (
+        <Card className="border-[var(--color-border)] bg-[var(--color-surface)]">
+          <CardContent className="py-12 text-center text-sm text-[var(--color-text-muted)]">
+            Tidak ada hotel yang cocok dengan pencarian dan filter Anda.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {filtered.map((hotel) => (
+            <Card
+              key={hotel.id}
+              className="hover:border-yellow-600 transition-colors flex flex-col h-full"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.03)',
+                borderColor: 'var(--color-border)',
+              }}
+            >
+              {/* Card Header */}
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold text-[var(--color-gold)]">
+                  {hotel.label}
+                </CardTitle>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 text-[10px] py-0 px-2"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                  >
+                    <MapPin className="h-2.5 w-2.5" />
+                    {hotel.city}
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="flex items-center gap-1 text-[10px] py-0 px-2"
+                    style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                  >
+                    <Building className="h-2.5 w-2.5" />
+                    {hotel.tier}
+                  </Badge>
+                  {hotel.distance && (
+                    <Badge
+                      variant="outline"
+                      className="flex items-center gap-1 text-[10px] py-0 px-2"
+                      style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}
+                    >
+                      <Ruler className="h-2.5 w-2.5" />
+                      {hotel.distance}
+                    </Badge>
+                  )}
+                </div>
+                {hotel.sublabel && (
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1.5 italic">
+                    {hotel.sublabel}
+                  </p>
+                )}
+              </CardHeader>
+
+              {/* Card Content with 12-Month Pricing */}
+              <CardContent className="pt-0 flex-grow flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-gold)] font-semibold mb-3 border-b border-[var(--color-border)] pb-1.5">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    <span>Estimasi Harga per Malam (IDR & SAR)</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {hotel.monthlyPrices.map((mp) => (
+                      <div
+                        key={mp.month}
+                        className={`p-2 rounded text-center transition-colors flex flex-col justify-center ${
+                          mp.isOverride
+                            ? 'bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.3)]'
+                            : 'bg-black/10 border border-transparent'
+                        }`}
+                        title={`${MONTH_NAMES[mp.month - 1]}: ${formatFullIdr(mp.idr)} (${mp.sar} SAR) per malam${
+                          mp.isOverride ? ' (Harga Musiman)' : ''
+                        }`}
+                      >
+                        <span className="text-[10px] text-[var(--color-text-muted)] block font-medium">
+                          {MONTH_NAMES[mp.month - 1]}
+                          {mp.isOverride && <span className="text-[var(--color-gold)] ml-0.5 font-bold">•</span>}
+                        </span>
+                        <span className="text-[11px] font-semibold text-[var(--color-text)] block mt-0.5">
+                          {formatCompactIdr(mp.idr)}
+                        </span>
+                        <span className="text-[9px] text-[var(--color-text-muted)] block">
+                          {mp.sar} SAR
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex justify-between items-center text-[10px] text-[var(--color-text-muted)]">
+                  <span>Baseline: {hotel.sarPerNight} SAR ({formatCompactIdr(hotel.sarPerNight * exchangeRate)})</span>
+                  <span className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-gold)]"></span>
+                    Harga Musiman
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

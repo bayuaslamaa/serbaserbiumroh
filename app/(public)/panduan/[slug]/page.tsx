@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { getAllGuides, getGuideBySlug } from '@/lib/panduan'
 import { GuideSidebar } from '@/components/panduan/GuideSidebar'
 import { ArabicText, Callout } from '@/components/mdx/MDXComponents'
+import { PdfViewer } from '@/components/panduan/PdfViewer'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -17,6 +18,12 @@ export async function generateMetadata({ params }: Props) {
   const guide = getGuideBySlug(slug)
   if (!guide) return {}
   return { title: guide.title, description: guide.description }
+}
+
+const PDF_MAPPING: Record<string, string> = {
+  'panduan-umroh-mandiri': '/pdf/panduan-umroh-mandiri.pdf',
+  'manasik-umroh': '/pdf/manasik-umroh.pdf',
+  'doa-dzikir-umroh': '/pdf/doa-dzikir-umroh.pdf',
 }
 
 // Static map of all MDX content modules so the bundler can statically resolve them.
@@ -36,6 +43,20 @@ export default async function GuideDetailPage({ params }: Props) {
   if (!guide) notFound()
 
   const allGuides = getAllGuides()
+  const pdfUrl = PDF_MAPPING[slug]
+
+  if (pdfUrl) {
+    return (
+      <div className="max-w-5xl mx-auto flex gap-8">
+        <GuideSidebar guides={allGuides} />
+        <PdfViewer
+          title={guide.title}
+          description={guide.description}
+          pdfUrl={pdfUrl}
+        />
+      </div>
+    )
+  }
 
   const loader = MDX_MODULES[guide.filePath]
   if (!loader) notFound()

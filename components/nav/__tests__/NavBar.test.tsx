@@ -7,6 +7,11 @@ vi.mock("@/auth", () => ({
   signOut: vi.fn(),
 }))
 
+// Mock next/navigation for client components inside NavBar
+vi.mock("next/navigation", () => ({
+  usePathname: vi.fn(() => "/"),
+}))
+
 import { auth } from "@/auth"
 import { NavBar } from "../NavBar"
 
@@ -50,4 +55,13 @@ describe("NavBar", () => {
     render(await NavBar({}))
     expect(screen.getByRole("link", { name: "Dashboard" })).toBeDefined()
   })
+
+  it("renders Panel Admin when user is an admin", async () => {
+    mockAuth.mockResolvedValue({
+      user: { email: "admin@example.com", role: "ADMIN" },
+    })
+    render(await NavBar({}))
+    expect(screen.getByRole("button", { name: /Panel Admin/i })).toBeDefined()
+  })
 })
+

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import type { HotelListing } from '@/lib/db/schema'
+import { HotelPriceList, type HotelWithMonthlyPrices } from '../HotelPriceList'
 
 // Mock the Select components to simple elements for testing
 vi.mock('@/components/ui/select', () => {
@@ -43,79 +43,67 @@ vi.mock('@/components/ui/select', () => {
   return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
 })
 
-function makeHotel(overrides: Partial<HotelListing> = {}): HotelListing {
+function makeHotel(overrides: Partial<HotelWithMonthlyPrices> = {}): HotelWithMonthlyPrices {
+  const basePrice = overrides.sarPerNight ?? 200
+  const monthlyPrices = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    sar: basePrice,
+    idr: basePrice * 4700,
+    isOverride: false,
+  }))
+
   return {
     id: 'default-id',
-    slug: 'default-slug',
-    name: 'Default Hotel',
     city: 'MAKKAH',
     tier: 'STANDARD',
-    distanceMeters: 500,
-    facilities: 'WiFi',
-    pilgrimNotes: '',
-    isPublished: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    label: 'Default Hotel',
+    sublabel: '3★, dekat Haram',
+    distance: '500m',
+    sarPerNight: basePrice,
+    monthlyPrices,
     ...overrides,
   }
 }
 
-const hotels: HotelListing[] = [
-  makeHotel({ id: '1', slug: 'h1', name: 'Makkah Economy', city: 'MAKKAH', tier: 'ECONOMY' }),
-  makeHotel({ id: '2', slug: 'h2', name: 'Makkah Standard', city: 'MAKKAH', tier: 'STANDARD' }),
-  makeHotel({ id: '3', slug: 'h3', name: 'Madinah Standard', city: 'MADINAH', tier: 'STANDARD' }),
-  makeHotel({ id: '4', slug: 'h4', name: 'Madinah Premium', city: 'MADINAH', tier: 'PREMIUM' }),
+const hotels: HotelWithMonthlyPrices[] = [
+  makeHotel({ id: '1', label: 'Makkah Economy', city: 'MAKKAH', tier: 'ECONOMY', sarPerNight: 150 }),
+  makeHotel({ id: '2', label: 'Makkah Standard', city: 'MAKKAH', tier: 'STANDARD', sarPerNight: 250 }),
+  makeHotel({ id: '3', label: 'Madinah Standard', city: 'MADINAH', tier: 'STANDARD', sarPerNight: 200 }),
+  makeHotel({ id: '4', label: 'Madinah Premium', city: 'MADINAH', tier: 'PREMIUM', sarPerNight: 400 }),
 ]
 
-const priceMap: Record<string, number> = {
-  MAKKAH_ECONOMY: 300_000,
-  MAKKAH_STANDARD: 500_000,
-  MADINAH_STANDARD: 450_000,
-  MADINAH_PREMIUM: 900_000,
-}
-
-// Import after mocking
-const { HotelFilters } = await import('../HotelFilters')
-
-describe('HotelFilters', () => {
+describe('HotelFilters (replaced with HotelPriceList tests)', () => {
   it('renders all hotels initially', () => {
-    render(<HotelFilters hotels={hotels} priceMap={priceMap} />)
+    render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
     expect(screen.getByText('Makkah Economy')).toBeDefined()
     expect(screen.getByText('Makkah Standard')).toBeDefined()
     expect(screen.getByText('Madinah Standard')).toBeDefined()
     expect(screen.getByText('Madinah Premium')).toBeDefined()
   })
 
+  it('renders monthly price grid for hotels', () => {
+    render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
+    // Verify month abbreviations are rendered
+    expect(screen.getAllByText('Jan').length).toBe(4)
+    expect(screen.getAllByText('Des').length).toBe(4)
+  })
+
   it('shows city filter dropdown options', () => {
-    render(<HotelFilters hotels={hotels} priceMap={priceMap} />)
+    render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
     expect(screen.getByText('Semua Kota')).toBeDefined()
-    // MAKKAH appears in both dropdown and card badges — use getAllByText
     expect(screen.getAllByText('MAKKAH').length).toBeGreaterThan(0)
     expect(screen.getAllByText('MADINAH').length).toBeGreaterThan(0)
   })
 
   it('shows tier filter dropdown options', () => {
-    render(<HotelFilters hotels={hotels} priceMap={priceMap} />)
+    render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
     expect(screen.getByText('Semua Tier')).toBeDefined()
-    // ECONOMY appears in both dropdown and card badges — use getAllByText
     expect(screen.getAllByText('ECONOMY').length).toBeGreaterThan(0)
     expect(screen.getAllByText('PREMIUM').length).toBeGreaterThan(0)
   })
 
-  it('shows "Tidak ada hotel yang cocok." when hotels array is empty', () => {
-    render(<HotelFilters hotels={[]} priceMap={{}} />)
-    expect(screen.getByText('Tidak ada hotel yang cocok.')).toBeDefined()
-  })
-
-  it('passes price to HotelCard — shows price when priceMap has matching key', () => {
-    render(<HotelFilters hotels={hotels} priceMap={priceMap} />)
-    // MAKKAH_ECONOMY 300_000 → formatted IDR
-    expect(screen.getByText(/300\.000.*malam/)).toBeDefined()
-  })
-
-  it('shows "Hubungi admin untuk harga" for hotels with no price in priceMap', () => {
-    render(<HotelFilters hotels={hotels} priceMap={{}} />)
-    const noPrice = screen.getAllByText('Hubungi admin untuk harga')
-    expect(noPrice.length).toBe(hotels.length)
+  it('shows empty text when filtered hotels list is empty', () => {
+    render(<HotelPriceList hotels={[]} exchangeRate={4700} />)
+    expect(screen.getByText('Tidak ada hotel yang cocok dengan pencarian dan filter Anda.')).toBeDefined()
   })
 })

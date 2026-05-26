@@ -58,9 +58,9 @@ export function EstimateList({ initialEstimates }: EstimateListProps) {
         <p className="text-lg" style={{ color: "var(--color-text-muted)" }}>
           Belum ada estimasi. Mulai buat estimasi pertama Anda.
         </p>
-        <Link href="/estimate/new">
-          <Button size="lg">Buat Estimasi Baru</Button>
-        </Link>
+        <Button size="lg" disabled className="opacity-50 cursor-not-allowed">
+          Buat Estimasi Baru (Coming Soon)
+        </Button>
       </div>
     )
   }

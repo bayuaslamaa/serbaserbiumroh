@@ -37,9 +37,9 @@ export default async function DashboardPage() {
             Riwayat dan rencana perjalanan umroh Anda.
           </p>
         </div>
-        <Link href="/estimate/new">
-          <Button size="lg">Buat Estimasi Baru</Button>
-        </Link>
+        <Button size="lg" disabled className="opacity-50 cursor-not-allowed">
+          Buat Estimasi Baru (Coming Soon)
+        </Button>
       </div>
 
       <div className="space-y-8">
