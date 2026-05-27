@@ -32,7 +32,11 @@ const sections = [
   },
 ]
 
-export function SectionCards() {
+interface SectionCardsProps {
+  isAdmin?: boolean
+}
+
+export function SectionCards({ isAdmin = false }: SectionCardsProps) {
   return (
     <section className="py-8">
       <h2 className="text-2xl font-bold mb-6 text-center" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-gold)' }}>
@@ -41,11 +45,12 @@ export function SectionCards() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {sections.map((section) => {
           const Icon = section.icon
+          const isDisabled = section.disabled && !isAdmin
           
           const CardContentComp = (
             <Card
               className={`h-full transition-colors flex flex-col justify-between ${
-                section.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-yellow-600 cursor-pointer'
+                isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-yellow-600 cursor-pointer'
               }`}
               style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)' }}
             >
@@ -53,7 +58,7 @@ export function SectionCards() {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between mb-2">
                     <Icon className="w-6 h-6" style={{ color: 'var(--color-gold)' }} />
-                    {section.badge && (
+                    {section.badge && !isAdmin && (
                       <Badge
                         variant="outline"
                         style={{
@@ -80,7 +85,7 @@ export function SectionCards() {
             </Card>
           )
 
-          if (section.disabled) {
+          if (isDisabled) {
             return (
               <div key={section.title}>
                 {CardContentComp}

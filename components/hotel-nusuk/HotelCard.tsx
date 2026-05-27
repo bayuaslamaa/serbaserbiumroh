@@ -6,6 +6,7 @@ import type { HotelListing } from '@/lib/db/schema'
 interface HotelCardProps {
   hotel: HotelListing
   priceIdrPerNight: number | null
+  isAdmin?: boolean
 }
 
 function formatDistance(meters: number | null): string {
@@ -24,7 +25,7 @@ function formatIdrPerNight(amount: number): string {
   )
 }
 
-export function HotelCard({ hotel, priceIdrPerNight }: HotelCardProps) {
+export function HotelCard({ hotel, priceIdrPerNight, isAdmin = false }: HotelCardProps) {
   const facilitiesList = hotel.facilities
     ? hotel.facilities
         .split(',')
@@ -77,11 +78,21 @@ export function HotelCard({ hotel, priceIdrPerNight }: HotelCardProps) {
             ? formatIdrPerNight(priceIdrPerNight)
             : 'Hubungi admin untuk harga'}
         </p>
-        <span
-          className="text-xs text-[var(--color-text-muted)] cursor-not-allowed italic"
-        >
-          Estimasi segera hadir
-        </span>
+        {isAdmin ? (
+          <Link
+            href={`/estimate/new?city=${hotel.city}&tier=${hotel.tier}`}
+            className="text-xs underline"
+            style={{ color: 'var(--color-gold)' }}
+          >
+            Hitung dengan hotel ini
+          </Link>
+        ) : (
+          <span
+            className="text-xs text-[var(--color-text-muted)] cursor-not-allowed italic"
+          >
+            Estimasi segera hadir
+          </span>
+        )}
       </CardContent>
     </Card>
   )

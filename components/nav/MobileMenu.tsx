@@ -9,11 +9,12 @@ import { Button } from "@/components/ui/button"
 interface MobileMenuProps {
   userEmail?: string | null
   showAdmin?: boolean
+  isAdmin?: boolean
   isLoggedIn?: boolean
   signOutAction: () => Promise<void>
 }
 
-export function MobileMenu({ userEmail, showAdmin, isLoggedIn, signOutAction }: MobileMenuProps) {
+export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, signOutAction }: MobileMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [isAdminOpen, setIsAdminOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
@@ -159,14 +160,22 @@ export function MobileMenu({ userEmail, showAdmin, isLoggedIn, signOutAction }: 
             </div>
 
             <div className="pt-6 space-y-4">
-              <Button
-                className="w-full flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)]"
-                size="lg"
-                disabled
-                style={{ cursor: 'not-allowed' }}
-              >
-                <PlusCircle size={18} /> Buat Estimasi (Coming Soon)
-              </Button>
+              {isAdmin ? (
+                <Link href="/estimate/new" onClick={() => setIsOpen(false)}>
+                  <Button className="w-full flex items-center justify-center gap-2" size="lg">
+                    <PlusCircle size={18} /> Buat Estimasi
+                  </Button>
+                </Link>
+              ) : (
+                <Button
+                  className="w-full flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)]"
+                  size="lg"
+                  disabled
+                  style={{ cursor: 'not-allowed' }}
+                >
+                  <PlusCircle size={18} /> Buat Estimasi (Coming Soon)
+                </Button>
+              )}
 
               {isLoggedIn ? (
                 <div className="flex flex-col gap-3 pt-4 border-t border-[var(--color-border)]">

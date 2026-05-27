@@ -37,13 +37,19 @@ export default async function DashboardPage() {
             Riwayat dan rencana perjalanan umroh Anda.
           </p>
         </div>
-        <Button size="lg" disabled className="opacity-50 cursor-not-allowed">
-          Buat Estimasi Baru (Coming Soon)
-        </Button>
+        {session?.user?.role === "ADMIN" ? (
+          <Link href="/estimate/new">
+            <Button size="lg">Buat Estimasi Baru</Button>
+          </Link>
+        ) : (
+          <Button size="lg" disabled className="opacity-50 cursor-not-allowed">
+            Buat Estimasi Baru (Coming Soon)
+          </Button>
+        )}
       </div>
 
       <div className="space-y-8">
-        <EstimateList initialEstimates={initialEstimates} />
+        <EstimateList initialEstimates={initialEstimates} isAdmin={session?.user?.role === "ADMIN"} />
         <FaqPreview items={faqItems} title="FAQ Umroh Mandiri" />
       </div>
     </div>

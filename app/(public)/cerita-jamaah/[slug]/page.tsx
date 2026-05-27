@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { pilgrimStories, storyItineraryDays, storyPackingItems } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { StoryDetail } from '@/components/cerita-jamaah/StoryDetail'
+import { auth } from '@/auth'
 
 // Allow slugs not pre-generated at build time to be rendered dynamically
 export const dynamicParams = true
@@ -65,11 +66,15 @@ export default async function StoryDetailPage({ params }: Props) {
       .orderBy(asc(storyPackingItems.sortOrder)),
   ])
 
+  const session = await auth()
+  const isAdmin = session?.user?.role === 'ADMIN'
+
   return (
     <StoryDetail
       story={story}
       itineraryDays={itinerary}
       packingItems={packing}
+      isAdmin={isAdmin}
     />
   )
 }

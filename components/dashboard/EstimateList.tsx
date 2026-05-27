@@ -10,9 +10,10 @@ import { Input } from "@/components/ui/input"
 
 interface EstimateListProps {
   initialEstimates: Estimate[]
+  isAdmin?: boolean
 }
 
-export function EstimateList({ initialEstimates }: EstimateListProps) {
+export function EstimateList({ initialEstimates, isAdmin = false }: EstimateListProps) {
   const [estimates, setEstimates] = useState<Estimate[]>(initialEstimates)
   const [searchQuery, setSearchQuery] = useState("")
   const [loadingMore, setLoadingMore] = useState(false)
@@ -58,9 +59,15 @@ export function EstimateList({ initialEstimates }: EstimateListProps) {
         <p className="text-lg" style={{ color: "var(--color-text-muted)" }}>
           Belum ada estimasi. Mulai buat estimasi pertama Anda.
         </p>
-        <Button size="lg" disabled className="opacity-50 cursor-not-allowed">
-          Buat Estimasi Baru (Coming Soon)
-        </Button>
+        {isAdmin ? (
+          <Link href="/estimate/new">
+            <Button size="lg">Buat Estimasi Baru</Button>
+          </Link>
+        ) : (
+          <Button size="lg" disabled className="opacity-50 cursor-not-allowed">
+            Buat Estimasi Baru (Coming Soon)
+          </Button>
+        )}
       </div>
     )
   }

@@ -61,9 +61,16 @@ describe('HotelCard', () => {
     expect(screen.getByText('Hubungi admin untuk harga')).toBeDefined()
   })
 
-  it('shows "Estimasi segera hadir" text instead of calculation link', () => {
-    render(<HotelCard hotel={makeHotel({ city: 'MAKKAH', tier: 'STANDARD' })} priceIdrPerNight={null} />)
+  it('shows "Estimasi segera hadir" text instead of calculation link for non-admins', () => {
+    render(<HotelCard hotel={makeHotel({ city: 'MAKKAH', tier: 'STANDARD' })} priceIdrPerNight={null} isAdmin={false} />)
     expect(screen.getByText('Estimasi segera hadir')).toBeDefined()
     expect(screen.queryByText('Hitung dengan hotel ini')).toBeNull()
+  })
+
+  it('shows "Hitung dengan hotel ini" link for admins', () => {
+    render(<HotelCard hotel={makeHotel({ city: 'MAKKAH', tier: 'STANDARD' })} priceIdrPerNight={null} isAdmin={true} />)
+    const link = screen.getByText('Hitung dengan hotel ini')
+    expect(link).toBeDefined()
+    expect(link.getAttribute('href')).toBe('/estimate/new?city=MAKKAH&tier=STANDARD')
   })
 })

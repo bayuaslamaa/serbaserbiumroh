@@ -29,9 +29,10 @@ interface StoryDetailProps {
   story: PilgrimStory
   itineraryDays: StoryItineraryDay[]
   packingItems: StoryPackingItem[]
+  isAdmin?: boolean
 }
 
-export function StoryDetail({ story, itineraryDays, packingItems }: StoryDetailProps) {
+export function StoryDetail({ story, itineraryDays, packingItems, isAdmin = false }: StoryDetailProps) {
   const travelPeriod = story.travelMonth
     ? `${MONTH_NAMES[story.travelMonth]}${story.travelYear ? ` ${story.travelYear}` : ''}`
     : null
@@ -91,18 +92,33 @@ export function StoryDetail({ story, itineraryDays, packingItems }: StoryDetailP
       </div>
 
       {/* Pre-fill button */}
-      <div className="mb-8 p-4 rounded-lg opacity-60" style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)', border: '1px solid' }}>
-        <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>
-          Gunakan cerita ini sebagai titik awal estimasi biaya Anda
-        </p>
-        <button
-          disabled
-          className="inline-block px-4 py-2 rounded text-sm font-semibold transition-colors cursor-not-allowed opacity-50"
-          style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
-        >
-          Gunakan sebagai titik awal (Coming Soon)
-        </button>
-      </div>
+      {isAdmin ? (
+        <div className="mb-8 p-4 rounded-lg" style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)', border: '1px solid' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>
+            Gunakan cerita ini sebagai titik awal estimasi biaya Anda
+          </p>
+          <Link
+            href={prefilUrl}
+            className="inline-block px-4 py-2 rounded text-sm font-semibold transition-colors"
+            style={{ backgroundColor: 'var(--color-gold)', color: '#000' }}
+          >
+            Gunakan sebagai titik awal
+          </Link>
+        </div>
+      ) : (
+        <div className="mb-8 p-4 rounded-lg opacity-60" style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)', border: '1px solid' }}>
+          <p className="text-sm mb-3" style={{ color: 'var(--color-text-muted)' }}>
+            Gunakan cerita ini sebagai titik awal estimasi biaya Anda
+          </p>
+          <button
+            disabled
+            className="inline-block px-4 py-2 rounded text-sm font-semibold transition-colors cursor-not-allowed opacity-50"
+            style={{ backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}
+          >
+            Gunakan sebagai titik awal (Coming Soon)
+          </button>
+        </div>
+      )}
 
       {/* Narrative */}
       {story.narrative && (

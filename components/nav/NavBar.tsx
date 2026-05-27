@@ -76,14 +76,20 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
 
         {/* Desktop navigation right aligned items */}
         <div className="hidden md:flex items-center gap-3">
-          <Button
-            size="sm"
-            disabled
-            className="opacity-50 cursor-not-allowed text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)]"
-            style={{ cursor: 'not-allowed' }}
-          >
-            Buat Estimasi (Coming Soon)
-          </Button>
+          {user?.role === "ADMIN" ? (
+            <Link href="/estimate/new">
+              <Button size="sm">Buat Estimasi</Button>
+            </Link>
+          ) : (
+            <Button
+              size="sm"
+              disabled
+              className="opacity-50 cursor-not-allowed text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)]"
+              style={{ cursor: 'not-allowed' }}
+            >
+              Buat Estimasi (Coming Soon)
+            </Button>
+          )}
           <div className="flex items-center gap-2">
             {user ? (
               <>
@@ -112,6 +118,7 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
         <MobileMenu
           userEmail={user?.email}
           showAdmin={showAdmin}
+          isAdmin={user?.role === "ADMIN"}
           isLoggedIn={!!user}
           signOutAction={handleSignOut}
         />

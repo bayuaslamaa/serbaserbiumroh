@@ -1,7 +1,11 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-export function HeroSection() {
+interface HeroSectionProps {
+  isAdmin?: boolean
+}
+
+export function HeroSection({ isAdmin = false }: HeroSectionProps) {
   return (
     <section className="py-16 text-center">
       <h1
@@ -23,14 +27,22 @@ export function HeroSection() {
             Lihat Cerita Jamaah
           </Button>
         </Link>
-        <Button
-          variant="outline"
-          disabled
-          className="opacity-50 cursor-not-allowed text-[var(--color-text-muted)]"
-          style={{ borderColor: 'var(--color-border)', cursor: 'not-allowed' }}
-        >
-          Buat Estimasi Biaya (Coming Soon)
-        </Button>
+        {isAdmin ? (
+          <Link href="/estimate/new">
+            <Button variant="outline" style={{ borderColor: 'var(--color-gold)', color: 'var(--color-gold)' }}>
+              Buat Estimasi Biaya
+            </Button>
+          </Link>
+        ) : (
+          <Button
+            variant="outline"
+            disabled
+            className="opacity-50 cursor-not-allowed text-[var(--color-text-muted)]"
+            style={{ borderColor: 'var(--color-border)', cursor: 'not-allowed' }}
+          >
+            Buat Estimasi Biaya (Coming Soon)
+          </Button>
+        )}
       </div>
     </section>
   )
