@@ -55,6 +55,13 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
               Hotel Nusuk
             </Link>
             <Link
+              href="/visa"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Visa
+            </Link>
+            <Link
               href="/faq"
               className="text-sm transition-colors hover:text-[var(--color-text)]"
               style={{ color: "var(--color-text-muted)" }}

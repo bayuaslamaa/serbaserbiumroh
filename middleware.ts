@@ -13,7 +13,8 @@ export function isPublicPath(pathname: string) {
     pathname.startsWith("/panduan") ||
     pathname.startsWith("/cerita-jamaah") ||
     pathname.startsWith("/hotel-nusuk") ||
-    pathname.startsWith("/komunitas")
+    pathname.startsWith("/komunitas") || 
+    pathname.startsWith("/visa")
   )
 }
 

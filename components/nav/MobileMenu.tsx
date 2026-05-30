@@ -78,7 +78,7 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
               className="font-bold text-lg"
               style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
             >
-              🕋 Umroh Estimator
+              🕋 SSU
             </Link>
             <button
               onClick={() => setIsOpen(false)}
