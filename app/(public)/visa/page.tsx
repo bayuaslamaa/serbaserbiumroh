@@ -1,14 +1,14 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { 
-  FileText, 
-  Clock, 
-  DollarSign, 
-  CheckCircle2, 
-  AlertTriangle, 
-  ExternalLink, 
-  MessageCircle, 
+import {
+  FileText,
+  Clock,
+  DollarSign,
+  CheckCircle2,
+  AlertTriangle,
+  ExternalLink,
+  MessageCircle,
   HelpCircle,
   ShieldCheck,
   Building,
@@ -30,7 +30,7 @@ export default function VisaPage() {
         <Badge variant="outline" className="mb-4 px-3 py-1 border-[var(--color-gold)] text-[var(--color-gold)] font-medium tracking-wide">
           VISA UMROH PERORANGAN 🇸🇦
         </Badge>
-        <h1 
+        <h1
           className="text-3xl md:text-5xl font-bold mb-4 tracking-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
         >
@@ -42,7 +42,7 @@ export default function VisaPage() {
         <p className="text-sm md:text-base leading-relaxed mb-8" style={{ color: "var(--color-text-muted)" }}>
           Pengurusan visa umroh dilakukan secara online. Transaksi dan komunikasi lebih lanjut tetap dilakukan melalui WhatsApp. Silakan pelajari persyaratan dan ajukan melalui tombol di bawah.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link href="https://visa.serbaserbiumroh.id" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto font-bold flex items-center justify-center gap-2 group transition-all duration-300 hover:shadow-lg hover:shadow-[rgba(201,168,76,0.2)]">
@@ -50,7 +50,7 @@ export default function VisaPage() {
               <ExternalLink className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Button>
           </Link>
-          <Link href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <Link href="https://wa.me/6285161134844" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button variant="outline" size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2 border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-surface)]">
               <MessageCircle className="w-4 h-4" />
               <span>Hubungi Kami di WhatsApp</span>
@@ -61,7 +61,7 @@ export default function VisaPage() {
 
       {/* Main Visa Types Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-        
+
         {/* Card 1: Nusuk Masar */}
         <Card className="flex flex-col h-full relative overflow-hidden border-[var(--color-border)] bg-[var(--color-surface)]">
           <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-r from-emerald-600 via-[var(--color-gold)] to-emerald-600" />
@@ -83,7 +83,7 @@ export default function VisaPage() {
               Metode reguler yang membutuhkan persetujuan (approval) dari hotel yang Anda pesan langsung di Nusuk Masar.
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="flex-grow space-y-6">
             {/* Info Badges */}
             <div className="flex gap-4 p-3 rounded-lg border border-[var(--color-border)] bg-black/20 text-xs">
@@ -138,7 +138,7 @@ export default function VisaPage() {
               </ul>
             </div>
           </CardContent>
-          
+
           <CardFooter className="pt-0">
             <Link href="https://visa.serbaserbiumroh.id" target="_blank" className="w-full">
               <Button className="w-full flex items-center justify-center gap-2">
@@ -170,7 +170,7 @@ export default function VisaPage() {
               Alternatif tanpa persetujuan hotel yang Anda beli. Kami bantu memesankan BRN dari hotel terdaftar lainnya.
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="flex-grow space-y-6">
             {/* Info Badges */}
             <div className="flex gap-4 p-3 rounded-lg border border-[var(--color-border)] bg-black/20 text-xs">
@@ -229,7 +229,7 @@ export default function VisaPage() {
               </p>
             </div>
           </CardContent>
-          
+
           <CardFooter className="pt-0">
             <Link href="https://visa.serbaserbiumroh.id" target="_blank" className="w-full">
               <Button className="w-full flex items-center justify-center gap-2">
@@ -323,12 +323,12 @@ export default function VisaPage() {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <Link href="https://visa.serbaserbiumroh.id" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto font-bold flex items-center justify-center gap-2">
+            <Button size="lg" className="w-full sm:w-auto font-bold flex items-center justify-center gap-2 p-1">
               <span>Ajukan Visa di visa.serbaserbiumroh.id</span>
               <ExternalLink className="w-4 h-4" />
             </Button>
           </Link>
-          <Link href="https://wa.me/628123456789" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <Link href="https://wa.me/6285161134844" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button variant="outline" size="lg" className="w-full sm:w-auto border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-surface)]">
               <span>Tanya Admin WhatsApp</span>
             </Button>
