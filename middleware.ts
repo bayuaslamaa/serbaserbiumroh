@@ -4,19 +4,26 @@ import { authConfig } from "@/auth.config"
 
 const { auth } = NextAuth(authConfig)
 
+export function isPublicPath(pathname: string) {
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/community") ||
+    pathname.startsWith("/panduan") ||
+    pathname.startsWith("/cerita-jamaah") ||
+    pathname.startsWith("/hotel-nusuk") ||
+    pathname.startsWith("/komunitas")
+  )
+}
+
 export default auth((req) => {
   const { nextUrl, auth: session } = req
   const isLoggedIn = !!session?.user
 
   const isAuthRoute = nextUrl.pathname.startsWith("/login")
-  const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth")
   const isAdminRoute = nextUrl.pathname.startsWith("/admin")
-  const isContentRoute =
-    nextUrl.pathname === "/" ||
-    nextUrl.pathname.startsWith("/panduan") ||
-    nextUrl.pathname.startsWith("/cerita-jamaah") ||
-    nextUrl.pathname.startsWith("/hotel-nusuk")
-  const isPublicRoute = isAuthRoute || isApiAuthRoute || isContentRoute
+  const isPublicRoute = isPublicPath(nextUrl.pathname)
 
   if (isPublicRoute) {
     if (isLoggedIn && isAuthRoute) {

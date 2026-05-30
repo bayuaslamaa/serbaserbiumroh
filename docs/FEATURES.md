@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-30
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -35,6 +35,7 @@ Managed with Drizzle ORM + Neon PostgreSQL. All PKs are CUID2 strings.
 | `users` | Auth users with `role` enum (USER / ADMIN) |
 | `accounts`, `sessions`, `verification_tokens` | Auth.js adapter tables |
 | `estimates` | Saved estimate snapshots (JSONB params + totals) |
+| `community_join_requests` | Public community join requests with admin review status and duplicate matching fields |
 | `faq_groups` | Admin-managed FAQ categories with display ordering |
 | `faq_items` | Admin-managed Q&A items with rich answers, ordering, and publish status |
 
@@ -130,7 +131,19 @@ Two export formats for sharing estimates:
 
 ---
 
-## 7. Dashboard
+## 7. Community Join
+
+- **Public join page** (`/komunitas`) — shareable form for calon jamaah to request joining the managed Umroh Mandiri WhatsApp community
+- **Fields** — nama lengkap and nomor HP required; username sosial media and alasan join optional
+- **Anonymous-first submit** — visitors can submit without login; logged-in users are associated when a session exists
+- **Post-submit guidance** — success state shows request-join and admin-chat WhatsApp actions and instructs users to keep name/phone consistent for admin matching
+- **Admin review** (`/admin/community-requests`) — admin can review submitted requests, see possible duplicate flags, update status, and add internal notes
+
+**Files:** `app/(public)/komunitas/page.tsx`, `components/community/`, `app/api/community/join/route.ts`, `app/(admin)/admin/community-requests/page.tsx`, `app/api/admin/community-requests/`
+
+---
+
+## 8. Dashboard
 
 - **Estimate list** (`/dashboard`) — cards showing saved estimates with title, date, and per-pax total
 - **Estimate detail** (`/estimate/[id]`) — full breakdown with export buttons
@@ -141,7 +154,7 @@ Two export formats for sharing estimates:
 
 ---
 
-## 8. Admin Panel
+## 9. Admin Panel
 
 Admin-only route group (`/admin/*`) guarded by `requireAdmin()` server-side.
 
@@ -211,6 +224,13 @@ All changes are saved immediately (no publish step).
 ### Admin User List (`/admin/users`)
 - View all registered users with role
 
+### Community Requests (`/admin/community-requests`)
+- Review public community join requests submitted from `/komunitas`
+- View contact identity, optional social username, optional intent, submission date, duplicate indicator, status, and internal notes
+- Update status: Baru, Sudah dicocokkan, Ditolak
+- Add/edit internal notes for manual WhatsApp matching
+- Duplicate indicators are advisory only and do not reject submissions
+
 ### FAQ Management (`/admin/content/faqs`)
 - CRUD FAQ groups with explicit display order
 - CRUD FAQ Q&A items with group, sort order, publish/draft status, and Markdown-style rich answers
@@ -230,16 +250,16 @@ All changes are saved immediately (no publish step).
 
 ---
 
-## 9. Navigation
+## 10. Navigation
 
-- `NavBar` — session-aware; shows Dashboard, public FAQ, and estimate links for all users; shows Admin links only when `role === ADMIN`
+- `NavBar` — session-aware; shows Dashboard, public FAQ, community, and estimate links for all users; shows Admin links only when `role === ADMIN`
 - Sign-out button
 
 **Files:** `components/nav/NavBar.tsx`
 
 ---
 
-## 10. API Routes
+## 11. API Routes
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
@@ -257,6 +277,9 @@ All changes are saved immediately (no publish step).
 | `GET` | `/api/estimate/[id]` | User (owner) | Get saved estimate |
 | `GET` | `/api/estimate/[id]/export` | User (owner) | Export as PDF or WhatsApp text |
 | `POST` | `/api/estimate/parse` | User | Parse freeform text → EstimateParams (no save) |
+| `POST` | `/api/community/join` | Public | Save community join request |
+| `GET` | `/api/admin/community-requests` | Admin | List community join requests with duplicate flags |
+| `PATCH` | `/api/admin/community-requests/[id]` | Admin | Update community request status or internal note |
 | `GET` | `/api/admin/faqs` | Admin | List FAQ items |
 | `POST` | `/api/admin/faqs` | Admin | Create FAQ item |
 | `GET/PUT/DELETE` | `/api/admin/faqs/[id]` | Admin | Read, update, or delete FAQ item |
@@ -268,9 +291,9 @@ All changes are saved immediately (no publish step).
 
 ---
 
-## 11. Test Coverage
+## 12. Test Coverage
 
-290 tests across 31 test files (Vitest + Testing Library).
+Community join adds focused coverage for request validation, public submit route, public form success/error states, admin request routes, and admin row actions.
 
 | File | Tests | Area |
 |------|-------|------|

@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { createPortal } from "react-dom"
-import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle } from "lucide-react"
+import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle, MessageCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface MobileMenuProps {
@@ -38,6 +38,7 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
   const adminLinks = [
     { href: "/admin/pricing", label: "Kelola Harga" },
     { href: "/admin/users", label: "Kelola User" },
+    { href: "/admin/community-requests", label: "Pengajuan Komunitas" },
     { href: "/admin/content/stories", label: "Kelola Cerita" },
     { href: "/admin/content/hotels", label: "Kelola Hotel" },
     { href: "/admin/content/faqs", label: "Kelola FAQ" },
@@ -118,6 +119,13 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
                 className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
               >
                 <HelpCircle size={18} /> FAQ
+              </Link>
+              <Link
+                href="/komunitas"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
+              >
+                <MessageCircle size={18} /> Komunitas
               </Link>
               {isLoggedIn && (
                 <Link

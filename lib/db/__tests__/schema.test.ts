@@ -9,6 +9,7 @@ import {
   users,
   estimates,
   activityLogs,
+  communityJoinRequests,
   pilgrimStories,
   storyItineraryDays,
   hotelListings,
@@ -99,6 +100,22 @@ describe("schema table definitions", () => {
     expect(cols).toContain("output")
     expect(cols).toContain("error")
     expect(cols).toContain("metadata")
+  })
+
+  it("communityJoinRequests table has review and matching columns", () => {
+    const cols = Object.keys(communityJoinRequests)
+    expect(cols).toContain("id")
+    expect(cols).toContain("userId")
+    expect(cols).toContain("fullName")
+    expect(cols).toContain("phone")
+    expect(cols).toContain("normalizedPhone")
+    expect(cols).toContain("socialUsername")
+    expect(cols).toContain("normalizedSocialUsername")
+    expect(cols).toContain("intent")
+    expect(cols).toContain("status")
+    expect(cols).toContain("adminNote")
+    expect(cols).toContain("createdAt")
+    expect(cols).toContain("updatedAt")
   })
 
   it("pilgrimStories table has expected columns", () => {

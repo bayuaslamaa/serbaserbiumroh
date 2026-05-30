@@ -26,6 +26,7 @@ export function AdminDropdown() {
   const adminLinks = [
     { href: "/admin/pricing", label: "Kelola Harga" },
     { href: "/admin/users", label: "Kelola User" },
+    { href: "/admin/community-requests", label: "Pengajuan Komunitas" },
     { href: "/admin/content/stories", label: "Kelola Cerita" },
     { href: "/admin/content/hotels", label: "Kelola Hotel" },
     { href: "/admin/content/faqs", label: "Kelola FAQ" },

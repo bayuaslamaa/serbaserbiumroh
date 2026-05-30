@@ -27,6 +27,11 @@ export function HeroSection({ isAdmin = false }: HeroSectionProps) {
             Lihat Cerita Jamaah
           </Button>
         </Link>
+        <Link href="/komunitas">
+          <Button variant="outline" style={{ borderColor: 'var(--color-gold)', color: 'var(--color-gold)' }}>
+            Gabung Komunitas
+          </Button>
+        </Link>
         {isAdmin ? (
           <Link href="/estimate/new">
             <Button variant="outline" style={{ borderColor: 'var(--color-gold)', color: 'var(--color-gold)' }}>

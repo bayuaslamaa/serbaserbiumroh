@@ -61,6 +61,13 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
             >
               FAQ
             </Link>
+            <Link
+              href="/komunitas"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Komunitas
+            </Link>
             {user && (
               <Link
                 href="/dashboard"
@@ -126,4 +133,3 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
     </nav>
   )
 }
-

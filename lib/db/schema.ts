@@ -8,6 +8,7 @@ import {
   jsonb,
   unique,
   uniqueIndex,
+  index,
   bigint,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
@@ -36,6 +37,11 @@ export const serviceKeyEnum = pgEnum("service_key", [
   "TOUR_MADINAH",
 ])
 export const roleEnum = pgEnum("role", ["USER", "ADMIN"])
+export const communityJoinRequestStatusEnum = pgEnum("community_join_request_status", [
+  "NEW",
+  "MATCHED",
+  "REJECTED",
+])
 
 // --- Exchange Rates ---
 export const exchangeRates = pgTable("exchange_rates", {
@@ -223,6 +229,32 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 })
 
+// --- Community Join Requests ---
+export const communityJoinRequests = pgTable(
+  "community_join_requests",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    fullName: text("full_name").notNull(),
+    phone: text("phone").notNull(),
+    normalizedPhone: text("normalized_phone").notNull(),
+    socialUsername: text("social_username"),
+    normalizedSocialUsername: text("normalized_social_username"),
+    intent: text("intent"),
+    status: communityJoinRequestStatusEnum("status").notNull().default("NEW"),
+    adminNote: text("admin_note").notNull().default(""),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("community_join_requests_normalized_phone_idx").on(t.normalizedPhone),
+    index("community_join_requests_normalized_social_idx").on(t.normalizedSocialUsername),
+    index("community_join_requests_status_created_at_idx").on(t.status, t.createdAt),
+  ]
+)
+
 // --- Pilgrim Stories ---
 export const pilgrimStories = pgTable("pilgrim_stories", {
   id: text("id")
@@ -331,6 +363,8 @@ export type Estimate = typeof estimates.$inferSelect
 export type NewEstimate = typeof estimates.$inferInsert
 export type ActivityLog = typeof activityLogs.$inferSelect
 export type NewActivityLog = typeof activityLogs.$inferInsert
+export type CommunityJoinRequest = typeof communityJoinRequests.$inferSelect
+export type NewCommunityJoinRequest = typeof communityJoinRequests.$inferInsert
 export type PilgrimStory = typeof pilgrimStories.$inferSelect
 export type NewPilgrimStory = typeof pilgrimStories.$inferInsert
 export type StoryItineraryDay = typeof storyItineraryDays.$inferSelect

@@ -42,6 +42,12 @@ describe("NavBar", () => {
     expect(screen.getByRole("link", { name: "FAQ" })).toBeDefined()
   })
 
+  it("renders Komunitas link when session is null", async () => {
+    mockAuth.mockResolvedValue(null)
+    render(await NavBar({}))
+    expect(screen.getByRole("link", { name: "Komunitas" })).toHaveAttribute("href", "/komunitas")
+  })
+
   it("renders without crashing when session is null (unauthenticated)", async () => {
     mockAuth.mockResolvedValue(null)
     render(await NavBar({}))
@@ -64,4 +70,3 @@ describe("NavBar", () => {
     expect(screen.getByRole("button", { name: /Panel Admin/i })).toBeDefined()
   })
 })
-
