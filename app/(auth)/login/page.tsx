@@ -137,10 +137,10 @@ export default function LoginPage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}>
-            🕋 Umroh Estimator
+            🕋 SSU
           </h1>
           <p style={{ color: "var(--color-text-muted)" }}>
-            Estimasi biaya umroh yang akurat dan cepat
+            Partner Umroh Mandirimu
           </p>
         </div>
 

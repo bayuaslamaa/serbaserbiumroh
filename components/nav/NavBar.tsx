@@ -30,7 +30,7 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
             className="font-bold text-lg"
             style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
           >
-            🕋 Umroh Estimator
+            🕋 SSU
           </Link>
           <div className="hidden md:flex items-center gap-4">
             <Link
