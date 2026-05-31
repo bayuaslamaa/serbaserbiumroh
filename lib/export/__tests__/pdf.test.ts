@@ -7,6 +7,7 @@ vi.mock("@react-pdf/renderer", () => ({
   Page: "Page",
   Text: "Text",
   View: "View",
+  Image: "Image",
   StyleSheet: { create: (s: object) => s },
   renderToBuffer: vi.fn().mockResolvedValue(Buffer.from("fake-pdf-content")),
 }))

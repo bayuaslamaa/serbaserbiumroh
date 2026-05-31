@@ -27,10 +27,11 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
         <div className="flex items-center gap-6">
           <Link
             href={user ? "/dashboard" : "/"}
-            className="font-bold text-lg"
+            className="flex items-center gap-2 font-bold text-lg"
             style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
           >
-            🕋 SSU
+            <img src="/logo.png" alt="SSU Logo" className="h-8 w-auto object-contain" />
+            <span>SSU</span>
           </Link>
           <div className="hidden md:flex items-center gap-4">
             <Link

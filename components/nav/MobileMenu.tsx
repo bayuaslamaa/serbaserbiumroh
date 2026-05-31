@@ -75,10 +75,11 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
             <Link
               href={isLoggedIn ? "/dashboard" : "/"}
               onClick={() => setIsOpen(false)}
-              className="font-bold text-lg"
+              className="flex items-center gap-2 font-bold text-lg"
               style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
             >
-              🕋 SSU
+              <img src="/logo.png" alt="SSU Logo" className="h-8 w-auto object-contain" />
+              <span>SSU</span>
             </Link>
             <button
               onClick={() => setIsOpen(false)}

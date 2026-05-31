@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet, renderToBuffer, Image } from "@react-pdf/renderer"
 import { createElement } from "react"
+import path from "path"
 import type { BudgetBreakdown, EstimateParams } from "@/types"
 
 const GOLD = "#c9a84c"
@@ -10,8 +11,10 @@ const MUTED = "#9ab39e"
 
 const styles = StyleSheet.create({
   page: { backgroundColor: BG, padding: 40, fontFamily: "Helvetica", color: WHITE },
-  header: { backgroundColor: GREEN, borderRadius: 8, padding: 20, marginBottom: 20, alignItems: "center" },
-  headerTitle: { fontSize: 22, color: GOLD, fontFamily: "Helvetica-Bold", marginBottom: 4 },
+  header: { backgroundColor: GREEN, borderRadius: 8, padding: 20, marginBottom: 20, flexDirection: "row", alignItems: "center" },
+  headerLogo: { width: 40, height: 40, marginRight: 15, objectFit: "contain" },
+  headerTextContainer: { flexDirection: "column", flex: 1 },
+  headerTitle: { fontSize: 20, color: GOLD, fontFamily: "Helvetica-Bold", marginBottom: 2 },
   headerSub: { fontSize: 10, color: MUTED },
   section: { marginBottom: 16 },
   sectionTitle: { fontSize: 11, color: GOLD, fontFamily: "Helvetica-Bold", marginBottom: 6, textTransform: "uppercase", letterSpacing: 1 },
@@ -64,8 +67,16 @@ export async function generatePDF(
       createElement(
         View,
         { style: styles.header },
-        createElement(Text, { style: styles.headerTitle }, "🕋 ESTIMASI BIAYA UMROH"),
-        createElement(Text, { style: styles.headerSub }, title ?? "Paket Umroh")
+        createElement(Image, {
+          src: path.join(process.cwd(), "public/pdf/ssu.png"),
+          style: styles.headerLogo,
+        }),
+        createElement(
+          View,
+          { style: styles.headerTextContainer },
+          createElement(Text, { style: styles.headerTitle }, "ESTIMASI BIAYA UMROH"),
+          createElement(Text, { style: styles.headerSub }, title ?? "Paket Umroh")
+        )
       ),
       // Trip summary
       createElement(

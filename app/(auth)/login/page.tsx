@@ -135,9 +135,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
+        <div className="flex flex-col items-center text-center space-y-2">
+          <img src="/logo.png" alt="SSU Logo" className="h-16 w-auto object-contain mb-2" />
           <h1 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}>
-            🕋 SSU
+            SSU
           </h1>
           <p style={{ color: "var(--color-text-muted)" }}>
             Partner Umroh Mandirimu
