@@ -72,7 +72,7 @@ export function VisitorCounter() {
   }, [pathname])
 
   // Baseline offset for promotional purposes
-  const BASELINE_OFFSET = 1420
+  const BASELINE_OFFSET = 100
   const displayCount = count !== null ? count + BASELINE_OFFSET : null
 
   return (
