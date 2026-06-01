@@ -12,7 +12,7 @@ export function HeroSection({ isAdmin = false }: HeroSectionProps) {
         className="text-4xl font-bold mb-4"
         style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-gold)' }}
       >
-        Umroh Mandiri
+        Serba Serbi Umroh
       </h1>
       <p className="text-lg mb-2" style={{ color: 'var(--color-text-muted)' }}>
         Panduan Lengkap Ibadah Umroh Secara Mandiri

@@ -10,6 +10,7 @@ export function isPublicPath(pathname: string) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/api/community") ||
+    pathname.startsWith("/api/visitor") ||
     pathname.startsWith("/panduan") ||
     pathname.startsWith("/cerita-jamaah") ||
     pathname.startsWith("/hotel-nusuk") ||

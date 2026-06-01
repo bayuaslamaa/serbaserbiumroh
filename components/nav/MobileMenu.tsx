@@ -43,6 +43,7 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
     { href: "/admin/content/stories", label: "Kelola Cerita" },
     { href: "/admin/content/hotels", label: "Kelola Hotel" },
     { href: "/admin/content/faqs", label: "Kelola FAQ" },
+    { href: "/admin/visitor-stats", label: "Statistik Pengunjung" },
   ]
 
   const triggerButton = (
@@ -80,7 +81,6 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
               style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
             >
               <img src="/logo.png" alt="SSU Logo" className="h-8 w-auto object-contain" />
-              <span>SSU</span>
             </Link>
             <button
               onClick={() => setIsOpen(false)}
@@ -115,7 +115,7 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
               >
                 <Hotel size={18} /> Hotel Nusuk
               </Link>
-              
+
               {/* Layanan Group */}
               <div className="flex flex-col">
                 <button

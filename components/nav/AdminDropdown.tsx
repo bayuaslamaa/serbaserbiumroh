@@ -30,6 +30,7 @@ export function AdminDropdown() {
     { href: "/admin/content/stories", label: "Kelola Cerita" },
     { href: "/admin/content/hotels", label: "Kelola Hotel" },
     { href: "/admin/content/faqs", label: "Kelola FAQ" },
+    { href: "/admin/visitor-stats", label: "Statistik Pengunjung" },
   ]
 
   return (

@@ -350,6 +350,25 @@ export const faqItems = pgTable("faq_items", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
+// --- Visitor Logs ---
+export const visitorLogs = pgTable(
+  "visitor_logs",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    ipHash: text("ip_hash").notNull(),
+    userAgent: text("user_agent"),
+    path: text("path").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("visitor_logs_ip_hash_idx").on(t.ipHash),
+    index("visitor_logs_created_at_idx").on(t.createdAt),
+    index("visitor_logs_path_idx").on(t.path),
+  ]
+)
+
 // --- Inferred types ---
 export type ExchangeRate = typeof exchangeRates.$inferSelect
 export type HotelPrice = typeof hotelPrices.$inferSelect
@@ -377,3 +396,6 @@ export type FaqGroup = typeof faqGroups.$inferSelect
 export type NewFaqGroup = typeof faqGroups.$inferInsert
 export type FaqItem = typeof faqItems.$inferSelect
 export type NewFaqItem = typeof faqItems.$inferInsert
+export type VisitorLog = typeof visitorLogs.$inferSelect
+export type NewVisitorLog = typeof visitorLogs.$inferInsert
+
