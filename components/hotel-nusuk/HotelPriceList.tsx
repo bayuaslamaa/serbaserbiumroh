@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { CalendarDays, Search, MapPin, Building, Ruler } from 'lucide-react'
+import { HotelNusukDisclaimerPopup } from '@/components/hotel-nusuk/HotelNusukDisclaimerPopup'
 
 export interface MonthlyPriceDetail {
   month: number
@@ -84,6 +85,7 @@ export function HotelPriceList({ hotels, exchangeRate }: HotelPriceListProps) {
 
   return (
     <div className="space-y-6">
+      <HotelNusukDisclaimerPopup />
       {/* Search and Filters panel */}
       <div className="flex flex-col md:flex-row gap-4 p-4 rounded-lg border bg-[var(--color-surface)] border-[var(--color-border)]">
         {/* Search input */}
