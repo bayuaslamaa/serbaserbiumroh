@@ -2,6 +2,7 @@ import Link from "next/link"
 import { auth, signOut } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { AdminDropdown } from "./AdminDropdown"
+import { LayananDropdown } from "./LayananDropdown"
 import { MobileMenu } from "./MobileMenu"
 
 export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
@@ -55,13 +56,7 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
             >
               Hotel Nusuk
             </Link>
-            <Link
-              href="/visa"
-              className="text-sm transition-colors hover:text-[var(--color-text)]"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Visa
-            </Link>
+            <LayananDropdown />
             <Link
               href="/faq"
               className="text-sm transition-colors hover:text-[var(--color-text)]"

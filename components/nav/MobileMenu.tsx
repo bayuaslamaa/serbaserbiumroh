@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { createPortal } from "react-dom"
-import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle, MessageCircle } from "lucide-react"
+import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle, MessageCircle, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface MobileMenuProps {
@@ -17,6 +17,7 @@ interface MobileMenuProps {
 export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, signOutAction }: MobileMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [isAdminOpen, setIsAdminOpen] = React.useState(false)
+  const [isLayananOpen, setIsLayananOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -114,6 +115,37 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
               >
                 <Hotel size={18} /> Hotel Nusuk
               </Link>
+              
+              {/* Layanan Group */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => setIsLayananOpen(!isLayananOpen)}
+                  className="flex items-center justify-between w-full text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
+                >
+                  <span className="flex items-center gap-3">
+                    <Briefcase size={18} /> Layanan
+                  </span>
+                  <ChevronDown size={18} className={`transition-transform duration-200 ${isLayananOpen ? "rotate-180" : ""}`} />
+                </button>
+                {isLayananOpen && (
+                  <div className="pl-6 mt-2 space-y-2 border-l border-[var(--color-border)] ml-2">
+                    <Link
+                      href="/visa"
+                      onClick={() => setIsOpen(false)}
+                      className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                    >
+                      Visa Umroh
+                    </Link>
+                    <Link
+                      href="/transportasi"
+                      onClick={() => setIsOpen(false)}
+                      className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                    >
+                      Sewa Transportasi
+                    </Link>
+                  </div>
+                )}
+              </div>
               <Link
                 href="/faq"
                 onClick={() => setIsOpen(false)}
