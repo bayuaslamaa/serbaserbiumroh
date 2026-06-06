@@ -33,8 +33,9 @@ export function CommunityJoinForm({ groupRequestUrl, adminChatUrl }: CommunityJo
 
   const adminLink = useMemo(() => {
     if (!adminChatUrl || !submitted) return adminChatUrl
+    const url = adminChatUrl.startsWith("http") ? adminChatUrl : `https://wa.me/${adminChatUrl}`
     return withPrefilledText(
-      adminChatUrl,
+      url,
       `Assalamualaikum, saya ${submitted.fullName} (${submitted.phone}) sudah mengisi form komunitas Umroh Mandiri dan ingin mengajukan masuk grup.`
     )
   }, [adminChatUrl, submitted])

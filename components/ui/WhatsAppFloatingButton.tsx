@@ -6,7 +6,7 @@ export function WhatsAppFloatingButton() {
   const [isVisible, setIsVisible] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
 
-  const adminUrl = process.env.NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL || "https://wa.me/6285161134844"
+  const adminUrl = "https://wa.me/6285161134844"
 
   useEffect(() => {
     // Show button after a small delay for a nice entry animation
