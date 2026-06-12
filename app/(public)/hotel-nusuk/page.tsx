@@ -59,6 +59,8 @@ export default async function HotelNusukPage() {
     }
   })
 
+  const showMonthlyPrices = process.env.NEXT_PUBLIC_SHOW_MONTHLY_HOTEL_PRICE === 'true'
+
   return (
     <div className="max-w-5xl mx-auto">
       <h1
@@ -76,7 +78,11 @@ export default async function HotelNusukPage() {
           Belum ada data hotel.
         </p>
       ) : (
-        <HotelPriceList hotels={mappedHotels} exchangeRate={sarToIdrRate} />
+        <HotelPriceList
+          hotels={mappedHotels}
+          exchangeRate={sarToIdrRate}
+          showMonthlyPrices={showMonthlyPrices}
+        />
       )}
     </div>
   )

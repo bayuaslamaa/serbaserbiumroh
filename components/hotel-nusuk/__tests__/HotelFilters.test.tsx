@@ -81,11 +81,26 @@ describe('HotelFilters (replaced with HotelPriceList tests)', () => {
     expect(screen.getByText('Madinah Premium')).toBeDefined()
   })
 
-  it('renders monthly price grid for hotels', () => {
-    render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
+  it('renders monthly price grid for hotels when showMonthlyPrices is true', () => {
+    render(<HotelPriceList hotels={hotels} exchangeRate={4700} showMonthlyPrices={true} />)
     // Verify month abbreviations are rendered
     expect(screen.getAllByText('Jan').length).toBe(4)
     expect(screen.getAllByText('Des').length).toBe(4)
+  })
+
+  it('does not render any prices and renders ask admin button when showMonthlyPrices is false', () => {
+    render(<HotelPriceList hotels={hotels} exchangeRate={4700} showMonthlyPrices={false} />)
+    // Verify month abbreviations are NOT rendered
+    expect(screen.queryByText('Jan')).toBeNull()
+    expect(screen.queryByText('Des')).toBeNull()
+    // Verify pricing details/baselines are NOT rendered
+    expect(screen.queryByText('Rp 705rb')).toBeNull()
+    expect(screen.queryByText('150 SAR')).toBeNull()
+    expect(screen.queryByText('Baseline: 150 SAR')).toBeNull()
+    // Verify reference rate is NOT rendered
+    expect(screen.queryByText('Kurs acuan:')).toBeNull()
+    // Verify "Tanyakan Harga ke Admin" button is rendered
+    expect(screen.getAllByText('Tanyakan Harga ke Admin').length).toBeGreaterThan(0)
   })
 
   it('shows city filter dropdown options', () => {

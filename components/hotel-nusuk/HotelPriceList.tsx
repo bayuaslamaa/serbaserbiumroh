@@ -35,6 +35,7 @@ export interface HotelWithMonthlyPrices {
 interface HotelPriceListProps {
   hotels: HotelWithMonthlyPrices[]
   exchangeRate: number
+  showMonthlyPrices?: boolean
 }
 
 const CITIES = ['MAKKAH', 'MADINAH'] as const
@@ -66,7 +67,11 @@ function formatFullIdr(amount: number): string {
   }).format(amount)
 }
 
-export function HotelPriceList({ hotels, exchangeRate }: HotelPriceListProps) {
+export function HotelPriceList({
+  hotels,
+  exchangeRate,
+  showMonthlyPrices = true,
+}: HotelPriceListProps) {
   const [city, setCity] = useState<string>('Semua')
   const [tier, setTier] = useState<string>('Semua')
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -148,7 +153,9 @@ export function HotelPriceList({ hotels, exchangeRate }: HotelPriceListProps) {
       {/* Header Info */}
       <div className="flex justify-between items-center text-xs text-[var(--color-text-muted)] px-1">
         <span>Menampilkan {filtered.length} dari {hotels.length} hotel</span>
-        <span>Kurs acuan: 1 SAR = {formatFullIdr(exchangeRate)}</span>
+        {showMonthlyPrices && (
+          <span>Kurs acuan: 1 SAR = {formatFullIdr(exchangeRate)}</span>
+        )}
       </div>
 
       {/* Grid of hotel cards */}
@@ -211,47 +218,83 @@ export function HotelPriceList({ hotels, exchangeRate }: HotelPriceListProps) {
 
               {/* Card Content with 12-Month Pricing */}
               <CardContent className="pt-0 flex-grow flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--color-gold)] font-semibold mb-3 border-b border-[var(--color-border)] pb-1.5">
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    <span>Estimasi Harga per Malam (IDR & SAR)</span>
-                  </div>
+                {showMonthlyPrices ? (
+                  <div>
+                    <div className="flex items-center gap-1.5 text-xs text-[var(--color-gold)] font-semibold mb-3 border-b border-[var(--color-border)] pb-1.5">
+                      <CalendarDays className="h-3.5 w-3.5" />
+                      <span>Estimasi Harga per Malam (IDR & SAR)</span>
+                    </div>
 
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {hotel.monthlyPrices.map((mp) => (
-                      <div
-                        key={mp.month}
-                        className={`p-2 rounded text-center transition-colors flex flex-col justify-center ${
-                          mp.isOverride
-                            ? 'bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.3)]'
-                            : 'bg-black/10 border border-transparent'
-                        }`}
-                        title={`${MONTH_NAMES[mp.month - 1]}: ${formatFullIdr(mp.idr)} (${mp.sar} SAR) per malam${
-                          mp.isOverride ? ' (Harga Musiman)' : ''
-                        }`}
-                      >
-                        <span className="text-[10px] text-[var(--color-text-muted)] block font-medium">
-                          {MONTH_NAMES[mp.month - 1]}
-                          {mp.isOverride && <span className="text-[var(--color-gold)] ml-0.5 font-bold">•</span>}
-                        </span>
-                        <span className="text-[11px] font-semibold text-[var(--color-text)] block mt-0.5">
-                          {formatCompactIdr(mp.idr)}
-                        </span>
-                        <span className="text-[9px] text-[var(--color-text-muted)] block">
-                          {mp.sar} SAR
-                        </span>
-                      </div>
-                    ))}
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {hotel.monthlyPrices.map((mp) => (
+                        <div
+                          key={mp.month}
+                          className={`p-2 rounded text-center transition-colors flex flex-col justify-center ${
+                            mp.isOverride
+                              ? 'bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.3)]'
+                              : 'bg-black/10 border border-transparent'
+                          }`}
+                          title={`${MONTH_NAMES[mp.month - 1]}: ${formatFullIdr(mp.idr)} (${mp.sar} SAR) per malam${
+                            mp.isOverride ? ' (Harga Musiman)' : ''
+                          }`}
+                        >
+                          <span className="text-[10px] text-[var(--color-text-muted)] block font-medium">
+                            {MONTH_NAMES[mp.month - 1]}
+                            {mp.isOverride && <span className="text-[var(--color-gold)] ml-0.5 font-bold">•</span>}
+                          </span>
+                          <span className="text-[11px] font-semibold text-[var(--color-text)] block mt-0.5">
+                            {formatCompactIdr(mp.idr)}
+                          </span>
+                          <span className="text-[9px] text-[var(--color-text-muted)] block">
+                            {mp.sar} SAR
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex flex-col justify-center items-center py-6">
+                    <p className="text-xs text-[var(--color-text-muted)] text-center mb-4 leading-relaxed">
+                      Hubungi admin untuk mendapatkan informasi estimasi harga terbaru hotel ini.
+                    </p>
+                    <a
+                      href={(() => {
+                        const adminPhone = process.env.NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL || ''
+                        const cleanPhone = adminPhone.startsWith('http') ? adminPhone : `https://wa.me/${adminPhone}`
+                        const text = encodeURIComponent(`Assalamu'alaikum Admin, saya ingin menanyakan estimasi harga terbaru untuk hotel ${hotel.label} (${hotel.city}).`)
+                        return adminPhone.startsWith('http') ? adminPhone : `${cleanPhone}?text=${text}`
+                      })()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-md border transition-all duration-200 w-full sm:w-auto text-center"
+                      style={{
+                        borderColor: 'var(--color-gold)',
+                        color: 'var(--color-gold)',
+                        backgroundColor: 'rgba(201, 168, 76, 0.05)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(201, 168, 76, 0.15)'
+                        e.currentTarget.style.transform = 'translateY(-1px)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(201, 168, 76, 0.05)'
+                        e.currentTarget.style.transform = 'none'
+                      }}
+                    >
+                      Tanyakan Harga ke Admin
+                    </a>
+                  </div>
+                )}
 
-                <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex justify-between items-center text-[10px] text-[var(--color-text-muted)]">
-                  <span>Baseline: {hotel.sarPerNight} SAR ({formatCompactIdr(hotel.sarPerNight * exchangeRate)})</span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-gold)]"></span>
-                    Harga Musiman
-                  </span>
-                </div>
+                {showMonthlyPrices && (
+                  <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex justify-between items-center text-[10px] text-[var(--color-text-muted)]">
+                    <span>Baseline: {hotel.sarPerNight} SAR ({formatCompactIdr(hotel.sarPerNight * exchangeRate)})</span>
+                    <span className="flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-gold)]"></span>
+                      Harga Musiman
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
