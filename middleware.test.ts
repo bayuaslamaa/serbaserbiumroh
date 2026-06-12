@@ -13,6 +13,13 @@ describe("middleware public route matching", () => {
     expect(isPublicPath("/api/community/join")).toBe(true)
   })
 
+  it("allows public webinar page without login", async () => {
+    const { isPublicPath } = await import("./middleware")
+
+    expect(isPublicPath("/webinar-umroh-mandiri")).toBe(true)
+    expect(isPublicPath("/webinar-umroh-mandiri/")).toBe(true)
+  })
+
   it("keeps dashboard and admin routes protected", async () => {
     const { isPublicPath } = await import("./middleware")
 

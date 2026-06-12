@@ -72,6 +72,13 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
             >
               Komunitas
             </Link>
+            <Link
+              href="/webinar-umroh-mandiri"
+              className="text-sm transition-colors hover:text-[var(--color-text)]"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Webinar
+            </Link>
             {user && (
               <Link
                 href="/dashboard"

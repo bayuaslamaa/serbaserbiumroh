@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { createPortal } from "react-dom"
-import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle, MessageCircle, Briefcase } from "lucide-react"
+import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle, MessageCircle, Briefcase, CalendarDays } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface MobileMenuProps {
@@ -159,6 +159,13 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
                 className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
               >
                 <MessageCircle size={18} /> Komunitas
+              </Link>
+              <Link
+                href="/webinar-umroh-mandiri"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
+              >
+                <CalendarDays size={18} /> Webinar
               </Link>
               {isLoggedIn && (
                 <Link

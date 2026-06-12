@@ -48,6 +48,12 @@ describe("NavBar", () => {
     expect(screen.getByRole("link", { name: "Komunitas" })).toHaveAttribute("href", "/komunitas")
   })
 
+  it("renders Webinar link when session is null", async () => {
+    mockAuth.mockResolvedValue(null)
+    render(await NavBar({}))
+    expect(screen.getByRole("link", { name: "Webinar" })).toHaveAttribute("href", "/webinar-umroh-mandiri")
+  })
+
   it("renders without crashing when session is null (unauthenticated)", async () => {
     mockAuth.mockResolvedValue(null)
     render(await NavBar({}))

@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-05-30
+> Last updated: 2026-06-11
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -141,9 +141,18 @@ Two export formats for sharing estimates:
 
 **Files:** `app/(public)/komunitas/page.tsx`, `components/community/`, `app/api/community/join/route.ts`, `app/(admin)/admin/community-requests/page.tsx`, `app/api/admin/community-requests/`
 
+## 8. Webinar RSVP
+
+- **Public webinar page** (`/webinar-umroh-mandiri`) — shareable event page for the Umroh Mandiri webinar on Ahad, 14 Juni 2026
+- **Logged-in RSVP gate** — anonymous visitors can read event details but cannot see the RSVP destination
+- **Callback login CTA** — anonymous visitors are sent to `/login` with a callback back to the webinar page
+- **Server-only RSVP URL** — `WEBINAR_RSVP_URL` is rendered only after `auth()` confirms a session; missing config shows an unavailable state instead of a broken link
+
+**Files:** `app/(public)/webinar-umroh-mandiri/page.tsx`, `middleware.ts`, `components/nav/`, `components/home/HeroSection.tsx`
+
 ---
 
-## 8. Dashboard
+## 9. Dashboard
 
 - **Estimate list** (`/dashboard`) — cards showing saved estimates with title, date, and per-pax total
 - **Estimate detail** (`/estimate/[id]`) — full breakdown with export buttons
@@ -154,7 +163,7 @@ Two export formats for sharing estimates:
 
 ---
 
-## 9. Admin Panel
+## 10. Admin Panel
 
 Admin-only route group (`/admin/*`) guarded by `requireAdmin()` server-side.
 
@@ -250,16 +259,16 @@ All changes are saved immediately (no publish step).
 
 ---
 
-## 10. Navigation
+## 11. Navigation
 
-- `NavBar` — session-aware; shows Dashboard, public FAQ, community, and estimate links for all users; shows Admin links only when `role === ADMIN`
+- `NavBar` — session-aware; shows Dashboard, public FAQ, community, webinar, and estimate links for all users; shows Admin links only when `role === ADMIN`
 - Sign-out button
 
 **Files:** `components/nav/NavBar.tsx`
 
 ---
 
-## 11. API Routes
+## 12. API Routes
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
@@ -291,9 +300,9 @@ All changes are saved immediately (no publish step).
 
 ---
 
-## 12. Test Coverage
+## 13. Test Coverage
 
-Community join adds focused coverage for request validation, public submit route, public form success/error states, admin request routes, and admin row actions.
+Community join and webinar RSVP add focused coverage for request validation, public submit route, public form success/error states, admin request routes, admin row actions, middleware public route matching, and RSVP link gating.
 
 | File | Tests | Area |
 |------|-------|------|
