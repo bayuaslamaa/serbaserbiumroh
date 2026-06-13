@@ -6,7 +6,7 @@ const WEBINAR_PATH = "/webinar-umroh-mandiri"
 
 export const metadata = {
   title: "Webinar Umroh Mandiri",
-  description: "RSVP webinar Umroh Mandiri Ahad, 14 Juni 2026 untuk user terdaftar.",
+  description: "RSVP webinar Umroh Mandiri Selasa, 16 Juni 2026 untuk user terdaftar.",
 }
 
 export default async function WebinarUmrohMandiriPage() {
@@ -40,7 +40,7 @@ export default async function WebinarUmrohMandiriPage() {
                 Jadwal
               </p>
               <p className="mt-1" style={{ color: "var(--color-text-muted)" }}>
-                Ahad, 14 Juni 2026
+                Selasa, 16 Juni 2026
               </p>
             </div>
             <div
