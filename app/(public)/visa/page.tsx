@@ -4,15 +4,12 @@ import { Button } from "@/components/ui/button"
 import {
   FileText,
   Clock,
-  DollarSign,
   CheckCircle2,
   AlertTriangle,
   ExternalLink,
   MessageCircle,
   HelpCircle,
   ShieldCheck,
-  Building,
-  Plane,
   Users
 } from "lucide-react"
 import Link from "next/link"
@@ -21,6 +18,14 @@ export const metadata = {
   title: "Penerbitan Visa Umroh Perorangan | SSU",
   description: "Layanan pengurusan visa umroh perorangan secara online oleh @badalinbybazanyc. Pilihan reguler lewat approval hotel Nusuk Masar atau BRN.",
 }
+
+const whatsappVisaHref =
+  "https://wa.me/6285161134844?text=Assalamu%27alaikum%2C%20saya%20ingin%20konsultasi%20pengurusan%20visa%20umroh%20perorangan."
+const whatsappLayanan1Href =
+  "https://wa.me/6285161134844?text=Assalamu%27alaikum%2C%20saya%20ingin%20mengajukan%20visa%20umroh%20Layanan%201%20reguler%20melalui%20approval%20hotel%20di%20Nusuk%20Masar."
+const whatsappLayanan2Href =
+  "https://wa.me/6285161134844?text=Assalamu%27alaikum%2C%20saya%20ingin%20mengajukan%20visa%20umroh%20Layanan%202%20reguler%20dengan%20BRN."
+const visaAppHref = "https://visa.serbaserbiumroh.id"
 
 export default function VisaPage() {
   return (
@@ -40,20 +45,20 @@ export default function VisaPage() {
           by @badalinbybazanyc
         </p>
         <p className="text-sm md:text-base leading-relaxed mb-8" style={{ color: "var(--color-text-muted)" }}>
-          Pengurusan visa umroh dilakukan secara online. Transaksi dan komunikasi lebih lanjut tetap dilakukan melalui WhatsApp. Silakan pelajari persyaratan dan ajukan melalui tombol di bawah.
+          Pengurusan visa umroh dilakukan online. Semua transaksi dan komunikasi lanjutan masih dilakukan melalui WhatsApp ini.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link href="https://visa.serbaserbiumroh.id" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <Link href={visaAppHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button size="lg" className="w-full sm:w-auto font-bold flex items-center justify-center gap-2 group transition-all duration-300 hover:shadow-lg hover:shadow-[rgba(201,168,76,0.2)]">
-              <span>Ajukan via visa.serbaserbiumroh.id</span>
+              <span>Pesan Visa lewat Aplikasi</span>
               <ExternalLink className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Button>
           </Link>
-          <Link href="https://wa.me/6285161134844" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <Link href={whatsappVisaHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button variant="outline" size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2 border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-surface)]">
               <MessageCircle className="w-4 h-4" />
-              <span>Hubungi Kami di WhatsApp</span>
+              <span>Ajukan via WhatsApp</span>
             </Button>
           </Link>
         </div>
@@ -73,14 +78,14 @@ export default function VisaPage() {
               <div className="text-right">
                 <span className="text-xs text-[var(--color-text-muted)] block">Harga</span>
                 <span className="text-2xl font-bold text-[var(--color-gold)]">USD 165</span>
-                <span className="text-[10px] text-[var(--color-text-muted)] block">(inc. Asuransi Saudi)</span>
+                <span className="text-[10px] text-[var(--color-text-muted)] block">(include asuransi selama di Saudi)</span>
               </div>
             </div>
             <CardTitle className="text-xl md:text-2xl font-bold" style={{ color: "var(--color-gold)", fontFamily: "var(--font-heading)" }}>
-              Reguler via Approval Hotel di Nusuk Masar
+              Reguler melalui Approval Hotel di Nusuk Masar
             </CardTitle>
             <CardDescription className="text-xs md:text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
-              Metode reguler yang membutuhkan persetujuan (approval) dari hotel yang Anda pesan langsung di Nusuk Masar.
+              Layanan reguler melalui approval hotel di Nusuk Masar untuk hotel Mekkah dan Madinah yang sudah Anda booking.
             </CardDescription>
           </CardHeader>
 
@@ -116,7 +121,17 @@ export default function VisaPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Booking hotel Mekkah & Madinah terdaftar di Nusuk Masar</span>
+                  <span>
+                    Booking hotel Mekkah & Madinah yang terdaftar di Nusuk Masar. Bisa cek rekomendasi kami di{" "}
+                    <Link
+                      href="https://serbaserbiumroh.id/hotel-nusuk"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[var(--color-gold)] underline underline-offset-4 hover:text-[var(--color-gold-muted)]"
+                    >
+                      serbaserbiumroh.id/hotel-nusuk
+                    </Link>
+                  </span>
                 </li>
               </ul>
             </div>
@@ -128,10 +143,13 @@ export default function VisaPage() {
               </h5>
               <ul className="space-y-1.5 text-[var(--color-text-muted)] list-disc pl-4">
                 <li>
-                  <strong className="text-[var(--color-text)]">WAJIB tanya ke kami</strong> sebelum membeli hotel di OTA (Trip.com, Agoda, dll).
+                  Hotel boleh dibeli melalui OTA seperti Bookingcom, Agoda, dan lainnya.
                 </li>
                 <li>
-                  Status pemesanan hotel harus <strong className="text-[var(--color-text)]">non-refundable & non-free cancellation</strong>.
+                  <strong className="text-[var(--color-text)]">WAJIB tanya ke kami</strong> sebelum membeli hotel.
+                </li>
+                <li>
+                  Hotel harus <strong className="text-[var(--color-text)]">non-refundable & non-free cancellation</strong>.
                 </li>
                 <li>Jumlah tempat tidur (bed) wajib sesuai dengan jumlah orang yang menginap.</li>
                 <li>Untuk grup dengan jumlah <strong className="text-[var(--color-text)]">lebih dari 2 orang</strong>, wajib menggunakan jasa transportasi penjemputan dari kami.</li>
@@ -140,10 +158,10 @@ export default function VisaPage() {
           </CardContent>
 
           <CardFooter className="pt-0">
-            <Link href="https://visa.serbaserbiumroh.id" target="_blank" className="w-full">
+            <Link href={whatsappLayanan1Href} target="_blank" rel="noopener noreferrer" className="w-full">
               <Button className="w-full flex items-center justify-center gap-2">
+                <MessageCircle className="w-4 h-4" />
                 <span>Pilih & Ajukan Layanan 1</span>
-                <ExternalLink className="w-4 h-4" />
               </Button>
             </Link>
           </CardFooter>
@@ -159,15 +177,15 @@ export default function VisaPage() {
               </Badge>
               <div className="text-right">
                 <span className="text-xs text-[var(--color-text-muted)] block">Harga</span>
-                <span className="text-2xl font-bold text-[var(--color-gold)]">Rp3.200.000</span>
-                <span className="text-[10px] text-[var(--color-text-muted)] block">(inc. Asuransi Saudi)</span>
+                <span className="text-2xl font-bold text-[var(--color-gold)]">USD 190</span>
+                <span className="text-[10px] text-[var(--color-text-muted)] block">(include asuransi)</span>
               </div>
             </div>
             <CardTitle className="text-xl md:text-2xl font-bold" style={{ color: "var(--color-gold)", fontFamily: "var(--font-heading)" }}>
-              Reguler dengan Booking Reference Number (BRN)
+              Reguler dengan BRN
             </CardTitle>
             <CardDescription className="text-xs md:text-sm mt-1" style={{ color: "var(--color-text-muted)" }}>
-              Alternatif tanpa persetujuan hotel yang Anda beli. Kami bantu memesankan BRN dari hotel terdaftar lainnya.
+              Tanpa melalui approval hotel yang dibeli, sehingga biasanya perlu membeli BRN hotel lain.
             </CardDescription>
           </CardHeader>
 
@@ -186,13 +204,13 @@ export default function VisaPage() {
             {/* Why BRN? */}
             <div className="p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-xs md:text-sm">
               <h5 className="font-semibold text-[var(--color-gold)] mb-1.5 flex items-center gap-1.5">
-                <HelpCircle className="w-4 h-4" /> Mengapa Memilih BRN?
+                <HelpCircle className="w-4 h-4" /> Kapan Menggunakan BRN?
               </h5>
-              <p className="text-[var(--color-text-muted)] mb-2">Layanan ini diambil biasanya karena beberapa faktor berikut pada hotel yang dipesan:</p>
+              <p className="text-[var(--color-text-muted)] mb-2">Layanan ini biasanya dipilih ketika approval hotel yang dibeli tidak memungkinkan karena:</p>
               <ul className="list-decimal pl-4 text-[var(--color-text-muted)] space-y-1">
-                <li>Sulit mendapatkan approval dari pihak hotel</li>
-                <li>Kurang kapasitas tempat tidur (bed)</li>
-                <li>Pihak hotel tidak responsif memproses persetujuan</li>
+                <li>Sulit mendapatkan approval hotel</li>
+                <li>Kurang bed</li>
+                <li>Hotel tidak responsif</li>
               </ul>
             </div>
 
@@ -216,7 +234,7 @@ export default function VisaPage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span className="leading-tight">Booking hotel Mekkah & Madinah yang terdaftar di web Kementerian Pariwisata Saudi. (Boleh dibeli di OTA seperti Trip.com, Agoda, dll).</span>
+                  <span className="leading-tight">Booking hotel Mekkah & Madinah yang terdaftar di web Kementerian Pariwisata Saudi. Hotel boleh dibeli melalui OTA seperti Bookingcom, Agoda, dan lainnya.</span>
                 </li>
               </ul>
             </div>
@@ -231,10 +249,10 @@ export default function VisaPage() {
           </CardContent>
 
           <CardFooter className="pt-0">
-            <Link href="https://visa.serbaserbiumroh.id" target="_blank" className="w-full">
+            <Link href={whatsappLayanan2Href} target="_blank" rel="noopener noreferrer" className="w-full">
               <Button className="w-full flex items-center justify-center gap-2">
+                <MessageCircle className="w-4 h-4" />
                 <span>Pilih & Ajukan Layanan 2</span>
-                <ExternalLink className="w-4 h-4" />
               </Button>
             </Link>
           </CardFooter>
@@ -259,7 +277,7 @@ export default function VisaPage() {
               <ShieldCheck className="w-5 h-5 text-[var(--color-gold)]" /> Siskopatuh (Opsional)
             </CardTitle>
             <CardDescription className="text-xs md:text-sm" style={{ color: "var(--color-text-muted)" }}>
-              Pendaftaran ke Sistem Komputerisasi Pengelolaan Terpadu Umrah dan Haji Khusus (Siskopatuh) Kementerian Agama RI.
+              Siskopatuh bersifat opsional dan dapat diajukan bersamaan dengan pengurusan visa.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-xs md:text-sm space-y-4">
@@ -307,7 +325,7 @@ export default function VisaPage() {
             </div>
             <div>
               <h5 className="font-bold text-[var(--color-text)] mb-1">Proses Pembayaran & Transaksi</h5>
-              <p style={{ color: "var(--color-text-muted)" }}>Seluruh proses pembayaran, verifikasi dokumen, dan konfirmasi akhir akan difasilitasi melalui link pengajuan dan diteruskan melalui chat admin WhatsApp resmi kami.</p>
+              <p style={{ color: "var(--color-text-muted)" }}>Seluruh proses pembayaran, verifikasi dokumen, dan konfirmasi akhir dilakukan melalui chat admin WhatsApp resmi kami.</p>
             </div>
           </div>
         </div>
@@ -319,17 +337,18 @@ export default function VisaPage() {
           Mulai Pengurusan Visa Anda Sekarang
         </h3>
         <p className="text-xs md:text-sm max-w-xl mx-auto mb-6" style={{ color: "var(--color-text-muted)" }}>
-          Persiapkan scan paspor dan kelengkapan hotel Anda. Klik tombol di bawah untuk masuk ke platform pengajuan visa mandiri kami.
+          Persiapkan scan paspor, tiket PP, dan kelengkapan booking hotel Anda. Ajukan lewat aplikasi kami atau konsultasikan dulu melalui WhatsApp.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link href="https://visa.serbaserbiumroh.id" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto font-bold flex items-center justify-center gap-2 p-1">
-              <span>Ajukan Visa di visa.serbaserbiumroh.id</span>
+          <Link href={visaAppHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto font-bold flex items-center justify-center gap-2">
+              <span>Pesan Visa lewat Aplikasi</span>
               <ExternalLink className="w-4 h-4" />
             </Button>
           </Link>
-          <Link href="https://wa.me/6285161134844" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+          <Link href={whatsappVisaHref} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
             <Button variant="outline" size="lg" className="w-full sm:w-auto border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-surface)]">
+              <MessageCircle className="w-4 h-4" />
               <span>Tanya Admin WhatsApp</span>
             </Button>
           </Link>
