@@ -34,6 +34,8 @@ interface Vehicle {
   passengers: number
   luggage: string
   details: string
+  imageSrc: string
+  imageAlt: string
   icon: React.ReactNode
   bgClass: string
   routes: Route[]
@@ -62,6 +64,8 @@ export default function TransportasiClient() {
       passengers: 3,
       luggage: '2 Koper + 2 Tas Kecil',
       details: 'Ideal untuk keluarga kecil atau perjalanan bisnis pribadi.',
+      imageSrc: '/transportasi/vehicles/sedan.webp',
+      imageAlt: 'Sedan hitam untuk layanan transportasi bandara',
       bgClass: 'from-pink-500/10 to-transparent',
       icon: <Car className="w-6 h-6 text-pink-400" />,
       routes: [
@@ -81,10 +85,12 @@ export default function TransportasiClient() {
     },
     {
       id: '7-seater',
-      name: '7 Seater Minivan',
+      name: 'Hyundai Staria (7 Seater)',
       passengers: 7,
       luggage: '10 Koper',
       details: 'Sangat cocok untuk rombongan keluarga sedang dengan bagasi banyak.',
+      imageSrc: '/transportasi/vehicles/7-seater-minivan.webp',
+      imageAlt: 'Hyundai Staria tujuh penumpang untuk layanan transportasi keluarga',
       bgClass: 'from-amber-500/10 to-transparent',
       icon: <Car className="w-6 h-6 text-amber-400" />,
       routes: [
@@ -108,6 +114,8 @@ export default function TransportasiClient() {
       passengers: 12,
       luggage: '15 Koper Besar',
       details: 'Luas, nyaman, armada andalan untuk rombongan umroh mandiri.',
+      imageSrc: '/transportasi/vehicles/hiace-12-seater.webp',
+      imageAlt: 'Van penumpang dua belas kursi untuk rombongan umroh',
       bgClass: 'from-emerald-500/10 to-transparent',
       icon: <Car className="w-6 h-6 text-emerald-400" />,
       routes: [
@@ -131,6 +139,8 @@ export default function TransportasiClient() {
       passengers: 6,
       luggage: '6 Koper Besar',
       details: 'SUV Premium Amerika berkapasitas besar untuk kenyamanan berkelas tinggi.',
+      imageSrc: '/transportasi/vehicles/gmc-yukon.webp',
+      imageAlt: 'SUV premium hitam untuk transportasi eksklusif',
       bgClass: 'from-blue-500/10 to-transparent',
       icon: <Car className="w-6 h-6 text-blue-400" />,
       routes: [
@@ -366,6 +376,7 @@ Mohon diinfo ketersediaan dan proses pemesanan lebih lanjut. Terima kasih!`
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {vehicles.map((v) => (
               <button
+                type="button"
                 key={v.id}
                 id={`btn-tab-${v.id}`}
                 onClick={() => {
@@ -382,6 +393,17 @@ Mohon diinfo ketersediaan dan proses pemesanan lebih lanjut. Terima kasih!`
                 {activeVehicleId === v.id && (
                   <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-r from-[var(--color-gold)] to-emerald-500" />
                 )}
+                <div className="mb-3 aspect-[4/3] w-full overflow-hidden rounded-lg border border-[var(--color-border)] bg-black/30">
+                  <img
+                    src={v.imageSrc}
+                    alt={v.imageAlt}
+                    width={720}
+                    height={540}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-contain p-2"
+                  />
+                </div>
                 <div className="flex items-center gap-2 mb-2">
                   {v.icon}
                   <span className="font-bold text-sm md:text-base text-[var(--color-text)]">{v.name}</span>
