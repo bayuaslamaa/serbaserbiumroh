@@ -15,8 +15,8 @@ function CountdownTimer() {
   } | null>(null)
 
   useEffect(() => {
-    // Target Date: 16 June 2026 at 13:00 WIB (UTC+7)
-    const targetDate = new Date('2026-06-16T13:00:00+07:00').getTime()
+    // Target Date: 21 June 2026 at 13:00 WIB (UTC+7)
+    const targetDate = new Date('2026-06-21T13:00:00+07:00').getTime()
 
     const updateTimer = () => {
       const now = new Date().getTime()
@@ -95,27 +95,27 @@ export function PromoWebinar() {
           <div className="lg:col-span-7 space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--color-gold)]/10 text-[var(--color-gold)] border border-[var(--color-gold)]/30 animate-pulse">
               <span className="w-2 h-2 rounded-full bg-red-500" />
-              WEBINAR AKBAR TERDEKAT
+              MANASIK ONLINE GRATIS
             </div>
             
             <h2 className="text-3xl md:text-4xl font-extrabold leading-tight tracking-wide font-serif" style={{ color: 'var(--color-gold)' }}>
-              Join Our Webinar:<br />
-              <span className="text-white">A-Z Umroh Mandiri Aman di Musim 1448 H</span>
+              Manasik Online:<br />
+              <span className="text-white">Tata Cara & Panduan Praktis Ibadah Umroh</span>
             </h2>
             
             <p className="text-sm md:text-base leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
-              Rencanakan ibadah umroh mandiri Anda secara aman, hemat, dan terstruktur. Pelajari persiapan dokumen dari A-Z, estimasi biaya riil, tips memilih hotel dekat Masjidil Haram & Masjid Nabawi, serta rincian transportasi langsung bersama praktisi berpengalaman.
+              Pelajari tata cara ibadah umroh yang benar sesuai sunnah, persiapan ruhani, serta tips praktis selama di tanah suci bersama Ustadz Muhammad Singgih Pamungkas.
             </p>
 
             <div className="space-y-3 pt-2">
-              <p className="text-xs uppercase tracking-wider font-bold" style={{ color: 'var(--color-gold)' }}>Webinar Dimulai Dalam:</p>
+              <p className="text-xs uppercase tracking-wider font-bold" style={{ color: 'var(--color-gold)' }}>Manasik Dimulai Dalam:</p>
               <CountdownTimer />
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs md:text-sm pt-2" style={{ color: 'var(--color-text-muted)' }}>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[var(--color-gold)]" />
-                <span>E-Sertifikat & Materi Lengkap</span>
+                <span>GRATIS & Terbuka untuk Umum</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[var(--color-gold)]" />
@@ -123,7 +123,7 @@ export function PromoWebinar() {
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 text-[var(--color-gold)]" />
-                <span>Grup Komunitas Eksklusif</span>
+                <span>Materi & Rekaman Manasik</span>
               </div>
             </div>
           </div>
@@ -146,7 +146,7 @@ export function PromoWebinar() {
                     <Calendar className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--color-gold)]" />
                     <div>
                       <p className="text-xs text-[var(--color-text-muted)] font-medium">Tanggal</p>
-                      <p className="text-sm font-semibold text-white">Selasa, 16 Juni 2026</p>
+                      <p className="text-sm font-semibold text-white">Ahad, 21 Juni 2026</p>
                     </div>
                   </div>
 
@@ -154,7 +154,7 @@ export function PromoWebinar() {
                     <Clock className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--color-gold)]" />
                     <div>
                       <p className="text-xs text-[var(--color-text-muted)] font-medium">Waktu</p>
-                      <p className="text-sm font-semibold text-white">13.00 - 15.00 WIB</p>
+                      <p className="text-sm font-semibold text-white">13.00 WIB - Selesai</p>
                     </div>
                   </div>
 
@@ -162,17 +162,22 @@ export function PromoWebinar() {
                     <User className="w-5 h-5 mt-0.5 flex-shrink-0 text-[var(--color-gold)]" />
                     <div>
                       <p className="text-xs text-[var(--color-text-muted)] font-medium">Narasumber</p>
-                      <p className="text-sm font-semibold text-white">Bayu Aslama & Nurul Yanti</p>
-                      <p className="text-[11px] text-[var(--color-text-muted)]">Serba Serbi Umroh Mandiri</p>
+                      <p className="text-sm font-semibold text-white">Ustadz Muhammad Singgih Pamungkas</p>
+                      <p className="text-[11px] text-[var(--color-text-muted)]">S3 Universitas Islam Madinah</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-[var(--color-border)]/50 space-y-4">
-                <Link href="/webinar-umroh-mandiri" className="block w-full">
+                <Link 
+                  href="https://us06web.zoom.us/j/86026784002?pwd=dVK3pz6hGnRdNl3HjwahZ9aNiXLZIU.1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block w-full"
+                >
                   <Button className="w-full py-6 text-sm md:text-base font-bold text-[#0b1c12] bg-[var(--color-gold)] hover:bg-[#b0923d] transition-all duration-300 shadow-[0_0_20px_rgba(201,168,76,0.2)] hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 font-semibold">
-                    Daftar / RSVP Sekarang
+                    Gabung Zoom Sekarang
                     <ArrowRight className="w-4 h-4 md:w-5 md:h-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
