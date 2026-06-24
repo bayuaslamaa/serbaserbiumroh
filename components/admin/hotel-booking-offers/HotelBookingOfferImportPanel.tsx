@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import type { HotelBookingOfferImportParseResult } from "@/lib/admin/hotel-booking-offer-import"
 
@@ -11,8 +11,8 @@ export function HotelBookingOfferImportPanel() {
   const [fileName, setFileName] = useState("")
   const [preview, setPreview] = useState<HotelBookingOfferImportParseResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [isPreviewPending, startPreviewTransition] = useTransition()
-  const [isConfirmPending, startConfirmTransition] = useTransition()
+  const [isPreviewPending, setIsPreviewPending] = useState(false)
+  const [isConfirmPending, setIsConfirmPending] = useState(false)
 
   const canConfirm =
     !!preview &&
@@ -31,30 +31,32 @@ export function HotelBookingOfferImportPanel() {
     return data
   }
 
-  function previewImport() {
+  async function previewImport() {
     setError(null)
-    startPreviewTransition(async () => {
-      try {
-        const data = await postImport("/api/admin/hotel-booking-offers/import/preview")
-        setPreview(data.preview)
-      } catch (err) {
-        setPreview(null)
-        setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
-      }
-    })
+    setIsPreviewPending(true)
+    try {
+      const data = await postImport("/api/admin/hotel-booking-offers/import/preview")
+      setPreview(data.preview)
+    } catch (err) {
+      setPreview(null)
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
+    } finally {
+      setIsPreviewPending(false)
+    }
   }
 
-  function confirmImport() {
+  async function confirmImport() {
     setError(null)
-    startConfirmTransition(async () => {
-      try {
-        const data = await postImport("/api/admin/hotel-booking-offers/import/confirm")
-        setPreview(data.preview)
-        router.refresh()
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
-      }
-    })
+    setIsConfirmPending(true)
+    try {
+      const data = await postImport("/api/admin/hotel-booking-offers/import/confirm")
+      setPreview(data.preview)
+      router.refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
+    } finally {
+      setIsConfirmPending(false)
+    }
   }
 
   const loading = isPreviewPending || isConfirmPending
@@ -152,7 +154,7 @@ export function HotelBookingOfferImportPanel() {
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={previewImport}
+              onClick={() => void previewImport()}
               disabled={loading || csv.trim().length === 0}
               className="rounded-md border px-4 py-2 text-sm font-semibold disabled:opacity-60"
               style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
@@ -161,7 +163,7 @@ export function HotelBookingOfferImportPanel() {
             </button>
             <button
               type="button"
-              onClick={confirmImport}
+              onClick={() => void confirmImport()}
               disabled={!canConfirm || loading}
               className="rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60"
               style={{ background: "var(--color-gold)", color: "#1a1206" }}

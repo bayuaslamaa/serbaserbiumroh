@@ -55,7 +55,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
     .limit(1)
   if (!existing) return NextResponse.json({ error: "Offer not found" }, { status: 404 })
 
-  const parsed = parseHotelBookingOfferPayload(body, { partial: true })
+  const parsed = parseHotelBookingOfferPayload(body, { partial: true, current: existing })
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
   const merged = {

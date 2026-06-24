@@ -7,21 +7,24 @@ const STATUSES = ["ACTIVE", "UNAVAILABLE", "INACTIVE"] as const
 
 export function parseHotelBookingOfferPayload(
   body: Record<string, unknown>,
-  options: { partial: boolean }
+  options: {
+    partial: boolean
+    current?: Pick<typeof hotelBookingOffers.$inferSelect, "periodStart" | "periodEnd">
+  }
 ) {
   const city = normalizeEnum(body.city)
   const tier = normalizeEnum(body.tier)
-  const hotelName = normalizeText(body.hotelName, 160)
-  const offerLabel = normalizeText(body.offerLabel, 120)
+  const hotelName = normalizeText(body.hotelName)
+  const offerLabel = normalizeText(body.offerLabel)
   const periodStart = parseDateField(body.periodStart)
   const periodEnd = parseDateField(body.periodEnd)
-  const periodLabel = normalizeText(body.periodLabel, 120)
-  const roomBasis = normalizeText(body.roomBasis, 120)
-  const currency = normalizeText(body.currency, 8).toUpperCase() || "SAR"
+  const periodLabel = normalizeText(body.periodLabel)
+  const roomBasis = normalizeText(body.roomBasis)
+  const currency = normalizeText(body.currency).toUpperCase() || "SAR"
   const priceAmount = parsePositiveInteger(body.priceAmount)
   const status = normalizeEnum(body.status) || "ACTIVE"
-  const notes = normalizeText(body.notes, 800)
-  const terms = normalizeText(body.terms, 800)
+  const notes = normalizeText(body.notes)
+  const terms = normalizeText(body.terms)
   const hotelListingId = normalizeNullableId(body.hotelListingId)
 
   if (!options.partial || body.city !== undefined) {
@@ -35,6 +38,7 @@ export function parseHotelBookingOfferPayload(
   }
   if (!options.partial || body.hotelName !== undefined) {
     if (!hotelName) return { error: "hotelName required" } as const
+    if (hotelName.length > 160) return { error: "hotelName must be 160 characters or fewer" } as const
   }
   if (!options.partial || body.periodStart !== undefined) {
     if (!periodStart) return { error: "periodStart must use YYYY-MM-DD" } as const
@@ -42,15 +46,23 @@ export function parseHotelBookingOfferPayload(
   if (!options.partial || body.periodEnd !== undefined) {
     if (!periodEnd) return { error: "periodEnd must use YYYY-MM-DD" } as const
   }
-  if (periodStart && periodEnd && periodStart > periodEnd) {
+  const effectivePeriodStart = periodStart ?? options.current?.periodStart
+  const effectivePeriodEnd = periodEnd ?? options.current?.periodEnd
+  if (effectivePeriodStart && effectivePeriodEnd && effectivePeriodStart > effectivePeriodEnd) {
     return { error: "periodEnd must be on or after periodStart" } as const
   }
   if (!options.partial || body.roomBasis !== undefined) {
     if (!roomBasis) return { error: "roomBasis required" } as const
+    if (roomBasis.length > 120) return { error: "roomBasis must be 120 characters or fewer" } as const
   }
   if (!options.partial || body.priceAmount !== undefined) {
     if (priceAmount == null) return { error: "priceAmount must be a positive number" } as const
   }
+  if (offerLabel.length > 120) return { error: "offerLabel must be 120 characters or fewer" } as const
+  if (periodLabel.length > 120) return { error: "periodLabel must be 120 characters or fewer" } as const
+  if (currency.length > 8) return { error: "currency must be 8 characters or fewer" } as const
+  if (notes.length > 800) return { error: "notes must be 800 characters or fewer" } as const
+  if (terms.length > 800) return { error: "terms must be 800 characters or fewer" } as const
 
   const data: Partial<typeof hotelBookingOffers.$inferInsert> = {
     updatedAt: new Date(),
@@ -110,9 +122,9 @@ function normalizeEnum(value: unknown): string {
   return typeof value === "string" ? value.trim().toUpperCase() : ""
 }
 
-function normalizeText(value: unknown, maxLength: number): string {
+function normalizeText(value: unknown): string {
   if (typeof value !== "string") return ""
-  return value.trim().slice(0, maxLength)
+  return value.trim()
 }
 
 function normalizeNullableId(value: unknown): string | null {

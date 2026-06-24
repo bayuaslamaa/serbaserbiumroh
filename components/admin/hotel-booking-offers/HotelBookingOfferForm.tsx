@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 type HotelListingOption = {
@@ -53,7 +53,7 @@ const STATUSES = [
 export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBookingOfferFormProps) {
   const isEdit = !!initialData
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const [hotelListingId, setHotelListingId] = useState(initialData?.hotelListingId ?? "")
@@ -101,30 +101,31 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
       terms,
     }
 
-    startTransition(async () => {
-      try {
-        const url = isEdit
-          ? `/api/admin/hotel-booking-offers/${initialData!.id}`
-          : "/api/admin/hotel-booking-offers"
-        const method = isEdit ? "PUT" : "POST"
-        const res = await fetch(url, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        })
+    setIsPending(true)
+    try {
+      const url = isEdit
+        ? `/api/admin/hotel-booking-offers/${initialData!.id}`
+        : "/api/admin/hotel-booking-offers"
+      const method = isEdit ? "PUT" : "POST"
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
 
-        if (!res.ok) {
-          const data = await res.json()
-          setError(data.error ?? "Terjadi kesalahan.")
-          return
-        }
-
-        router.push("/admin/content/hotel-booking-offers")
-        router.refresh()
-      } catch {
-        setError("Terjadi kesalahan jaringan.")
+      if (!res.ok) {
+        const data = await res.json()
+        setError(data.error ?? "Terjadi kesalahan.")
+        return
       }
-    })
+
+      router.push("/admin/content/hotel-booking-offers")
+      router.refresh()
+    } catch {
+      setError("Terjadi kesalahan jaringan.")
+    } finally {
+      setIsPending(false)
+    }
   }
 
   const inputClass = "w-full px-3 py-2 rounded-md border text-sm focus:outline-none focus:ring-2"
