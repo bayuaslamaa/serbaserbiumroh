@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-06-11
+> Last updated: 2026-06-24
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -38,6 +38,7 @@ Managed with Drizzle ORM + Neon PostgreSQL. All PKs are CUID2 strings.
 | `community_join_requests` | Public community join requests with admin review status and duplicate matching fields |
 | `faq_groups` | Admin-managed FAQ categories with display ordering |
 | `faq_items` | Admin-managed Q&A items with rich answers, ordering, and publish status |
+| `hotel_booking_offers` | Period-based hotel offers for manual booking requests via WhatsApp |
 
 Enums: `city` (MAKKAH, MADINAH), `hotel_tier` (ECONOMY, STANDARD, PELATARAN, PREMIUM), `airline_tier` (BUDGET, STANDARD, GARUDA, BUSINESS), `service_key`, `role`.
 
@@ -250,6 +251,19 @@ All changes are saved immediately (no publish step).
   - Missing groups are created during confirm
   - Existing FAQs are matched by normalized question and updated instead of duplicated
   - Imported new FAQs stay draft; publish status and ordering are managed in the admin UI
+
+### Hotel Booking Offers (`/admin/content/hotel-booking-offers`)
+- Manage period-based hotel offers that can be requested manually from `/hotel-nusuk`
+- Download a prefilled CSV generated from the current `/hotel-nusuk` hotel pricing catalog, then bulk preview and import edited offers
+- Optional link to an existing Hotel Nusuk listing; standalone hotel names are also supported for hotels not bookable through OTA/app flows
+- Fields: city, tier, hotel name, offer label, booking period, room basis, currency, price, notes, terms, and status
+- Statuses:
+  - `ACTIVE` appears in the public booking catalog
+  - `UNAVAILABLE` and `INACTIVE` stay hidden from the public catalog
+- CSV bulk import supports preview/confirm with create/update/invalid/conflict summaries
+  - Template columns include city, tier, hotel_name, hotel_listing_slug, period dates, room_basis, currency, price_amount, status, notes, and terms
+  - Existing rows are matched by normalized hotel, city, tier, period, room basis, and offer label
+- Public CTA opens WhatsApp with offer context only; payment, document handling, and final hotel availability checks remain manual
 
 ### Components
 - `InlineEditCell` — click-to-edit cell with save/cancel

@@ -29,6 +29,7 @@ export function AdminDropdown() {
     { href: "/admin/community-requests", label: "Pengajuan Komunitas" },
     { href: "/admin/content/stories", label: "Kelola Cerita" },
     { href: "/admin/content/hotels", label: "Kelola Hotel" },
+    { href: "/admin/content/hotel-booking-offers", label: "Offer Booking Hotel" },
     { href: "/admin/content/faqs", label: "Kelola FAQ" },
     { href: "/admin/visitor-stats", label: "Statistik Pengunjung" },
   ]

@@ -3,6 +3,7 @@ import {
   text,
   integer,
   boolean,
+  date,
   timestamp,
   pgEnum,
   jsonb,
@@ -41,6 +42,11 @@ export const communityJoinRequestStatusEnum = pgEnum("community_join_request_sta
   "NEW",
   "MATCHED",
   "REJECTED",
+])
+export const hotelBookingOfferStatusEnum = pgEnum("hotel_booking_offer_status", [
+  "ACTIVE",
+  "UNAVAILABLE",
+  "INACTIVE",
 ])
 
 // --- Exchange Rates ---
@@ -323,6 +329,40 @@ export const hotelListings = pgTable("hotel_listings", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
+// --- Manual Hotel Booking Offers ---
+export const hotelBookingOffers = pgTable(
+  "hotel_booking_offers",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    hotelListingId: text("hotel_listing_id").references(() => hotelListings.id, {
+      onDelete: "set null",
+    }),
+    city: cityEnum("city").notNull(),
+    tier: hotelTierEnum("tier").notNull(),
+    hotelName: text("hotel_name").notNull(),
+    offerLabel: text("offer_label").notNull().default(""),
+    periodStart: date("period_start", { mode: "date" }).notNull(),
+    periodEnd: date("period_end", { mode: "date" }).notNull(),
+    periodLabel: text("period_label").notNull().default(""),
+    roomBasis: text("room_basis").notNull(),
+    currency: text("currency").notNull().default("SAR"),
+    priceAmount: integer("price_amount").notNull(),
+    notes: text("notes").notNull().default(""),
+    terms: text("terms").notNull().default(""),
+    status: hotelBookingOfferStatusEnum("status").notNull().default("ACTIVE"),
+    importKey: text("import_key").notNull().unique(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("hotel_booking_offers_city_status_idx").on(t.city, t.status),
+    index("hotel_booking_offers_period_idx").on(t.periodStart, t.periodEnd),
+    index("hotel_booking_offers_hotel_listing_idx").on(t.hotelListingId),
+  ]
+)
+
 // --- FAQ Groups ---
 export const faqGroups = pgTable("faq_groups", {
   id: text("id")
@@ -392,10 +432,11 @@ export type StoryPackingItem = typeof storyPackingItems.$inferSelect
 export type NewStoryPackingItem = typeof storyPackingItems.$inferInsert
 export type HotelListing = typeof hotelListings.$inferSelect
 export type NewHotelListing = typeof hotelListings.$inferInsert
+export type HotelBookingOffer = typeof hotelBookingOffers.$inferSelect
+export type NewHotelBookingOffer = typeof hotelBookingOffers.$inferInsert
 export type FaqGroup = typeof faqGroups.$inferSelect
 export type NewFaqGroup = typeof faqGroups.$inferInsert
 export type FaqItem = typeof faqItems.$inferSelect
 export type NewFaqItem = typeof faqItems.$inferInsert
 export type VisitorLog = typeof visitorLogs.$inferSelect
 export type NewVisitorLog = typeof visitorLogs.$inferInsert
-
