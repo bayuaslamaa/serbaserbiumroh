@@ -42,8 +42,8 @@ interface Vehicle {
 }
 
 export default function TransportasiClient() {
-  // Exchange rate state (default: 4800 IDR per 1 SAR)
-  const [exchangeRate, setExchangeRate] = useState<number>(4800)
+  // Exchange rate state (default: 4850 IDR per 1 SAR)
+  const [exchangeRate, setExchangeRate] = useState<number>(4850)
   // Admin selector state
   const [selectedAdmin, setSelectedAdmin] = useState<'nurul' | 'bayu'>('nurul')
   // Search query
@@ -167,8 +167,8 @@ export default function TransportasiClient() {
 
   // Calculation helpers
   const calculatePriceSAR = (base: number, isAirportPickup: boolean) => {
-    // 1. Base + 30 SAR
-    let price = base + 30
+    // 1. Base + 50 SAR (30 SAR original SSU fee + 20 SAR addition)
+    let price = base + 50
     // 2. Extra + 50 SAR if Airport Pickup
     if (isAirportPickup) {
       price += 50
@@ -303,7 +303,7 @@ Mohon diinfo ketersediaan dan proses pemesanan lebih lanjut. Terima kasih!`
                       setExchangeRate(isNaN(val) ? 0 : val)
                     }}
                     className="block w-full rounded-md border-0 bg-neutral-900/80 py-2.5 pl-8 pr-12 text-sm text-[var(--color-text)] ring-1 ring-inset ring-[var(--color-border)] placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-[var(--color-gold)] font-mono"
-                    placeholder="4800"
+                    placeholder="4850"
                   />
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                     <span className="text-xs text-[var(--color-text-muted)]">/ SAR</span>
