@@ -8,7 +8,9 @@ import {
 
 describe("hotel pricing CSV import", () => {
   it("exports a template with base and monthly SAR columns", () => {
-    expect(HOTEL_PRICING_IMPORT_TEMPLATE).toContain("city,tier,label,sublabel,distance,base_sar_per_night")
+    expect(HOTEL_PRICING_IMPORT_TEMPLATE).toContain(
+      "city,tier,label,sublabel,distance,agoda_url,bookingcom_url,tripcom_url,booking_url,base_sar_per_night"
+    )
     expect(HOTEL_PRICING_IMPORT_TEMPLATE).toContain("jan_sar")
     expect(HOTEL_PRICING_IMPORT_TEMPLATE).toContain("dec_sar")
 
@@ -49,14 +51,15 @@ describe("hotel pricing CSV import", () => {
 
   it("parses quoted spreadsheet values containing commas", () => {
     const result = parseHotelPricingCsv(
-      "city,tier,label,sublabel,distance,base_sar_per_night\n" +
-        'MADINAH,PREMIUM,"Hotel Royal, Madinah","5 star, dekat Nabawi","250m, jalan kaki",3500\n'
+      "city,tier,label,sublabel,distance,agoda_url,base_sar_per_night\n" +
+        'MADINAH,PREMIUM,"Hotel Royal, Madinah","5 star, dekat Nabawi","250m, jalan kaki","https://www.agoda.com/hotel-royal",3500\n'
     )
 
     expect(result.rows[0].status).toBe("create")
     expect(result.rows[0].data?.label).toBe("Hotel Royal, Madinah")
     expect(result.rows[0].data?.sublabel).toBe("5 star, dekat Nabawi")
     expect(result.rows[0].data?.distance).toBe("250m, jalan kaki")
+    expect(result.rows[0].data?.agodaUrl).toBe("https://www.agoda.com/hotel-royal")
   })
 
   it("keeps distance optional for older CSVs", () => {
@@ -77,6 +80,29 @@ describe("hotel pricing CSV import", () => {
 
     expect(result.rows[0].status).toBe("create")
     expect(result.rows[0].data?.distance).toBe("250m jalan kaki")
+  })
+
+  it("parses OTA and internal booking URLs when provided", () => {
+    const result = parseHotelPricingCsv(
+      "city,tier,label,sublabel,distance,agoda_url,bookingcom_url,tripcom_url,booking_url,base_sar_per_night\n" +
+        "MAKKAH,STANDARD,Safwa Tower 3,Near Haram,250m jalan kaki,https://www.agoda.com/safwa,https://www.booking.com/safwa,https://www.trip.com/safwa,https://example.com/book/safwa,1300\n"
+    )
+
+    expect(result.rows[0].status).toBe("create")
+    expect(result.rows[0].data?.agodaUrl).toBe("https://www.agoda.com/safwa")
+    expect(result.rows[0].data?.bookingcomUrl).toBe("https://www.booking.com/safwa")
+    expect(result.rows[0].data?.tripcomUrl).toBe("https://www.trip.com/safwa")
+    expect(result.rows[0].data?.bookingUrl).toBe("https://example.com/book/safwa")
+  })
+
+  it("rejects invalid booking URLs", () => {
+    const result = parseHotelPricingCsv(
+      "city,tier,label,sublabel,agoda_url,base_sar_per_night\n" +
+        "MAKKAH,STANDARD,Safwa Tower 3,Near Haram,not-a-url,1300\n"
+    )
+
+    expect(result.rows[0].status).toBe("invalid")
+    expect(result.rows[0].errors).toContain("agoda_url must be a valid http/https URL when provided")
   })
 
   it("normalizes city, tier, and label for matching", () => {

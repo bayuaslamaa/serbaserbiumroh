@@ -59,6 +59,10 @@ function makeHotel(overrides: Partial<HotelWithMonthlyPrices> = {}): HotelWithMo
     label: 'Default Hotel',
     sublabel: '3★, dekat Haram',
     distance: '500m',
+    agodaUrl: null,
+    bookingcomUrl: null,
+    tripcomUrl: null,
+    bookingUrl: null,
     sarPerNight: basePrice,
     monthlyPrices,
     ...overrides,
@@ -101,6 +105,18 @@ describe('HotelFilters (replaced with HotelPriceList tests)', () => {
     expect(screen.queryByText('Kurs acuan:')).toBeNull()
     // Verify "Tanyakan Harga ke Admin" button is rendered
     expect(screen.getAllByText('Tanyakan Harga ke Admin').length).toBeGreaterThan(0)
+  })
+
+  it('renders a booking CTA when a preferred booking link exists', () => {
+    render(
+      <HotelPriceList
+        hotels={[makeHotel({ label: 'Pullman Zam Zam', agodaUrl: 'https://www.agoda.com/pullman-zamzam-madina/hotel/medina-sa.html' })]}
+        exchangeRate={4700}
+      />
+    )
+
+    const link = screen.getByRole('link', { name: /Buka Agoda/i })
+    expect(link).toHaveAttribute('href', 'https://www.agoda.com/pullman-zamzam-madina/hotel/medina-sa.html')
   })
 
   it('shows city filter dropdown options', () => {

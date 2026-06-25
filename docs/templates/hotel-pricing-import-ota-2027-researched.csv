@@ -1,64 +1,64 @@
-city,tier,label,sublabel,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
-MADINAH,STANDARD,Emaar Group,OTA approval draft - standard Madinah group,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Peninsula Worth,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,PREMIUM,Pullman Zam Zam,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,STANDARD,New Madinah,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Mokhtara Diamond Al Masi,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Grand Zowar,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Zowar al Alami,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,PELATARAN,SAJA,OTA approval draft - closer Madinah option,450,540,900,990,580,450,450,500,500,450,450,450,540
-MADINAH,STANDARD,Al Mokhtara al Gharbi,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Diyafa al Mukhtara,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Madinah Deluxe Aram,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,STANDARD,Artal Taiba,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,PREMIUM,Madinah Hilton,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,STANDARD,Astoneast Taiba,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,PELATARAN,Saja al Madinah,OTA approval draft - closer Madinah option,450,540,900,990,580,450,450,500,500,450,450,450,540
-MADINAH,ECONOMY,ODEST,OTA approval draft - economy Madinah,150,160,240,270,170,150,150,160,160,150,150,150,160
-MADINAH,STANDARD,Ajyal al Madina,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,PELATARAN,Bosphorus,OTA approval draft - closer Madinah option,450,540,900,990,580,450,450,500,500,450,450,450,540
-MADINAH,PREMIUM,Dallah Taiba,OTA approval draft - premium Madinah 4 star near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,PELATARAN,Golden Tulip,OTA approval draft - upper midscale Madinah,450,540,900,990,580,450,450,500,500,450,450,450,540
-MADINAH,PELATARAN,Tulip in Daar,OTA approval draft - upper midscale Madinah,450,540,900,990,580,450,450,500,500,450,450,450,540
-MADINAH,PREMIUM,Maden Taiba,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,ECONOMY,Diyar AlSaliheen,OTA approval draft - economy Madinah,150,160,240,270,170,150,150,160,160,150,150,150,160
-MADINAH,STANDARD,Elaf Group,OTA approval draft - standard Madinah group,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,PREMIUM,Taiba Front,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,PREMIUM,Al Ritz Al Madinah,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,PREMIUM,Millennium al Aqeeq,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,PREMIUM,Movenpick,OTA approval draft - premium near Nabawi,650,810,1430,1620,910,650,650,720,720,650,650,650,810
-MADINAH,ECONOMY,Abraj al Marzam,OTA approval draft - economy Madinah,150,160,240,270,170,150,150,160,160,150,150,150,160
-MADINAH,ECONOMY,Marjan Rose,OTA approval draft - economy Madinah,150,160,240,270,170,150,150,160,160,150,150,150,160
-MADINAH,ECONOMY,Nusk al Hijrah,OTA approval draft - economy Madinah,150,160,240,270,170,150,150,160,160,150,150,150,160
-MADINAH,STANDARD,Nusk al Madinah,OTA approval draft - standard Madinah,250,290,450,500,300,250,250,260,260,250,250,250,290
-MADINAH,ECONOMY,Gacine Hotel,OTA approval draft - economy Madinah,150,160,240,270,170,150,150,160,160,150,150,150,160
-MAKKAH,PELATARAN,Elaf Group,OTA approval draft - closer Makkah group,600,750,1500,1680,840,600,600,660,660,600,600,600,750
-MAKKAH,STANDARD,Manazel Ajyad,OTA approval draft - standard Makkah Ajyad,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,PELATARAN,Makarem Ajyad,OTA approval draft - upper Makkah Ajyad,600,750,1500,1680,840,600,600,660,660,600,600,600,750
-MAKKAH,STANDARD,Al Ebaa,OTA approval draft - standard Makkah,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Emaar Group,OTA approval draft - standard Makkah group,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Al Shahba,OTA approval draft - standard Makkah,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Mahd ar Resala,OTA approval draft - standard Makkah,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,ECONOMY,Afraa Hotel,OTA approval draft - economy Makkah,150,170,270,300,180,150,150,160,160,150,150,150,170
-MAKKAH,PREMIUM,Pullman Zam-Zam,OTA approval draft - premium tower near Haram,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,ECONOMY,Maysal al Talaqo,OTA approval draft - economy Makkah,150,170,270,300,180,150,150,160,160,150,150,150,170
-MAKKAH,PREMIUM,Movenpick,OTA approval draft - premium tower near Haram,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,PREMIUM,Makkah Tower,OTA approval draft - premium tower near Haram,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,PREMIUM,Safwa Tower 1,OTA approval draft - premium tower near Haram,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,PREMIUM,Safwa Orchid,OTA approval draft - premium tower near Haram,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,PREMIUM,Makkah Hotel Tower,OTA approval draft - premium tower near Haram,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,PELATARAN,Violet,OTA approval draft - upper midscale Makkah,600,750,1500,1680,840,600,600,660,660,600,600,600,750
-MAKKAH,PREMIUM,Anjum,OTA approval draft - premium Makkah 5 star,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,PREMIUM,Millennium,OTA approval draft - premium Makkah,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
-MAKKAH,STANDARD,Ibis,OTA approval draft - standard Makkah branded,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Mercure,OTA approval draft - standard Makkah branded,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Al fouad Tower,OTA approval draft - standard Makkah tower,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,PELATARAN,Voco,OTA approval draft - upper Makkah 4 star shuttle,600,750,1500,1680,840,600,600,660,660,600,600,600,750
-MAKKAH,STANDARD,Novotel Thakher,OTA approval draft - standard Makkah 4 star shuttle,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Miaad al Majd,OTA approval draft - standard Makkah,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Alayam Elite,OTA approval draft - standard Makkah,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,SAJA,OTA approval draft - standard Makkah,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,STANDARD,Al Hidayah Tower,OTA approval draft - standard Makkah tower,300,360,660,750,390,300,300,330,330,300,300,300,360
-MAKKAH,ECONOMY,Al Kiswah Tower,OTA approval draft - economy Makkah tower,150,170,270,300,180,150,150,160,160,150,150,150,170
-MAKKAH,ECONOMY,Saif al Majid,OTA approval draft - economy Makkah,150,170,270,300,180,150,150,160,160,150,150,150,170
-MAKKAH,ECONOMY,Palestine Hotel,OTA approval draft - economy Makkah,150,170,270,300,180,150,150,160,160,150,150,150,170
+city,tier,label,sublabel,distance,agoda_url,bookingcom_url,tripcom_url,booking_url,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+MADINAH,STANDARD,Emaar Group,OTA approval draft - standard Madinah group,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Peninsula Worth,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,PREMIUM,Pullman Zam Zam,OTA approval draft - premium near Nabawi,,https://www.agoda.com/pullman-zamzam-madina/hotel/medina-sa.html,https://www.booking.com/hotel/sa/pullman-zamzam-madina.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,STANDARD,New Madinah,OTA approval draft - standard Madinah,,,https://www.booking.com/hotel/sa/new-madinah-hotel.html,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Mokhtara Diamond Al Masi,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Grand Zowar,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Zowar al Alami,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,PELATARAN,SAJA,OTA approval draft - closer Madinah option,,,,,,450,540,900,990,580,450,450,500,500,450,450,450,540
+MADINAH,STANDARD,Al Mokhtara al Gharbi,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Diyafa al Mukhtara,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Madinah Deluxe Aram,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,STANDARD,Artal Taiba,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,PREMIUM,Madinah Hilton,OTA approval draft - premium near Nabawi,,https://www.agoda.com/madinah-hilton/hotel/medina-sa.html,https://www.booking.com/hotel/sa/madinah-hilton.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,STANDARD,Astoneast Taiba,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,PELATARAN,Saja al Madinah,OTA approval draft - closer Madinah option,,https://www.agoda.com/saja-al-madinah_2/hotel/medina-sa.html,https://www.booking.com/hotel/sa/saja-al-madinah.html,,,450,540,900,990,580,450,450,500,500,450,450,450,540
+MADINAH,ECONOMY,ODEST,OTA approval draft - economy Madinah,,,,,,150,160,240,270,170,150,150,160,160,150,150,150,160
+MADINAH,STANDARD,Ajyal al Madina,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,PELATARAN,Bosphorus,OTA approval draft - closer Madinah option,,https://www.agoda.com/bosphorus-waqf-al-safi-hotel/hotel/medina-sa.html,https://www.booking.com/hotel/sa/bosphorus-waqf-al-safi.html,,,450,540,900,990,580,450,450,500,500,450,450,450,540
+MADINAH,PREMIUM,Dallah Taiba,OTA approval draft - premium Madinah 4 star near Nabawi,,,https://www.booking.com/hotel/sa/dallah-taibah.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,PELATARAN,Golden Tulip,OTA approval draft - upper midscale Madinah,,https://www.agoda.com/al-shakreen-golden-tulip/hotel/medina-sa.html,https://www.booking.com/hotel/sa/golden-tulip-al-shakreen.html,,,450,540,900,990,580,450,450,500,500,450,450,450,540
+MADINAH,PELATARAN,Tulip in Daar,OTA approval draft - upper midscale Madinah,,,,,,450,540,900,990,580,450,450,500,500,450,450,450,540
+MADINAH,PREMIUM,Maden Taiba,OTA approval draft - premium near Nabawi,,https://www.agoda.com/maden-taiba-hotel/hotel/medina-sa.html,https://www.booking.com/hotel/sa/maden-taibah-mdn-tyb.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,ECONOMY,Diyar AlSaliheen,OTA approval draft - economy Madinah,,,,,,150,160,240,270,170,150,150,160,160,150,150,150,160
+MADINAH,STANDARD,Elaf Group,OTA approval draft - standard Madinah group,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,PREMIUM,Taiba Front,OTA approval draft - premium near Nabawi,,,https://www.booking.com/hotel/sa/al-majeedi-arac-suites.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,PREMIUM,Al Ritz Al Madinah,OTA approval draft - premium near Nabawi,,,,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,PREMIUM,Millennium al Aqeeq,OTA approval draft - premium near Nabawi,,,https://www.booking.com/hotel/sa/millennium-al-aqeeq-madinah-hotel.ar.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,PREMIUM,Movenpick,OTA approval draft - premium near Nabawi,,https://www.agoda.com/anwar-al-madinah-movenpick-hotel/hotel/medina-sa.html,https://www.booking.com/hotel/sa/anwar-al-madinah-movenpick.html,,,650,810,1430,1620,910,650,650,720,720,650,650,650,810
+MADINAH,ECONOMY,Abraj al Marzam,OTA approval draft - economy Madinah,,,,,,150,160,240,270,170,150,150,160,160,150,150,150,160
+MADINAH,ECONOMY,Marjan Rose,OTA approval draft - economy Madinah,,,,,,150,160,240,270,170,150,150,160,160,150,150,150,160
+MADINAH,ECONOMY,Nusk al Hijrah,OTA approval draft - economy Madinah,,https://www.agoda.com/nusk-al-hijrah/hotel/medina-sa.html,https://www.booking.com/hotel/sa/nsk-lhjr.html,,,150,160,240,270,170,150,150,160,160,150,150,150,160
+MADINAH,STANDARD,Nusk al Madinah,OTA approval draft - standard Madinah,,,,,,250,290,450,500,300,250,250,260,260,250,250,250,290
+MADINAH,ECONOMY,Gacine Hotel,OTA approval draft - economy Madinah,,,,,,150,160,240,270,170,150,150,160,160,150,150,150,160
+MAKKAH,PELATARAN,Elaf Group,OTA approval draft - closer Makkah group,,,,,,600,750,1500,1680,840,600,600,660,660,600,600,600,750
+MAKKAH,STANDARD,Manazel Ajyad,OTA approval draft - standard Makkah Ajyad,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,PELATARAN,Makarem Ajyad,OTA approval draft - upper Makkah Ajyad,,,https://www.booking.com/hotel/sa/ajyad-makkah-makarim.html,,,600,750,1500,1680,840,600,600,660,660,600,600,600,750
+MAKKAH,STANDARD,Al Ebaa,OTA approval draft - standard Makkah,,,https://www.booking.com/hotel/sa/al-ebaa.html,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Emaar Group,OTA approval draft - standard Makkah group,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Al Shahba,OTA approval draft - standard Makkah,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Mahd ar Resala,OTA approval draft - standard Makkah,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,ECONOMY,Afraa Hotel,OTA approval draft - economy Makkah,,,,,,150,170,270,300,180,150,150,160,160,150,150,150,170
+MAKKAH,PREMIUM,Pullman Zam-Zam,OTA approval draft - premium tower near Haram,,https://www.agoda.com/zamzam-pullman-makkah-hotel/hotel/mecca-sa.html,https://www.booking.com/hotel/sa/zamzam-grand-suites-managed-by-pullman.html,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,ECONOMY,Maysal al Talaqo,OTA approval draft - economy Makkah,,,,,,150,170,270,300,180,150,150,160,160,150,150,150,170
+MAKKAH,PREMIUM,Movenpick,OTA approval draft - premium tower near Haram,,https://www.agoda.com/movenpick-hotel-residence-hajar-tower-makkah/hotel/mecca-sa.html,,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Makkah Tower,OTA approval draft - premium tower near Haram,,,https://www.booking.com/hotel/sa/makkah-towers.html,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Safwa Tower 1,OTA approval draft - premium tower near Haram,,,https://www.booking.com/hotel/sa/al-safwah.html,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Safwa Orchid,OTA approval draft - premium tower near Haram,,,https://www.booking.com/hotel/sa/al-jewar-royal-orchid.html,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Makkah Hotel Tower,OTA approval draft - premium tower near Haram,,https://www.agoda.com/makkah-hotel_2/hotel/mecca-sa.html,https://www.booking.com/hotel/sa/makkah-hotel.html,https://us.trip.com/hotels/makkah-hotel-detail-2256531/makkah-millennium-hotel/,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,PELATARAN,Violet,OTA approval draft - upper midscale Makkah,,,,,,600,750,1500,1680,840,600,600,660,660,600,600,600,750
+MAKKAH,PREMIUM,Anjum,OTA approval draft - premium Makkah 5 star,,https://www.agoda.com/anjum-hotel-makkah/hotel/mecca-sa.html,https://www.booking.com/hotel/sa/anjum-makkah.html,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,PREMIUM,Millennium,OTA approval draft - premium Makkah,,,,,,850,1100,2380,2720,1280,850,850,980,980,850,850,850,1100
+MAKKAH,STANDARD,Ibis,OTA approval draft - standard Makkah branded,,https://www.agoda.com/ibis-styles-makkah/hotel/mecca-sa.html,https://www.booking.com/hotel/sa/ibis-styles-makkah.html,https://us.trip.com/hotels/makkah-hotel-detail-7126870/ibis-styles-makkah/,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Mercure,OTA approval draft - standard Makkah branded,,,https://www.booking.com/hotel/sa/mercure-makkah-aziziah.html,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Al fouad Tower,OTA approval draft - standard Makkah tower,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,PELATARAN,Voco,OTA approval draft - upper Makkah 4 star shuttle,,,https://www.booking.com/hotel/sa/voco-makkah.ar.html,,,600,750,1500,1680,840,600,600,660,660,600,600,600,750
+MAKKAH,STANDARD,Novotel Thakher,OTA approval draft - standard Makkah 4 star shuttle,,,https://www.booking.com/hotel/sa/novotel-makkah-thaker-city.html,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Miaad al Majd,OTA approval draft - standard Makkah,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Alayam Elite,OTA approval draft - standard Makkah,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,SAJA,OTA approval draft - standard Makkah,,,,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,STANDARD,Al Hidayah Tower,OTA approval draft - standard Makkah tower,,,https://www.booking.com/hotel/sa/al-hidayah-towers-hotel.html,,,300,360,660,750,390,300,300,330,330,300,300,300,360
+MAKKAH,ECONOMY,Al Kiswah Tower,OTA approval draft - economy Makkah tower,,,,,,150,170,270,300,180,150,150,160,160,150,150,150,170
+MAKKAH,ECONOMY,Saif al Majid,OTA approval draft - economy Makkah,,,,,,150,170,270,300,180,150,150,160,160,150,150,150,170
+MAKKAH,ECONOMY,Palestine Hotel,OTA approval draft - economy Makkah,,,,,,150,170,270,300,180,150,150,160,160,150,150,150,170

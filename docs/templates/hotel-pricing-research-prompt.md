@@ -23,7 +23,7 @@ Output requirement:
 Return a complete CSV with the exact same columns and one row per hotel:
 
 ```csv
-city,tier,label,sublabel,distance,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+city,tier,label,sublabel,distance,agoda_url,bookingcom_url,tripcom_url,booking_url,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
 ```
 
 Do not add columns. Do not remove columns. Do not return markdown tables. Return only CSV content plus a short notes section after the CSV if needed.
@@ -38,6 +38,8 @@ For each hotel row, estimate realistic SAR/night pricing for 2027 by month using
 - Expedia
 - Google hotel snippets
 - Official hotel website
+
+When a direct hotel detail page is confidently found, fill the matching `agoda_url`, `bookingcom_url`, or `tripcom_url` column with the canonical OTA URL. Leave uncertain links blank. `booking_url` is reserved for first-party/internal booking flow and can remain blank unless a project-owned booking URL is supplied.
 - Other credible OTA or hotel listing pages
 
 If live prices are unavailable, use nearby comparable hotels in the same city, tier, distance band, and brand class.

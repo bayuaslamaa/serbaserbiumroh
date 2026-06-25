@@ -37,6 +37,10 @@ describe("schema table definitions", () => {
     expect(cols).toContain("label")
     expect(cols).toContain("sublabel")
     expect(cols).toContain("distance")
+    expect(cols).toContain("agodaUrl")
+    expect(cols).toContain("bookingcomUrl")
+    expect(cols).toContain("tripcomUrl")
+    expect(cols).toContain("bookingUrl")
   })
 
   it("airlinePrices table has expected columns", () => {
