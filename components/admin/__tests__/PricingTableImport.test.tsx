@@ -19,6 +19,10 @@ const hotel = {
   label: "Safwa Tower 3",
   sublabel: "Near Haram",
   distance: "250m jalan kaki",
+  agodaUrl: "https://www.agoda.com/safwa-tower-3",
+  bookingcomUrl: "https://www.booking.com/safwa-tower-3",
+  tripcomUrl: null,
+  bookingUrl: null,
   updatedAt: baseDate,
   monthlyPrices: Array.from({ length: 12 }, (_, i) => ({
     id: `mp-${i + 1}`,
@@ -183,10 +187,14 @@ describe("PricingTable hotel CSV import", () => {
     render(<PricingTable {...props} />)
 
     expect(screen.getByText("Jarak")).toBeInTheDocument()
+    expect(screen.getByText("Booking")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Agoda" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "250m jalan kaki" })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("button", { name: "+ Tambah Hotel" }))
     expect(screen.getByPlaceholderText("cth. 250m jalan kaki")).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("https://www.agoda.com/...")).toBeInTheDocument()
+    expect(screen.getByPlaceholderText("https://www.booking.com/...")).toBeInTheDocument()
   })
 
   it("keeps confirm disabled until preview returns writable rows without conflicts", async () => {

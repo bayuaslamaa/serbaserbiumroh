@@ -59,6 +59,10 @@ export interface HotelPriceConfig {
   label: string
   sublabel: string
   distance?: string | null
+  agodaUrl?: string | null
+  bookingcomUrl?: string | null
+  tripcomUrl?: string | null
+  bookingUrl?: string | null
   monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override
 }
 

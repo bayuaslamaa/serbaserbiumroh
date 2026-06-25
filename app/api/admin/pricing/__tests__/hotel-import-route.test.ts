@@ -197,7 +197,10 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
     const { POST } = await import("../hotel-import/confirm/route")
 
     const res = await POST(
-      request("city,tier,label,sublabel,distance,base_sar_per_night\nMAKKAH,STANDARD,Safwa Tower 3,Near Haram,250m jalan kaki,1400\n")
+      request(
+        "city,tier,label,sublabel,distance,agoda_url,bookingcom_url,tripcom_url,booking_url,base_sar_per_night\n" +
+          "MAKKAH,STANDARD,Safwa Tower 3,Near Haram,250m jalan kaki,https://www.agoda.com/safwa,https://www.booking.com/safwa,https://www.trip.com/safwa,https://example.com/book/safwa,1400\n"
+      )
     )
 
     expect(res.status).toBe(200)
@@ -215,6 +218,10 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
     expect(spies.updateSet).toHaveBeenCalledWith(
       expect.objectContaining({
         distance: "250m jalan kaki",
+        agodaUrl: "https://www.agoda.com/safwa",
+        bookingcomUrl: "https://www.booking.com/safwa",
+        tripcomUrl: "https://www.trip.com/safwa",
+        bookingUrl: "https://example.com/book/safwa",
       })
     )
     expect(spies.hotelValues).not.toHaveBeenCalled()
@@ -271,6 +278,24 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
     expect((res.body as any).applied).toBe(1)
     expect((res.body as any).preview.summary.invalid).toBe(1)
     expect(spies.hotelValues).toHaveBeenCalledTimes(1)
+  })
+
+  it("skips invalid rows with malformed booking URLs", async () => {
+    selectExisting([])
+    const { tx, spies } = makeTx()
+    mockDb.transaction.mockImplementation(async (callback) => callback(tx))
+    const { POST } = await import("../hotel-import/confirm/route")
+
+    const res = await POST(
+      request(
+        "city,tier,label,sublabel,agoda_url,base_sar_per_night\n" +
+          "MAKKAH,STANDARD,Safwa Tower 3,Near Haram,notaurl,1300\n"
+      )
+    )
+
+    expect((res.body as any).applied).toBe(0)
+    expect((res.body as any).preview.summary.invalid).toBe(1)
+    expect(spies.hotelValues).not.toHaveBeenCalled()
   })
 
   it("does not write duplicate rows from the same CSV", async () => {

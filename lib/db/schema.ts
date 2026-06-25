@@ -66,6 +66,10 @@ export const hotelPrices = pgTable("hotel_prices", {
   label: text("label").notNull(), // e.g. "Safwa Tower 3"
   sublabel: text("sublabel").notNull(), // e.g. "3★, dekat Haram"
   distance: text("distance"), // e.g. "250m", "ring 1", "jalan kaki"
+  agodaUrl: text("agoda_url"),
+  bookingcomUrl: text("bookingcom_url"),
+  tripcomUrl: text("tripcom_url"),
+  bookingUrl: text("booking_url"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 })
 
@@ -398,4 +402,3 @@ export type FaqItem = typeof faqItems.$inferSelect
 export type NewFaqItem = typeof faqItems.$inferInsert
 export type VisitorLog = typeof visitorLogs.$inferSelect
 export type NewVisitorLog = typeof visitorLogs.$inferInsert
-

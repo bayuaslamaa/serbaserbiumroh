@@ -24,6 +24,27 @@ const CITIES = ["MAKKAH", "MADINAH"]
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
 const AIRLINE_TIERS = ["BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
 const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"]
+const HOTEL_URL_FIELDS = ["agodaUrl", "bookingcomUrl", "tripcomUrl", "bookingUrl"] as const
+
+function normalizeOptionalUrl(value: unknown): { provided: boolean; valid: boolean; value: string | null } {
+  if (value === undefined) return { provided: false, valid: true, value: null }
+  if (value === null) return { provided: true, valid: true, value: null }
+  if (typeof value !== "string") return { provided: true, valid: false, value: null }
+
+  const normalized = value.trim()
+  if (!normalized) return { provided: true, valid: true, value: null }
+
+  try {
+    const parsed = new URL(normalized)
+    return {
+      provided: true,
+      valid: parsed.protocol === "http:" || parsed.protocol === "https:",
+      value: parsed.protocol === "http:" || parsed.protocol === "https:" ? normalized : null,
+    }
+  } catch {
+    return { provided: true, valid: false, value: null }
+  }
+}
 
 type RouteCtx = { params: Promise<{ category: string }> }
 
@@ -43,7 +64,7 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
   const now = new Date()
 
   if (category === "hotel") {
-    const { city, tier, label, sublabel, distance, sarPerNight } = body
+    const { city, tier, label, sublabel, distance, sarPerNight, agodaUrl, bookingcomUrl, tripcomUrl, bookingUrl } = body
     if (!CITIES.includes(city as string)) {
       return NextResponse.json({ error: "invalid city" }, { status: 400 })
     }
@@ -59,6 +80,22 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
     if (distance !== undefined && distance !== null && typeof distance !== "string") {
       return NextResponse.json({ error: "distance must be a string" }, { status: 400 })
     }
+    const normalizedAgodaUrl = normalizeOptionalUrl(agodaUrl)
+    if (!normalizedAgodaUrl.valid) {
+      return NextResponse.json({ error: "agodaUrl must be a valid http/https URL" }, { status: 400 })
+    }
+    const normalizedBookingcomUrl = normalizeOptionalUrl(bookingcomUrl)
+    if (!normalizedBookingcomUrl.valid) {
+      return NextResponse.json({ error: "bookingcomUrl must be a valid http/https URL" }, { status: 400 })
+    }
+    const normalizedTripcomUrl = normalizeOptionalUrl(tripcomUrl)
+    if (!normalizedTripcomUrl.valid) {
+      return NextResponse.json({ error: "tripcomUrl must be a valid http/https URL" }, { status: 400 })
+    }
+    const normalizedBookingUrl = normalizeOptionalUrl(bookingUrl)
+    if (!normalizedBookingUrl.valid) {
+      return NextResponse.json({ error: "bookingUrl must be a valid http/https URL" }, { status: 400 })
+    }
     if (typeof sarPerNight !== "number" || sarPerNight <= 0) {
       return NextResponse.json({ error: "sarPerNight must be a positive number" }, { status: 400 })
     }
@@ -71,6 +108,10 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
         label: label.trim(),
         sublabel: sublabel.trim(),
         distance: typeof distance === "string" && distance.trim() ? distance.trim() : null,
+        agodaUrl: normalizedAgodaUrl.value,
+        bookingcomUrl: normalizedBookingcomUrl.value,
+        tripcomUrl: normalizedTripcomUrl.value,
+        bookingUrl: normalizedBookingUrl.value,
         importKey: normalizeHotelPricingImportKey({
           city: city as "MAKKAH" | "MADINAH",
           tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
@@ -183,7 +224,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
   }
 
   if (category === "hotel") {
-    const { hotelId, city, tier, sarPerNight, label, sublabel, distance } = body
+    const { hotelId, city, tier, sarPerNight, label, sublabel, distance, agodaUrl, bookingcomUrl, tripcomUrl, bookingUrl } = body
     if (!CITIES.includes(city as string)) {
       return NextResponse.json({ error: "invalid city" }, { status: 400 })
     }
@@ -202,6 +243,17 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     if (distance !== undefined && distance !== null && typeof distance !== "string") {
       return NextResponse.json({ error: "distance must be a string" }, { status: 400 })
     }
+    const urlUpdates = {
+      agodaUrl: normalizeOptionalUrl(agodaUrl),
+      bookingcomUrl: normalizeOptionalUrl(bookingcomUrl),
+      tripcomUrl: normalizeOptionalUrl(tripcomUrl),
+      bookingUrl: normalizeOptionalUrl(bookingUrl),
+    }
+    for (const field of HOTEL_URL_FIELDS) {
+      if (!urlUpdates[field].valid) {
+        return NextResponse.json({ error: `${field} must be a valid http/https URL` }, { status: 400 })
+      }
+    }
     const updates: Partial<typeof hotelPrices.$inferInsert> & { updatedAt: Date } = { sarPerNight, updatedAt: now }
     if (typeof label === "string") {
       updates.label = label.trim()
@@ -214,6 +266,12 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     if (typeof sublabel === "string") updates.sublabel = sublabel.trim()
     if (distance !== undefined) {
       updates.distance = typeof distance === "string" && distance.trim() ? distance.trim() : null
+    }
+    for (const field of HOTEL_URL_FIELDS) {
+      const normalized = urlUpdates[field]
+      if (normalized.provided) {
+        updates[field] = normalized.value
+      }
     }
     const [updated] = await db
       .update(hotelPrices)

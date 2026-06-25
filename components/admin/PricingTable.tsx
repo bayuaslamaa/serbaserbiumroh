@@ -67,7 +67,20 @@ type AddHotelForm = {
   label: string
   sublabel: string
   distance: string
+  agodaUrl: string
+  bookingcomUrl: string
+  tripcomUrl: string
+  bookingUrl: string
   sarPerNight: string
+}
+
+type HotelLinkField = "agodaUrl" | "bookingcomUrl" | "tripcomUrl" | "bookingUrl"
+
+const HOTEL_LINK_LABELS: Record<HotelLinkField, string> = {
+  agodaUrl: "Agoda",
+  bookingcomUrl: "Booking.com",
+  tripcomUrl: "Trip.com",
+  bookingUrl: "Booking Internal",
 }
 
 type AddAirlineForm = {
@@ -93,6 +106,10 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
     label: "",
     sublabel: "",
     distance: "",
+    agodaUrl: "",
+    bookingcomUrl: "",
+    tripcomUrl: "",
+    bookingUrl: "",
     sarPerNight: "",
   })
   const [addHotelError, setAddHotelError] = useState("")
@@ -166,6 +183,10 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
           label: addHotelForm.label,
           sublabel: addHotelForm.sublabel,
           distance: addHotelForm.distance,
+          agodaUrl: addHotelForm.agodaUrl,
+          bookingcomUrl: addHotelForm.bookingcomUrl,
+          tripcomUrl: addHotelForm.tripcomUrl,
+          bookingUrl: addHotelForm.bookingUrl,
           sarPerNight: sarValue,
         }),
       })
@@ -176,7 +197,18 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
       const { hotel, monthlyPrices: mp } = await res.json()
       setHotels((prev) => [...prev, { ...hotel, monthlyPrices: mp }])
       setAddHotelOpen(false)
-      setAddHotelForm({ city: "MAKKAH", tier: "STANDARD", label: "", sublabel: "", distance: "", sarPerNight: "" })
+      setAddHotelForm({
+        city: "MAKKAH",
+        tier: "STANDARD",
+        label: "",
+        sublabel: "",
+        distance: "",
+        agodaUrl: "",
+        bookingcomUrl: "",
+        tripcomUrl: "",
+        bookingUrl: "",
+        sarPerNight: "",
+      })
     } catch (err: unknown) {
       setAddHotelError(err instanceof Error ? err.message : "Terjadi kesalahan")
     } finally {
@@ -379,6 +411,30 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
     !!airlineImportPreview &&
     airlineImportPreview.summary.conflict === 0 &&
     airlineImportPreview.summary.create + airlineImportPreview.summary.update > 0
+
+  function renderHotelLinks(hotel: HotelWithMonthly) {
+    const links = (Object.entries(HOTEL_LINK_LABELS) as Array<[HotelLinkField, string]>)
+      .map(([field, label]) => {
+        const href = hotel[field]
+        if (!href) return null
+        return (
+          <a
+            key={field}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex rounded border px-2 py-0.5 text-[11px]"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-gold)" }}
+          >
+            {label}
+          </a>
+        )
+      })
+      .filter(Boolean)
+
+    if (links.length === 0) return <span style={{ color: "var(--color-text-muted)" }}>-</span>
+    return <div className="flex flex-wrap gap-1">{links}</div>
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -639,6 +695,50 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                   style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
                 />
               </label>
+              <label className="flex flex-col gap-1 col-span-2">
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Agoda URL</span>
+                <input
+                  type="url"
+                  value={addHotelForm.agodaUrl}
+                  onChange={(e) => setAddHotelForm((f) => ({ ...f, agodaUrl: e.target.value }))}
+                  placeholder="https://www.agoda.com/..."
+                  className="rounded border px-2 py-1.5 text-sm bg-transparent"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                />
+              </label>
+              <label className="flex flex-col gap-1 col-span-2">
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Booking.com URL</span>
+                <input
+                  type="url"
+                  value={addHotelForm.bookingcomUrl}
+                  onChange={(e) => setAddHotelForm((f) => ({ ...f, bookingcomUrl: e.target.value }))}
+                  placeholder="https://www.booking.com/..."
+                  className="rounded border px-2 py-1.5 text-sm bg-transparent"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                />
+              </label>
+              <label className="flex flex-col gap-1 col-span-2">
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Trip.com URL</span>
+                <input
+                  type="url"
+                  value={addHotelForm.tripcomUrl}
+                  onChange={(e) => setAddHotelForm((f) => ({ ...f, tripcomUrl: e.target.value }))}
+                  placeholder="https://www.trip.com/..."
+                  className="rounded border px-2 py-1.5 text-sm bg-transparent"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                />
+              </label>
+              <label className="flex flex-col gap-1 col-span-2">
+                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Booking Internal URL</span>
+                <input
+                  type="url"
+                  value={addHotelForm.bookingUrl}
+                  onChange={(e) => setAddHotelForm((f) => ({ ...f, bookingUrl: e.target.value }))}
+                  placeholder="https://app.example.com/book/..."
+                  className="rounded border px-2 py-1.5 text-sm bg-transparent"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
+                />
+              </label>
             </div>
             {addHotelError && (
               <p className="text-xs" style={{ color: "#ef4444" }}>{addHotelError}</p>
@@ -663,6 +763,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Kategori</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Nama</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Jarak</th>
+                <th className={TH} style={{ color: "var(--color-text-muted)" }}>Booking</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>SAR/Malam (Dasar)</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Harga Bulanan</th>
                 <th className={TH} style={{ color: "var(--color-text-muted)" }}>Diperbarui</th>
@@ -694,6 +795,7 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                           }}
                         />
                       </td>
+                      <td className={TD}>{renderHotelLinks(h)}</td>
                       <td className={TD}>
                         <InlineEditCell
                           value={h.sarPerNight}
@@ -718,31 +820,62 @@ export function PricingTable({ rates: initialRates, hotels: initialHotels, airli
                     </tr>
                     {isExpanded && (
                       <tr key={`${h.id}-monthly`} className="border-t" style={{ borderColor: "var(--color-border)", background: "rgba(0,0,0,0.15)" }}>
-                        <td colSpan={7} className="px-3 py-3">
-                          <div className="text-xs font-semibold mb-2" style={{ color: "var(--color-text-muted)" }}>
-                            Harga per Bulan — {h.city} {h.tier}
-                          </div>
-                          <div className="grid grid-cols-6 gap-2">
-                            {h.monthlyPrices.map((mp) => (
-                              <div key={mp.month} className="flex flex-col gap-1">
-                                <span className="text-xs text-center" style={{ color: "var(--color-text-muted)" }}>
-                                  {MONTH_SHORT[mp.month - 1]}
-                                </span>
-                                <InlineEditCell
-                                  value={mp.sarPerNight}
-                                  type="number"
-                                  formatter={(v) => `SAR ${v}`}
-                                  onSave={async (newVal) => {
-                                    const { monthlyPrice } = await patch("monthly-hotel", {
-                                      hotelId: h.id,
-                                      month: mp.month,
-                                      sarPerNight: newVal,
-                                    })
-                                    updateMonthlyPrice(h.id, mp.month, monthlyPrice.sarPerNight)
-                                  }}
-                                />
+                        <td colSpan={8} className="px-3 py-3">
+                          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+                            <div>
+                              <div className="text-xs font-semibold mb-2" style={{ color: "var(--color-text-muted)" }}>
+                                Harga per Bulan — {h.city} {h.tier}
                               </div>
-                            ))}
+                              <div className="grid grid-cols-6 gap-2">
+                                {h.monthlyPrices.map((mp) => (
+                                  <div key={mp.month} className="flex flex-col gap-1">
+                                    <span className="text-xs text-center" style={{ color: "var(--color-text-muted)" }}>
+                                      {MONTH_SHORT[mp.month - 1]}
+                                    </span>
+                                    <InlineEditCell
+                                      value={mp.sarPerNight}
+                                      type="number"
+                                      formatter={(v) => `SAR ${v}`}
+                                      onSave={async (newVal) => {
+                                        const { monthlyPrice } = await patch("monthly-hotel", {
+                                          hotelId: h.id,
+                                          month: mp.month,
+                                          sarPerNight: newVal,
+                                        })
+                                        updateMonthlyPrice(h.id, mp.month, monthlyPrice.sarPerNight)
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs font-semibold mb-2" style={{ color: "var(--color-text-muted)" }}>
+                                Tautan Booking
+                              </div>
+                              <div className="grid gap-2">
+                                {(Object.entries(HOTEL_LINK_LABELS) as Array<[HotelLinkField, string]>).map(([field, label]) => (
+                                  <div key={field} className="grid grid-cols-[112px_minmax(0,1fr)] items-center gap-2">
+                                    <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>{label}</span>
+                                    <InlineEditCell
+                                      value={(h[field] as string | null) ?? ""}
+                                      type="text"
+                                      formatter={(v) => String(v).trim() || "-"}
+                                      onSave={async (newVal) => {
+                                        const { hotel } = await patch("hotel", {
+                                          hotelId: h.id,
+                                          city: h.city,
+                                          tier: h.tier,
+                                          sarPerNight: h.sarPerNight,
+                                          [field]: String(newVal),
+                                        })
+                                        setHotels((prev) => prev.map((x) => x.id === h.id ? { ...hotel, monthlyPrices: h.monthlyPrices } : x))
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </td>
                       </tr>
