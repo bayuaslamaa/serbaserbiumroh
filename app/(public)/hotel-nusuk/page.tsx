@@ -1,33 +1,24 @@
+import Link from 'next/link'
 import { db } from '@/lib/db'
-import { hotelPrices, hotelMonthlyPrices, exchangeRates, hotelBookingOffers } from '@/lib/db/schema'
+import { hotelPrices, hotelMonthlyPrices, exchangeRates } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { HotelPriceList, type HotelWithMonthlyPrices } from '@/components/hotel-nusuk/HotelPriceList'
-import {
-  HotelBookingOfferCatalog,
-  type HotelBookingOfferCatalogItem,
-} from '@/components/hotel-nusuk/HotelBookingOfferCatalog'
-import { buildHotelBookingWhatsappHref } from '@/lib/hotel-booking/whatsapp'
 
 export const revalidate = 3600
 
 export const metadata = {
   title: 'Hotel Nusuk — Umroh Mandiri',
-  description: 'Direktori hotel umroh, estimasi harga, dan offer booking manual',
+  description: 'Direktori hotel umroh dan estimasi harga referensi',
 }
 
 export default async function HotelNusukPage() {
-  const [hotels, monthlyPrices, rateRows, bookingOffers] = await Promise.all([
+  const [hotels, monthlyPrices, rateRows] = await Promise.all([
     db
       .select()
       .from(hotelPrices)
       .orderBy(asc(hotelPrices.city), asc(hotelPrices.label)),
     db.select().from(hotelMonthlyPrices),
     db.select().from(exchangeRates).where(eq(exchangeRates.currency, 'SAR')),
-    db
-      .select()
-      .from(hotelBookingOffers)
-      .where(eq(hotelBookingOffers.status, 'ACTIVE'))
-      .orderBy(asc(hotelBookingOffers.city), asc(hotelBookingOffers.periodStart), asc(hotelBookingOffers.hotelName)),
   ])
 
   const sarToIdrRate = rateRows[0]?.rateToIdr ?? 4700
@@ -74,24 +65,6 @@ export default async function HotelNusukPage() {
   })
 
   const showMonthlyPrices = process.env.NEXT_PUBLIC_SHOW_MONTHLY_HOTEL_PRICE === 'true'
-  const adminWhatsapp = process.env.NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL
-
-  const mappedBookingOffers: HotelBookingOfferCatalogItem[] = bookingOffers.map((offer) => ({
-    id: offer.id,
-    city: offer.city,
-    tier: offer.tier,
-    hotelName: offer.hotelName,
-    offerLabel: offer.offerLabel,
-    periodLabel: offer.periodLabel,
-    periodStart: toDateString(offer.periodStart),
-    periodEnd: toDateString(offer.periodEnd),
-    roomBasis: offer.roomBasis,
-    currency: offer.currency,
-    priceAmount: offer.priceAmount,
-    notes: offer.notes,
-    terms: offer.terms,
-    whatsappHref: buildHotelBookingWhatsappHref(adminWhatsapp, offer),
-  }))
 
   return (
     <div className="max-w-5xl mx-auto space-y-10">
@@ -102,10 +75,29 @@ export default async function HotelNusukPage() {
         Hotel Nusuk
       </h1>
       <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-        Direktori hotel umroh dengan estimasi harga IDR terkini dan offer booking manual via WhatsApp.
+        Direktori hotel umroh dengan estimasi harga IDR terkini untuk referensi perencanaan.
       </p>
 
-      <HotelBookingOfferCatalog offers={mappedBookingOffers} />
+      <section
+        className="rounded-lg border p-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+        style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }}
+      >
+        <div>
+          <h2 className="text-lg font-semibold" style={{ color: 'var(--color-gold)' }}>
+            Mau request booking hotel?
+          </h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            Lihat katalog offer yang sedang dibuka dan lanjutkan request manual via WhatsApp.
+          </p>
+        </div>
+        <Link
+          href="/pesan-hotel"
+          className="inline-flex items-center justify-center rounded-md px-4 py-2.5 text-sm font-semibold transition-opacity hover:opacity-90"
+          style={{ background: 'var(--color-gold)', color: '#1a1206' }}
+        >
+          Pesan Hotel
+        </Link>
+      </section>
 
       <section className="space-y-5">
         <div>
@@ -134,8 +126,4 @@ export default async function HotelNusukPage() {
       </section>
     </div>
   )
-}
-
-function toDateString(value: Date): string {
-  return value.toISOString().slice(0, 10)
 }

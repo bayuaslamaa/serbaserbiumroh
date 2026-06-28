@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     .values(parsed.data as typeof hotelBookingOffers.$inferInsert)
     .returning()
 
-  revalidatePath("/hotel-nusuk")
+  revalidatePath("/pesan-hotel")
 
   return NextResponse.json({ offer }, { status: 201 })
 }

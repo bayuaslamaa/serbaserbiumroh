@@ -138,6 +138,13 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
                       Visa Umroh
                     </Link>
                     <Link
+                      href="/pesan-hotel"
+                      onClick={() => setIsOpen(false)}
+                      className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                    >
+                      Pesan Hotel
+                    </Link>
+                    <Link
                       href="/transportasi"
                       onClick={() => setIsOpen(false)}
                       className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"

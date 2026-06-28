@@ -81,7 +81,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
     .where(eq(hotelBookingOffers.id, id))
     .returning()
 
-  revalidatePath("/hotel-nusuk")
+  revalidatePath("/pesan-hotel")
 
   return NextResponse.json({ offer })
 }
@@ -99,7 +99,7 @@ export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
 
   if (!deleted) return NextResponse.json({ error: "Offer not found" }, { status: 404 })
 
-  revalidatePath("/hotel-nusuk")
+  revalidatePath("/pesan-hotel")
 
   return NextResponse.json({ success: true })
 }

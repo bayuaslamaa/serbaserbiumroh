@@ -122,7 +122,7 @@ export default function VisaPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>
-                    Booking hotel Mekkah & Madinah yang terdaftar di Nusuk Masar. Bisa cek rekomendasi kami di{" "}
+                    Booking hotel Mekkah & Madinah yang terdaftar di Nusuk Masar. Bisa cek rekomendasi di{" "}
                     <Link
                       href="https://serbaserbiumroh.id/hotel-nusuk"
                       target="_blank"
@@ -130,6 +130,15 @@ export default function VisaPage() {
                       className="font-semibold text-[var(--color-gold)] underline underline-offset-4 hover:text-[var(--color-gold-muted)]"
                     >
                       serbaserbiumroh.id/hotel-nusuk
+                    </Link>
+                    {" "}atau lihat offer booking manual di{" "}
+                    <Link
+                      href="https://serbaserbiumroh.id/pesan-hotel"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[var(--color-gold)] underline underline-offset-4 hover:text-[var(--color-gold-muted)]"
+                    >
+                      serbaserbiumroh.id/pesan-hotel
                     </Link>
                   </span>
                 </li>

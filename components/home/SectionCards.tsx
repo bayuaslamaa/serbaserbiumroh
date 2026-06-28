@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Users, Hotel, Calculator, MessageCircle, ShieldCheck } from 'lucide-react'
+import { BookOpen, Users, Hotel, Calculator, MessageCircle, ShieldCheck, BedDouble } from 'lucide-react'
 
 const sections = [
   {
@@ -21,6 +21,12 @@ const sections = [
     description: 'Direktori hotel dekat Masjidil Haram dan Masjid Nabawi pilihan jamaah',
     href: '/hotel-nusuk',
     icon: Hotel,
+  },
+  {
+    title: 'Pesan Hotel',
+    description: 'Katalog offer hotel yang bisa direquest manual via WhatsApp',
+    href: '/pesan-hotel',
+    icon: BedDouble,
   },
   {
     title: 'Visa Umroh',
@@ -54,7 +60,7 @@ export function SectionCards({ isAdmin = false }: SectionCardsProps) {
       <h2 className="text-2xl font-bold mb-6 text-center" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-gold)' }}>
         Mulai Perencanaan Umroh Anda
       </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
         {sections.map((section) => {
           const Icon = section.icon
           const isDisabled = section.disabled && !isAdmin

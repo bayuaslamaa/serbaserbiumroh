@@ -20,6 +20,13 @@ describe("middleware public route matching", () => {
     expect(isPublicPath("/webinar-umroh-mandiri/")).toBe(true)
   })
 
+  it("allows public hotel booking offer page without login", async () => {
+    const { isPublicPath } = await import("./middleware")
+
+    expect(isPublicPath("/pesan-hotel")).toBe(true)
+    expect(isPublicPath("/pesan-hotel/")).toBe(true)
+  })
+
   it("keeps dashboard and admin routes protected", async () => {
     const { isPublicPath } = await import("./middleware")
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { readFileSync } from "node:fs"
+import { parse } from "csv-parse/sync"
 import {
   HOTEL_BOOKING_OFFER_IMPORT_TEMPLATE,
   buildHotelBookingOfferTemplateCsv,
@@ -29,10 +30,12 @@ describe("hotel booking offer CSV import", () => {
   })
 
   it("keeps the OTA 2027 dummy fixture parseable and aligned to January pricing", () => {
-    const sourceRows = readFileSync("docs/templates/hotel-pricing-import-ota-2027-researched.csv", "utf8")
-      .trim()
-      .split(/\r?\n/)
-      .slice(1)
+    const sourceRows = parse(readFileSync("docs/templates/hotel-pricing-import-ota-2027-researched.csv", "utf8"), {
+      bom: true,
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    }) as Array<Record<string, string>>
     const dummyCsv = readFileSync("docs/templates/hotel-booking-offer-import-ota-2027-dummy.csv", "utf8")
     const result = parseHotelBookingOfferCsv(dummyCsv)
 
@@ -41,19 +44,18 @@ describe("hotel booking offer CSV import", () => {
     expect(result.rows).toHaveLength(sourceRows.length)
 
     for (const [index, sourceRow] of sourceRows.entries()) {
-      const [city, tier, hotelName, notes, , janSar] = sourceRow.split(",")
       expect(result.rows[index].data).toEqual(
         expect.objectContaining({
-          city,
-          tier,
-          hotelName,
+          city: sourceRow.city,
+          tier: sourceRow.tier,
+          hotelName: sourceRow.label,
           periodStart: "2027-01-01",
           periodEnd: "2027-01-31",
           periodLabel: "Jan 2027",
           currency: "SAR",
-          priceAmount: Number(janSar),
+          priceAmount: Number(sourceRow.jan_sar),
           status: "INACTIVE",
-          notes,
+          notes: sourceRow.sublabel,
         })
       )
     }

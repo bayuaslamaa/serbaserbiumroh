@@ -9,7 +9,7 @@ export function LayananDropdown() {
   const [isOpen, setIsOpen] = React.useState(false)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
   const pathname = usePathname()
-  const isActive = pathname === "/visa" || pathname === "/transportasi"
+  const isActive = pathname === "/visa" || pathname === "/pesan-hotel" || pathname === "/transportasi"
 
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -25,6 +25,7 @@ export function LayananDropdown() {
 
   const layananLinks = [
     { href: "/visa", label: "Visa Umroh" },
+    { href: "/pesan-hotel", label: "Pesan Hotel" },
     { href: "/transportasi", label: "Sewa Transportasi" },
   ]
 

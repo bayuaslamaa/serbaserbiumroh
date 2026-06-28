@@ -253,8 +253,8 @@ All changes are saved immediately (no publish step).
   - Imported new FAQs stay draft; publish status and ordering are managed in the admin UI
 
 ### Hotel Booking Offers (`/admin/content/hotel-booking-offers`)
-- Manage period-based hotel offers that can be requested manually from `/hotel-nusuk`
-- Download a prefilled CSV generated from the current `/hotel-nusuk` hotel pricing catalog, then bulk preview and import edited offers
+- Manage period-based hotel offers that can be requested manually from `/pesan-hotel`
+- Download a prefilled CSV generated from the current Hotel Nusuk pricing catalog, then bulk preview and import edited offers
 - Optional link to an existing Hotel Nusuk listing; standalone hotel names are also supported for hotels not bookable through OTA/app flows
 - Fields: city, tier, hotel name, offer label, booking period, room basis, currency, price, notes, terms, and status
 - Statuses:

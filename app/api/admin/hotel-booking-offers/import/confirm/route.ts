@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         appliedRows.push(await applyImportRow(tx, row))
       }
     })
-    revalidatePath("/hotel-nusuk")
+    revalidatePath("/pesan-hotel")
   }
 
   return NextResponse.json({ preview, applied: writableRows.length, appliedRows })

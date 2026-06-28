@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, it, expect, vi } from "vitest"
 
 // Mock @/auth before importing NavBar
@@ -33,7 +33,16 @@ describe("NavBar", () => {
   it("renders Hotel Nusuk link when session is null", async () => {
     mockAuth.mockResolvedValue(null)
     render(await NavBar({}))
-    expect(screen.getByRole("link", { name: "Hotel Nusuk" })).toBeDefined()
+    expect(screen.getByRole("link", { name: "Hotel Nusuk" })).toHaveAttribute("href", "/hotel-nusuk")
+  })
+
+  it("renders Pesan Hotel link in layanan menu when session is null", async () => {
+    mockAuth.mockResolvedValue(null)
+    render(await NavBar({}))
+
+    fireEvent.click(screen.getByRole("button", { name: /Layanan/i }))
+
+    expect(screen.getByRole("link", { name: "Pesan Hotel" })).toHaveAttribute("href", "/pesan-hotel")
   })
 
   it("renders FAQ link when session is null", async () => {
