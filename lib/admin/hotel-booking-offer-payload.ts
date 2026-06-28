@@ -1,5 +1,10 @@
 import { hotelBookingOffers } from "@/lib/db/schema"
-import { normalizeHotelBookingOfferImportKey } from "@/lib/admin/hotel-booking-offer-import"
+import {
+  HOTEL_BOOKING_OFFER_MAX_PRICE_AMOUNT,
+  SUPPORTED_HOTEL_BOOKING_OFFER_CURRENCIES,
+  normalizeHotelBookingOfferImportKey,
+  type HotelBookingOfferCurrency,
+} from "@/lib/admin/hotel-booking-offer-import"
 
 const CITIES = ["MAKKAH", "MADINAH"] as const
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
@@ -60,7 +65,9 @@ export function parseHotelBookingOfferPayload(
   }
   if (offerLabel.length > 120) return { error: "offerLabel must be 120 characters or fewer" } as const
   if (periodLabel.length > 120) return { error: "periodLabel must be 120 characters or fewer" } as const
-  if (currency.length > 8) return { error: "currency must be 8 characters or fewer" } as const
+  if (!SUPPORTED_HOTEL_BOOKING_OFFER_CURRENCIES.includes(currency as HotelBookingOfferCurrency)) {
+    return { error: "currency must be SAR, USD, or IDR" } as const
+  }
   if (notes.length > 800) return { error: "notes must be 800 characters or fewer" } as const
   if (terms.length > 800) return { error: "terms must be 800 characters or fewer" } as const
 
@@ -153,7 +160,9 @@ function parsePositiveInteger(value: unknown): number | null {
   if (!/^\d+$/.test(normalized)) return null
 
   const parsed = Number(normalized)
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
+  return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= HOTEL_BOOKING_OFFER_MAX_PRICE_AMOUNT
+    ? parsed
+    : null
 }
 
 function toDateString(date: Date): string {

@@ -50,6 +50,9 @@ const STATUSES = [
   { value: "INACTIVE", label: "Arsip" },
 ]
 
+const CURRENCIES = ["SAR", "USD", "IDR"]
+const MAX_PRICE_AMOUNT = 2147483647
+
 export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBookingOfferFormProps) {
   const isEdit = !!initialData
   const router = useRouter()
@@ -298,13 +301,16 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
             <label className={labelClass} style={labelStyle}>
               Mata Uang
             </label>
-            <input
+            <select
               className={inputClass}
               style={inputStyle}
               value={currency}
-              onChange={(e) => setCurrency(e.target.value.toUpperCase())}
-              maxLength={8}
-            />
+              onChange={(e) => setCurrency(e.target.value)}
+            >
+              {CURRENCIES.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className={labelClass} style={labelStyle}>
@@ -317,6 +323,7 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
               value={priceAmount}
               onChange={(e) => setPriceAmount(e.target.value)}
               min={1}
+              max={MAX_PRICE_AMOUNT}
               required
             />
           </div>

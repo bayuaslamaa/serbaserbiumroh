@@ -2,10 +2,14 @@ import { parse } from "csv-parse/sync"
 import type { City, HotelTier } from "@/types"
 
 export type HotelBookingOfferStatus = "ACTIVE" | "UNAVAILABLE" | "INACTIVE"
+export type HotelBookingOfferCurrency = (typeof SUPPORTED_HOTEL_BOOKING_OFFER_CURRENCIES)[number]
 
 const CITIES: City[] = ["MAKKAH", "MADINAH"]
 const HOTEL_TIERS: HotelTier[] = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
 const STATUSES: HotelBookingOfferStatus[] = ["ACTIVE", "UNAVAILABLE", "INACTIVE"]
+
+export const HOTEL_BOOKING_OFFER_MAX_PRICE_AMOUNT = 2_147_483_647
+export const SUPPORTED_HOTEL_BOOKING_OFFER_CURRENCIES = ["SAR", "USD", "IDR"] as const
 
 const REQUIRED_HEADERS = [
   "city",
@@ -303,7 +307,9 @@ function parseRecord(
   if (offerLabel.length > 120) errors.push("offer_label must be 120 characters or fewer")
   if (periodLabel.length > 120) errors.push("period_label must be 120 characters or fewer")
   if (!currency) errors.push("currency is required")
-  if (currency.length > 8) errors.push("currency must be 8 characters or fewer")
+  if (!SUPPORTED_HOTEL_BOOKING_OFFER_CURRENCIES.includes(currency as HotelBookingOfferCurrency)) {
+    errors.push("currency must be SAR, USD, or IDR")
+  }
   if (priceAmount == null) errors.push("price_amount must be a positive number")
   if (!STATUSES.includes(status as HotelBookingOfferStatus)) {
     errors.push("status must be ACTIVE, UNAVAILABLE, or INACTIVE")
@@ -382,7 +388,9 @@ function parsePositiveInteger(value: string | undefined): number | null {
   if (!/^\d+$/.test(normalized)) return null
 
   const parsed = Number(normalized)
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null
+  return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= HOTEL_BOOKING_OFFER_MAX_PRICE_AMOUNT
+    ? parsed
+    : null
 }
 
 function summarize(

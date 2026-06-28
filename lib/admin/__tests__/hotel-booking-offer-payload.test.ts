@@ -37,4 +37,22 @@ describe("hotel booking offer payload", () => {
 
     expect(result).toEqual({ error: "periodEnd must be on or after periodStart" })
   })
+
+  it("rejects unsupported currencies", () => {
+    const result = parseHotelBookingOfferPayload(
+      { ...validPayload, currency: "EUR" },
+      { partial: false }
+    )
+
+    expect(result).toEqual({ error: "currency must be SAR, USD, or IDR" })
+  })
+
+  it("rejects prices outside the database integer range", () => {
+    const result = parseHotelBookingOfferPayload(
+      { ...validPayload, priceAmount: 2147483648 },
+      { partial: false }
+    )
+
+    expect(result).toEqual({ error: "priceAmount must be a positive number" })
+  })
 })

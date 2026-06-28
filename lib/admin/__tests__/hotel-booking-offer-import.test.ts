@@ -28,6 +28,37 @@ describe("hotel booking offer CSV import", () => {
     expect(docsTemplate).toBe(HOTEL_BOOKING_OFFER_IMPORT_TEMPLATE)
   })
 
+  it("keeps the OTA 2027 dummy fixture parseable and aligned to January pricing", () => {
+    const sourceRows = readFileSync("docs/templates/hotel-pricing-import-ota-2027-researched.csv", "utf8")
+      .trim()
+      .split(/\r?\n/)
+      .slice(1)
+    const dummyCsv = readFileSync("docs/templates/hotel-booking-offer-import-ota-2027-dummy.csv", "utf8")
+    const result = parseHotelBookingOfferCsv(dummyCsv)
+
+    expect(result.fileErrors).toEqual([])
+    expect(result.summary).toEqual({ create: sourceRows.length, update: 0, invalid: 0, conflict: 0 })
+    expect(result.rows).toHaveLength(sourceRows.length)
+
+    for (const [index, sourceRow] of sourceRows.entries()) {
+      const [city, tier, hotelName, notes, , janSar] = sourceRow.split(",")
+      expect(result.rows[index].data).toEqual(
+        expect.objectContaining({
+          city,
+          tier,
+          hotelName,
+          periodStart: "2027-01-01",
+          periodEnd: "2027-01-31",
+          periodLabel: "Jan 2027",
+          currency: "SAR",
+          priceAmount: Number(janSar),
+          status: "INACTIVE",
+          notes,
+        })
+      )
+    }
+  })
+
   it("builds an editable CSV from Hotel Nusuk pricing data", () => {
     const csv = buildHotelBookingOfferTemplateCsv(
       [
@@ -182,6 +213,21 @@ describe("hotel booking offer CSV import", () => {
         "period_end must be on or after period_start",
         "price_amount must be a positive number",
         "status must be ACTIVE, UNAVAILABLE, or INACTIVE",
+      ])
+    )
+  })
+
+  it("rejects unsupported currencies and prices outside the database integer range", () => {
+    const result = parseHotelBookingOfferCsv(
+      "city,tier,hotel_name,period_start,period_end,room_basis,currency,price_amount\n" +
+        "MAKKAH,STANDARD,Safwa Tower 3,2026-02-15,2026-03-05,per kamar per malam,EUR,2147483648\n"
+    )
+
+    expect(result.rows[0].status).toBe("invalid")
+    expect(result.rows[0].errors).toEqual(
+      expect.arrayContaining([
+        "currency must be SAR, USD, or IDR",
+        "price_amount must be a positive number",
       ])
     )
   })
