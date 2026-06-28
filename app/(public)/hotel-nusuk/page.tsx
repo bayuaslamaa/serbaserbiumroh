@@ -64,6 +64,10 @@ export default async function HotelNusukPage() {
       label: h.label,
       sublabel: h.sublabel,
       distance: h.distance,
+      agodaUrl: h.agodaUrl,
+      bookingcomUrl: h.bookingcomUrl,
+      tripcomUrl: h.tripcomUrl,
+      bookingUrl: h.bookingUrl,
       sarPerNight: h.sarPerNight,
       monthlyPrices: monthlyPricesDetail,
     }

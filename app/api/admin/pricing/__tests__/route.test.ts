@@ -40,11 +40,11 @@ function validateService(body: unknown): string | null {
 describe("Admin pricing validation", () => {
   describe("rates", () => {
     it("valid rates body passes", () => {
-      expect(validateRates({ currency: "SAR", rateToIdr: 4800 })).toBeNull()
+      expect(validateRates({ currency: "SAR", rateToIdr: 4850 })).toBeNull()
     })
 
     it("missing currency → error", () => {
-      expect(validateRates({ rateToIdr: 4800 })).toBeTruthy()
+      expect(validateRates({ rateToIdr: 4850 })).toBeTruthy()
     })
 
     it("negative rateToIdr → error", () => {

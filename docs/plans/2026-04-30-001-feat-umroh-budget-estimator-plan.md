@@ -776,7 +776,7 @@ graph TD
 - PRD §5.4 admin panel UI spec (inline-edit, toast feedback)
 
 **Test scenarios:**
-- Happy path: PATCH `/api/admin/pricing/rates` body `{ currency: "SAR", rateToIdr: 4800 }` → DB `exchange_rates` row updated, response returns new row with `updatedAt`
+- Happy path: PATCH `/api/admin/pricing/rates` body `{ currency: "SAR", rateToIdr: 4850 }` → DB `exchange_rates` row updated, response returns new row with `updatedAt`
 - Happy path: PATCH `/api/admin/pricing/hotel` → new `sarPerNight` reflected in subsequent GET
 - Happy path: PATCH `/api/admin/pricing/service` body `{ key: "VISA", enabled: false }` → VISA excluded from `fetchPricingConfig` output (filtered by `enabled=true`)
 - Happy path: PATCH `/api/admin/pricing/airline` → new IDR value used in subsequent `calculateBudget` calls

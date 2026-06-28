@@ -1,9 +1,9 @@
-city,tier,label,sublabel,distance,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
-MAKKAH,ECONOMY,Makkah Economy Example,Contoh tier ECONOMY,shuttle area,900,900,900,1100,1000,900,900,950,950,900,900,900,1000
-MAKKAH,STANDARD,Safwa Tower 3,3 star dekat Haram,250m jalan kaki,1300,1300,1300,1600,1450,1300,1300,1400,1400,1300,1300,1300,1500
-MAKKAH,PELATARAN,Makkah Pelataran Example,Contoh tier PELATARAN,pelataran/ring 1,1800,1800,1800,2200,2000,1800,1800,1900,1900,1800,1800,1800,2000
-MAKKAH,PREMIUM,Makkah Premium Example,Contoh tier PREMIUM,ring 1 tower,2600,2600,2600,3200,2900,2600,2600,2800,2800,2600,2600,2600,3000
-MADINAH,ECONOMY,Madinah Economy Example,Contoh tier ECONOMY,shuttle area,450,450,450,600,550,450,450,500,500,450,450,450,550
-MADINAH,STANDARD,Grand Plaza Badr Maqam,4 star dekat Nabawi,300m jalan kaki,650,650,650,850,750,650,650,700,700,650,650,650,750
-MADINAH,PELATARAN,Madinah Pelataran Example,Contoh tier PELATARAN,pelataran/ring 1,1100,1100,1100,1400,1250,1100,1100,1200,1200,1100,1100,1100,1250
-MADINAH,PREMIUM,Madinah Premium Example,Contoh tier PREMIUM,ring 1 dekat Nabawi,1800,1800,1800,2300,2050,1800,1800,1950,1950,1800,1800,1800,2100
+city,tier,label,sublabel,distance,agoda_url,bookingcom_url,tripcom_url,booking_url,base_sar_per_night,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+MAKKAH,ECONOMY,Makkah Economy Example,Contoh tier ECONOMY,shuttle area,,,,,900,900,900,1100,1000,900,900,950,950,900,900,900,1000
+MAKKAH,STANDARD,Safwa Tower 3,3 star dekat Haram,250m jalan kaki,,,,,1300,1300,1300,1600,1450,1300,1300,1400,1400,1300,1300,1300,1500
+MAKKAH,PELATARAN,Makkah Pelataran Example,Contoh tier PELATARAN,pelataran/ring 1,,,,,1800,1800,1800,2200,2000,1800,1800,1900,1900,1800,1800,1800,2000
+MAKKAH,PREMIUM,Makkah Premium Example,Contoh tier PREMIUM,ring 1 tower,,,,,2600,2600,2600,3200,2900,2600,2600,2800,2800,2600,2600,2600,3000
+MADINAH,ECONOMY,Madinah Economy Example,Contoh tier ECONOMY,shuttle area,,,,,450,450,450,600,550,450,450,500,500,450,450,450,550
+MADINAH,STANDARD,Grand Plaza Badr Maqam,4 star dekat Nabawi,300m jalan kaki,,,,,650,650,650,850,750,650,650,700,700,650,650,650,750
+MADINAH,PELATARAN,Madinah Pelataran Example,Contoh tier PELATARAN,pelataran/ring 1,,,,,1100,1100,1100,1400,1250,1100,1100,1200,1200,1100,1100,1100,1250
+MADINAH,PREMIUM,Madinah Premium Example,Contoh tier PREMIUM,ring 1 dekat Nabawi,,,,,1800,1800,1800,2300,2050,1800,1800,1950,1950,1800,1800,1800,2100
