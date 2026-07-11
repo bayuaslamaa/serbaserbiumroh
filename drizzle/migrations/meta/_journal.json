@@ -1,0 +1,97 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777637098279,
+      "tag": "0000_hesitant_moira_mactaggert",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777646237191,
+      "tag": "0001_cuddly_random",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777780018106,
+      "tag": "0002_long_hercules",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777823674080,
+      "tag": "0003_sad_scrambler",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778253246944,
+      "tag": "0004_wandering_invaders",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778328489377,
+      "tag": "0005_stiff_midnight",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778409250033,
+      "tag": "0006_add_faq_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778604199662,
+      "tag": "0007_fearless_kinsey_walden",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780313859582,
+      "tag": "0008_friendly_korg",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1781411791557,
+      "tag": "0009_shallow_boomer",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1782305431915,
+      "tag": "0010_calm_lady_ursula",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1782361695641,
+      "tag": "0011_far_rictor",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1782762016000,
+      "tag": "0013_hotel_booking_rate_windows",
+      "breakpoints": true
+    }
+  ]
+}
