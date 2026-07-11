@@ -1,2 +1,2 @@
-city,tier,hotel_name,hotel_listing_slug,offer_label,period_start,period_end,period_label,room_basis,currency,price_amount,status,notes,terms
-MAKKAH,STANDARD,Safwa Tower 3,safwa-tower-3,Ramadan awal,2026-02-15,2026-03-05,15 Feb - 5 Mar 2026,per kamar per malam double,SAR,1450,ACTIVE,Harga dapat berubah sebelum dikonfirmasi hotel,Booking final setelah admin cek ketersediaan
+city,tier,hotel_name,hotel_listing_slug,offer_label,room_type,rate_label,period_start,period_end,period_label,room_basis,currency,price_amount,max_adults,max_guests,min_nights,inclusions,cancellation_policy,sort_order,verified_at,status,notes,terms
+MAKKAH,STANDARD,Safwa Tower 3,safwa-tower-3,Ramadan awal,Double Standard Room,Non-refundable,2026-02-15,2026-03-05,15 Feb - 5 Mar 2026,per kamar per malam double,SAR,1450,2,2,1,Free WiFi,Non-refundable setelah hotel konfirmasi,0,2026-01-20,ACTIVE,Harga dapat berubah sebelum dikonfirmasi hotel,Booking final setelah admin cek ketersediaan

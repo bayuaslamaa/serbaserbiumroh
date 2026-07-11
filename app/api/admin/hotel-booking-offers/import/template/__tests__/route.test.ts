@@ -90,7 +90,7 @@ describe("GET /api/admin/hotel-booking-offers/import/template", () => {
       "hotel-booking-offers-hotel-nusuk.csv"
     )
     expect(response.body).toContain(
-      "MAKKAH,STANDARD,Safwa Tower 3,safwa-tower-3,,,,,per kamar per malam,SAR,1450,INACTIVE"
+      "MAKKAH,STANDARD,Safwa Tower 3,safwa-tower-3,,Standard Room,,,,,per kamar per malam,SAR,1450,,,1"
     )
   })
 

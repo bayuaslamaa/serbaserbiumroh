@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import type { HotelBookingOfferImportParseResult } from "@/lib/admin/hotel-booking-offer-import"
 
@@ -10,20 +10,24 @@ export function HotelBookingOfferImportPanel() {
   const [csv, setCsv] = useState("")
   const [fileName, setFileName] = useState("")
   const [preview, setPreview] = useState<HotelBookingOfferImportParseResult | null>(null)
+  const [previewCsv, setPreviewCsv] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isPreviewPending, setIsPreviewPending] = useState(false)
   const [isConfirmPending, setIsConfirmPending] = useState(false)
+  const previewRequestId = useRef(0)
+  const fileReadId = useRef(0)
 
   const canConfirm =
     !!preview &&
+    previewCsv === csv &&
     preview.summary.conflict === 0 &&
     preview.summary.create + preview.summary.update > 0
 
-  async function postImport(url: string) {
+  async function postImport(url: string, csvSnapshot: string) {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ csv }),
+      body: JSON.stringify({ csv: csvSnapshot }),
     })
 
     const data = await res.json()
@@ -32,13 +36,19 @@ export function HotelBookingOfferImportPanel() {
   }
 
   async function previewImport() {
+    const requestId = ++previewRequestId.current
+    const csvSnapshot = csv
     setError(null)
     setIsPreviewPending(true)
     try {
-      const data = await postImport("/api/admin/hotel-booking-offers/import/preview")
+      const data = await postImport("/api/admin/hotel-booking-offers/import/preview", csvSnapshot)
+      if (requestId !== previewRequestId.current) return
       setPreview(data.preview)
+      setPreviewCsv(csvSnapshot)
     } catch (err) {
+      if (requestId !== previewRequestId.current) return
       setPreview(null)
+      setPreviewCsv(null)
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
     } finally {
       setIsPreviewPending(false)
@@ -46,11 +56,15 @@ export function HotelBookingOfferImportPanel() {
   }
 
   async function confirmImport() {
+    if (!preview || previewCsv !== csv) return
+
+    const csvSnapshot = csv
     setError(null)
     setIsConfirmPending(true)
     try {
-      const data = await postImport("/api/admin/hotel-booking-offers/import/confirm")
+      const data = await postImport("/api/admin/hotel-booking-offers/import/confirm", csvSnapshot)
       setPreview(data.preview)
+      setPreviewCsv(csvSnapshot)
       router.refresh()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
@@ -64,12 +78,18 @@ export function HotelBookingOfferImportPanel() {
   async function selectCsvFile(file: File | undefined) {
     if (!file) return
 
+    const requestId = ++fileReadId.current
+    previewRequestId.current += 1
     setError(null)
     setPreview(null)
+    setPreviewCsv(null)
     setFileName(file.name)
     try {
-      setCsv(await file.text())
+      const contents = await file.text()
+      if (requestId !== fileReadId.current) return
+      setCsv(contents)
     } catch {
+      if (requestId !== fileReadId.current) return
       setCsv("")
       setError("File CSV tidak dapat dibaca.")
     }
@@ -90,7 +110,7 @@ export function HotelBookingOfferImportPanel() {
             Import Offer Booking CSV
           </span>
           <span className="mt-1 block text-sm" style={{ color: "var(--color-text-muted)" }}>
-            Bulk create/update offer hotel berdasarkan kota, tier, hotel, periode, basis kamar, dan label.
+            Bulk create/update offer hotel berdasarkan kota, tier, hotel, periode, tipe kamar, rate, dan label.
           </span>
         </span>
         <span className="text-sm font-semibold" style={{ color: "var(--color-text-muted)" }}>
@@ -102,7 +122,7 @@ export function HotelBookingOfferImportPanel() {
         <div className="space-y-4 border-t p-5" style={{ borderColor: "var(--color-border)" }}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-              CSV sudah berisi hotel dari /hotel-nusuk. Lengkapi periode, label offer, basis kamar,
+              CSV sudah berisi hotel dari /hotel-nusuk. Lengkapi periode, tipe kamar, kapasitas,
               harga, dan ubah status menjadi ACTIVE saat siap ditampilkan.
             </p>
             <a
@@ -117,8 +137,10 @@ export function HotelBookingOfferImportPanel() {
           <textarea
             value={csv}
             onChange={(event) => {
+              previewRequestId.current += 1
               setCsv(event.target.value)
               setPreview(null)
+              setPreviewCsv(null)
             }}
             placeholder="Tempel isi CSV offer booking hotel di sini..."
             className="min-h-[180px] w-full rounded-md border px-3 py-2 font-mono text-xs outline-none focus:ring-2"
@@ -214,10 +236,10 @@ function HotelBookingOfferImportPreview({ preview }: { preview: HotelBookingOffe
       )}
 
       <div className="overflow-x-auto rounded-md border" style={{ borderColor: "var(--color-border)" }}>
-        <table className="w-full min-w-[860px] text-sm">
+        <table className="w-full min-w-[940px] text-sm">
           <thead style={{ background: "rgba(0,0,0,0.2)" }}>
             <tr>
-              {["Row", "Status", "Hotel", "Periode", "Harga", "Catatan"].map((heading) => (
+              {["Row", "Status", "Hotel", "Kamar", "Periode", "Harga", "Catatan"].map((heading) => (
                 <th
                   key={heading}
                   className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide"
@@ -235,6 +257,9 @@ function HotelBookingOfferImportPreview({ preview }: { preview: HotelBookingOffe
                 <td className="px-3 py-2 font-semibold" style={{ color: statusColor(row.status) }}>{row.status}</td>
                 <td className="px-3 py-2" style={{ color: "var(--color-text)" }}>
                   {row.data?.hotelName ?? "-"}
+                </td>
+                <td className="px-3 py-2" style={{ color: "var(--color-text-muted)" }}>
+                  {row.data ? [row.data.roomType, row.data.rateLabel].filter(Boolean).join(" · ") : "-"}
                 </td>
                 <td className="px-3 py-2" style={{ color: "var(--color-text-muted)" }}>
                   {row.data ? `${row.data.periodStart} - ${row.data.periodEnd}` : "-"}

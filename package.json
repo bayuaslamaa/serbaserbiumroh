@@ -11,6 +11,7 @@
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
+    "db:reset:hotel-booking-offers": "dotenv -e .env.local -- tsx lib/db/reset-hotel-booking-offers.ts",
     "seed": "dotenv -e .env.local -- tsx lib/db/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest"

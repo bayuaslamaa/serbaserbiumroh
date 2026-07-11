@@ -54,10 +54,92 @@ describe("hotel booking offer CSV import", () => {
           periodLabel: "Jan 2027",
           currency: "SAR",
           priceAmount: Number(sourceRow.jan_sar),
+          roomType: "Standard Room",
+          rateLabel: "Manual availability check",
+          maxAdults: 2,
+          maxGuests: 2,
+          minNights: 1,
           status: "INACTIVE",
           notes: sourceRow.sublabel,
         })
       )
+    }
+  })
+
+  it("keeps the Gemini 2027 dummy fixture parseable as monthly multi-period offers", () => {
+    const sourceRows = parse(readFileSync("gemini-code-1778326367070 - gemini-code-1778326367070.csv", "utf8"), {
+      bom: true,
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    }) as Array<Record<string, string>>
+    const dummyCsv = readFileSync("docs/templates/hotel-booking-offer-import-gemini-2027-dummy.csv", "utf8")
+    const dummyRecords = parse(dummyCsv, {
+      bom: true,
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+    }) as Array<Record<string, string>>
+    const result = parseHotelBookingOfferCsv(dummyCsv)
+    const expectedHotels = [
+      "Emaar Royal Hotel Al Madina",
+      "Emaar Elite Al Madina Hotel",
+      "Pullman Zam Zam",
+      "Madinah Hilton",
+      "Makkah Hotel Tower",
+      "Le Meridien Makkah",
+      "Ibis",
+      "Le Meridien Towers",
+    ]
+    const expectedPeriods = [
+      { priceKey: "jul_sar", start: "2026-07-01", end: "2026-07-31", label: "Jul 2026" },
+      { priceKey: "aug_sar", start: "2026-08-01", end: "2026-08-31", label: "Aug 2026" },
+      { priceKey: "sep_sar", start: "2026-09-01", end: "2026-09-30", label: "Sep 2026" },
+      { priceKey: "oct_sar", start: "2026-10-01", end: "2026-10-31", label: "Oct 2026" },
+      { priceKey: "nov_sar", start: "2026-11-01", end: "2026-11-30", label: "Nov 2026" },
+      { priceKey: "dec_sar", start: "2026-12-01", end: "2026-12-31", label: "Dec 2026" },
+      { priceKey: "jan_sar", start: "2027-01-01", end: "2027-01-31", label: "Jan 2027" },
+      { priceKey: "feb_sar", start: "2027-02-01", end: "2027-02-28", label: "Feb 2027" },
+    ]
+    const sourceByHotel = new Map(sourceRows.map((sourceRow) => [sourceRow.label, sourceRow]))
+
+    expect(result.fileErrors).toEqual([])
+    expect(result.summary).toEqual({ create: expectedHotels.length * expectedPeriods.length, update: 0, invalid: 0, conflict: 0 })
+    expect(result.rows).toHaveLength(expectedHotels.length * expectedPeriods.length)
+    expect(dummyRecords).toHaveLength(expectedHotels.length * expectedPeriods.length)
+    expect(new Set(dummyRecords.map((record) => record.hotel_name))).toEqual(new Set(expectedHotels))
+    expect(new Set(dummyRecords.map((record) => record.period_label))).toEqual(
+      new Set(expectedPeriods.map((period) => period.label))
+    )
+
+    for (const hotelName of expectedHotels) {
+      const sourceRow = sourceByHotel.get(hotelName)
+      if (!sourceRow) throw new Error(`Missing source row for ${hotelName}`)
+
+      const hotelRows = result.rows.filter((row) => row.data?.hotelName === hotelName)
+      expect(hotelRows).toHaveLength(expectedPeriods.length)
+
+      for (const [periodIndex, period] of expectedPeriods.entries()) {
+        expect(hotelRows[periodIndex].data).toEqual(
+          expect.objectContaining({
+            city: sourceRow.city,
+            tier: sourceRow.tier,
+            hotelName,
+            periodStart: period.start,
+            periodEnd: period.end,
+            periodLabel: period.label,
+            currency: "SAR",
+            priceAmount: Number(sourceRow[period.priceKey] || sourceRow.base_sar_per_night),
+            roomType: "Standard Room",
+            rateLabel: "Manual availability check",
+            maxAdults: 2,
+            maxGuests: 2,
+            minNights: 1,
+            status: "INACTIVE",
+          })
+        )
+        expect(hotelRows[periodIndex].data?.notes).toContain("Source:")
+      }
     }
   })
 
@@ -84,7 +166,7 @@ describe("hotel booking offer CSV import", () => {
     )
 
     expect(csv).toContain(
-      'MAKKAH,STANDARD,Safwa Tower 3,safwa-tower-3,,,,,per kamar per malam,SAR,1450,INACTIVE,"Dekat Haram, akses mudah | 250m"'
+      'MAKKAH,STANDARD,Safwa Tower 3,safwa-tower-3,,Standard Room,,,,,per kamar per malam,SAR,1450,,,1,,Ketersediaan akhir dan payment dilanjutkan manual via WhatsApp,0,,INACTIVE,"Dekat Haram, akses mudah | 250m"'
     )
 
     const incomplete = parseHotelBookingOfferCsv(csv, {
@@ -99,8 +181,8 @@ describe("hotel booking offer CSV import", () => {
     )
 
     const completedCsv = csv.replace(
-      "safwa-tower-3,,,,,per kamar per malam",
-      "safwa-tower-3,Ramadan awal,2026-02-15,2026-03-05,15 Feb - 5 Mar 2026,per kamar per malam"
+      "safwa-tower-3,,Standard Room,,,,,per kamar per malam",
+      "safwa-tower-3,Ramadan awal,Double Standard Room,Free cancellation,2026-02-15,2026-03-05,15 Feb - 5 Mar 2026,per kamar per malam"
     )
     const completed = parseHotelBookingOfferCsv(completedCsv, {
       hotelListings: [{ id: "hotel-1", slug: "safwa-tower-3" }],
@@ -110,6 +192,8 @@ describe("hotel booking offer CSV import", () => {
       expect.objectContaining({
         hotelName: "Safwa Tower 3",
         hotelListingId: "hotel-1",
+        roomType: "Double Standard Room",
+        rateLabel: "Free cancellation",
         priceAmount: 1450,
         status: "INACTIVE",
       })
@@ -143,8 +227,8 @@ describe("hotel booking offer CSV import", () => {
     ])
 
     const completedCsv = csv.replace(
-      ",,,,,per kamar per malam",
-      ",Ramadan,2026-02-15,2026-03-05,Ramadan,per kamar per malam"
+      ",,Standard Room,,,,,per kamar per malam",
+      ",Ramadan,Standard Room,,2026-02-15,2026-03-05,Ramadan,per kamar per malam"
     )
     const result = parseHotelBookingOfferCsv(completedCsv)
 
@@ -164,7 +248,7 @@ describe("hotel booking offer CSV import", () => {
     })
 
     expect(key).toBe(
-      "MAKKAH:STANDARD:safwa tower 3:2026-02-15:2026-03-05:per kamar per malam:ramadan awal"
+      "MAKKAH:STANDARD:safwa tower 3:2026-02-15:2026-03-05:per kamar per malam:ramadan awal:standard room:"
     )
   })
 
@@ -188,6 +272,40 @@ describe("hotel booking offer CSV import", () => {
     expect(result.rows[0].status).toBe("update")
     expect(result.rows[0].existingOfferId).toBe("offer-1")
     expect(result.summary.update).toBe(1)
+  })
+
+  it("matches legacy import keys from CSVs created before room type and rate label columns existed", () => {
+    const legacyImportKey =
+      "MAKKAH:STANDARD:safwa tower 3:2026-02-15:2026-03-05:per kamar per malam:ramadan awal"
+
+    const result = parseHotelBookingOfferCsv(
+      "city,tier,hotel_name,offer_label,period_start,period_end,room_basis,price_amount\n" +
+        "MAKKAH,STANDARD,Safwa Tower 3,Ramadan awal,2026-02-15,2026-03-05,per kamar per malam,1450\n",
+      { existingOffers: [{ id: "offer-legacy", importKey: legacyImportKey }] }
+    )
+
+    expect(result.rows[0].status).toBe("update")
+    expect(result.rows[0].existingOfferId).toBe("offer-legacy")
+    expect(result.rows[0].data?.matchKey).toBe(
+      "MAKKAH:STANDARD:safwa tower 3:2026-02-15:2026-03-05:per kamar per malam:ramadan awal:standard room:"
+    )
+  })
+
+  it("updates a legacy offer once and creates additional room rates", () => {
+    const legacyImportKey =
+      "MAKKAH:STANDARD:safwa tower 3:2026-02-15:2026-03-05:per kamar per malam:ramadan awal"
+
+    const result = parseHotelBookingOfferCsv(
+      "city,tier,hotel_name,offer_label,room_type,rate_label,period_start,period_end,room_basis,price_amount\n" +
+        "MAKKAH,STANDARD,Safwa Tower 3,Ramadan awal,Standard Room,Non-refundable,2026-02-15,2026-03-05,per kamar per malam,1450\n" +
+        "MAKKAH,STANDARD,Safwa Tower 3,Ramadan awal,Deluxe Room,Free cancellation,2026-02-15,2026-03-05,per kamar per malam,1750\n",
+      { existingOffers: [{ id: "offer-legacy", importKey: legacyImportKey }] }
+    )
+
+    expect(result.rows.map((row) => row.status)).toEqual(["update", "create"])
+    expect(result.rows[0].existingOfferId).toBe("offer-legacy")
+    expect(result.rows[1].existingOfferId).toBeUndefined()
+    expect(result.summary).toEqual({ create: 1, update: 1, invalid: 0, conflict: 0 })
   })
 
   it("marks duplicate rows in one upload as conflicts", () => {

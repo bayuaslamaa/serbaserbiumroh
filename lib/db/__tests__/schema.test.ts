@@ -13,6 +13,7 @@ import {
   pilgrimStories,
   storyItineraryDays,
   hotelListings,
+  hotelBookingOffers,
   faqGroups,
   faqItems,
 } from "@/lib/db/schema"
@@ -146,6 +147,22 @@ describe("schema table definitions", () => {
     expect(cols).toContain("tier")
     expect(cols).toContain("slug")
     expect(cols).toContain("name")
+  })
+
+  it("hotelBookingOffers table has searchable rate-window fields", () => {
+    const cols = Object.keys(hotelBookingOffers)
+    expect(cols).toContain("hotelListingId")
+    expect(cols).toContain("periodStart")
+    expect(cols).toContain("periodEnd")
+    expect(cols).toContain("roomType")
+    expect(cols).toContain("rateLabel")
+    expect(cols).toContain("maxAdults")
+    expect(cols).toContain("maxGuests")
+    expect(cols).toContain("minNights")
+    expect(cols).toContain("inclusions")
+    expect(cols).toContain("cancellationPolicy")
+    expect(cols).toContain("sortOrder")
+    expect(cols).toContain("verifiedAt")
   })
 
   it("faqGroups table has ordering fields", () => {

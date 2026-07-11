@@ -20,12 +20,21 @@ type HotelBookingOfferFormProps = {
     tier: string
     hotelName: string
     offerLabel: string
+    roomType: string
+    rateLabel: string
     periodStart: string
     periodEnd: string
     periodLabel: string
     roomBasis: string
     currency: string
     priceAmount: number
+    maxAdults: number | null
+    maxGuests: number | null
+    minNights: number
+    inclusions: string
+    cancellationPolicy: string
+    sortOrder: number
+    verifiedAt: string
     status: string
     notes: string
     terms: string
@@ -64,12 +73,21 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
   const [tier, setTier] = useState(initialData?.tier ?? "STANDARD")
   const [hotelName, setHotelName] = useState(initialData?.hotelName ?? "")
   const [offerLabel, setOfferLabel] = useState(initialData?.offerLabel ?? "")
+  const [roomType, setRoomType] = useState(initialData?.roomType ?? "Standard Room")
+  const [rateLabel, setRateLabel] = useState(initialData?.rateLabel ?? "")
   const [periodStart, setPeriodStart] = useState(initialData?.periodStart ?? "")
   const [periodEnd, setPeriodEnd] = useState(initialData?.periodEnd ?? "")
   const [periodLabel, setPeriodLabel] = useState(initialData?.periodLabel ?? "")
   const [roomBasis, setRoomBasis] = useState(initialData?.roomBasis ?? "per kamar per malam")
   const [currency, setCurrency] = useState(initialData?.currency ?? "SAR")
   const [priceAmount, setPriceAmount] = useState(initialData?.priceAmount?.toString() ?? "")
+  const [maxAdults, setMaxAdults] = useState(initialData?.maxAdults?.toString() ?? "")
+  const [maxGuests, setMaxGuests] = useState(initialData?.maxGuests?.toString() ?? "")
+  const [minNights, setMinNights] = useState(initialData?.minNights?.toString() ?? "1")
+  const [inclusions, setInclusions] = useState(initialData?.inclusions ?? "")
+  const [cancellationPolicy, setCancellationPolicy] = useState(initialData?.cancellationPolicy ?? "")
+  const [sortOrder, setSortOrder] = useState(initialData?.sortOrder?.toString() ?? "0")
+  const [verifiedAt, setVerifiedAt] = useState(initialData?.verifiedAt ?? "")
   const [status, setStatus] = useState(initialData?.status ?? "ACTIVE")
   const [notes, setNotes] = useState(initialData?.notes ?? "")
   const [terms, setTerms] = useState(initialData?.terms ?? "")
@@ -93,12 +111,21 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
       tier,
       hotelName,
       offerLabel,
+      roomType,
+      rateLabel,
       periodStart,
       periodEnd,
       periodLabel,
       roomBasis,
       currency,
       priceAmount: priceAmount ? parseInt(priceAmount.replace(/,/g, ""), 10) : null,
+      maxAdults: maxAdults ? parseInt(maxAdults.replace(/,/g, ""), 10) : null,
+      maxGuests: maxGuests ? parseInt(maxGuests.replace(/,/g, ""), 10) : null,
+      minNights: minNights ? parseInt(minNights.replace(/,/g, ""), 10) : 1,
+      inclusions,
+      cancellationPolicy,
+      sortOrder: sortOrder ? parseInt(sortOrder.replace(/,/g, ""), 10) : 0,
+      verifiedAt: verifiedAt || null,
       status,
       notes,
       terms,
@@ -232,6 +259,35 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
               placeholder="contoh: Ramadan awal, grup kecil, family room"
             />
           </div>
+
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Tipe Kamar *
+            </label>
+            <input
+              className={inputClass}
+              style={inputStyle}
+              value={roomType}
+              onChange={(e) => setRoomType(e.target.value)}
+              required
+              maxLength={120}
+              placeholder="contoh: Double Standard Room"
+            />
+          </div>
+
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Label Rate
+            </label>
+            <input
+              className={inputClass}
+              style={inputStyle}
+              value={rateLabel}
+              onChange={(e) => setRateLabel(e.target.value)}
+              maxLength={120}
+              placeholder="contoh: Free cancellation, Non-refundable"
+            />
+          </div>
         </div>
       </section>
 
@@ -337,6 +393,75 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
               ))}
             </select>
           </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Minimal Malam
+            </label>
+            <input
+              type="number"
+              className={inputClass}
+              style={inputStyle}
+              value={minNights}
+              onChange={(e) => setMinNights(e.target.value)}
+              min={1}
+              max={365}
+            />
+          </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Maks Dewasa / Kamar
+            </label>
+            <input
+              type="number"
+              className={inputClass}
+              style={inputStyle}
+              value={maxAdults}
+              onChange={(e) => setMaxAdults(e.target.value)}
+              min={1}
+              max={100}
+              placeholder="kosongkan jika fleksibel"
+            />
+          </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Maks Tamu / Kamar
+            </label>
+            <input
+              type="number"
+              className={inputClass}
+              style={inputStyle}
+              value={maxGuests}
+              onChange={(e) => setMaxGuests(e.target.value)}
+              min={1}
+              max={100}
+              placeholder="kosongkan jika fleksibel"
+            />
+          </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Urutan Tampil
+            </label>
+            <input
+              type="number"
+              className={inputClass}
+              style={inputStyle}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              min={0}
+            />
+          </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>
+              Tanggal Verifikasi
+            </label>
+            <input
+              type="date"
+              className={inputClass}
+              style={inputStyle}
+              value={verifiedAt}
+              onChange={(e) => setVerifiedAt(e.target.value)}
+            />
+          </div>
         </div>
       </section>
 
@@ -347,6 +472,32 @@ export function HotelBookingOfferForm({ hotelListings, initialData }: HotelBooki
         <h2 className="text-base font-semibold" style={{ color: "var(--color-gold)" }}>
           Catatan Booking
         </h2>
+        <div>
+          <label className={labelClass} style={labelStyle}>
+            Inklusi
+          </label>
+          <textarea
+            className={inputClass}
+            style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }}
+            value={inclusions}
+            onChange={(e) => setInclusions(e.target.value)}
+            maxLength={800}
+            placeholder="contoh: Free WiFi, private bathroom, non-smoking"
+          />
+        </div>
+        <div>
+          <label className={labelClass} style={labelStyle}>
+            Kebijakan Cancellation
+          </label>
+          <textarea
+            className={inputClass}
+            style={{ ...inputStyle, minHeight: 80, resize: "vertical" as const }}
+            value={cancellationPolicy}
+            onChange={(e) => setCancellationPolicy(e.target.value)}
+            maxLength={800}
+            placeholder="contoh: Free cancellation sebelum 1 Jul 2026"
+          />
+        </div>
         <div>
           <label className={labelClass} style={labelStyle}>
             Catatan

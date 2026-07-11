@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import { hotelBookingOffers } from "@/lib/db/schema"
 import { desc } from "drizzle-orm"
 import { parseHotelBookingOfferPayload } from "@/lib/admin/hotel-booking-offer-payload"
+import { isHotelBookingOfferUniqueViolation } from "@/lib/admin/hotel-booking-offer-errors"
 import { revalidatePath } from "next/cache"
 
 async function requireAdmin() {
@@ -31,7 +32,11 @@ export async function POST(req: NextRequest) {
 
   let body: Record<string, unknown>
   try {
-    body = await req.json()
+    const parsedBody: unknown = await req.json()
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return NextResponse.json({ error: "JSON body must be an object" }, { status: 400 })
+    }
+    body = parsedBody as Record<string, unknown>
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -39,10 +44,19 @@ export async function POST(req: NextRequest) {
   const parsed = parseHotelBookingOfferPayload(body, { partial: false })
   if ("error" in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 })
 
-  const [offer] = await db
-    .insert(hotelBookingOffers)
-    .values(parsed.data as typeof hotelBookingOffers.$inferInsert)
-    .returning()
+  let offer: typeof hotelBookingOffers.$inferSelect
+  try {
+    const created = await db
+      .insert(hotelBookingOffers)
+      .values(parsed.data as typeof hotelBookingOffers.$inferInsert)
+      .returning()
+    offer = created[0]
+  } catch (error) {
+    if (isHotelBookingOfferUniqueViolation(error)) {
+      return NextResponse.json({ error: "An offer with the same rate identity already exists" }, { status: 409 })
+    }
+    throw error
+  }
 
   revalidatePath("/pesan-hotel")
 

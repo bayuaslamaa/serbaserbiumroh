@@ -24,7 +24,11 @@ export async function POST(req: NextRequest) {
 
   let body: { csv?: unknown }
   try {
-    body = await req.json()
+    const parsedBody: unknown = await req.json()
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return NextResponse.json({ error: "JSON body must be an object" }, { status: 400 })
+    }
+    body = parsedBody as { csv?: unknown }
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -87,12 +91,21 @@ async function applyImportRow(
     tier: row.data.tier,
     hotelName: row.data.hotelName,
     offerLabel: row.data.offerLabel,
+    roomType: row.data.roomType,
+    rateLabel: row.data.rateLabel,
     periodStart: toDate(row.data.periodStart),
     periodEnd: toDate(row.data.periodEnd),
     periodLabel: row.data.periodLabel,
     roomBasis: row.data.roomBasis,
     currency: row.data.currency,
     priceAmount: row.data.priceAmount,
+    maxAdults: row.data.maxAdults,
+    maxGuests: row.data.maxGuests,
+    minNights: row.data.minNights,
+    inclusions: row.data.inclusions,
+    cancellationPolicy: row.data.cancellationPolicy,
+    sortOrder: row.data.sortOrder,
+    verifiedAt: row.data.verifiedAt ? toDate(row.data.verifiedAt) : null,
     status: row.data.status,
     notes: row.data.notes,
     terms: row.data.terms,

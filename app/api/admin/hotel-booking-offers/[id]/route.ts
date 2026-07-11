@@ -8,6 +8,7 @@ import {
   toHotelBookingOfferImportKey,
 } from "@/lib/admin/hotel-booking-offer-payload"
 import { revalidatePath } from "next/cache"
+import { isHotelBookingOfferUniqueViolation } from "@/lib/admin/hotel-booking-offer-errors"
 
 async function requireAdmin() {
   const session = await auth()
@@ -43,7 +44,11 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
 
   let body: Record<string, unknown>
   try {
-    body = await req.json()
+    const parsedBody: unknown = await req.json()
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return NextResponse.json({ error: "JSON body must be an object" }, { status: 400 })
+    }
+    body = parsedBody as Record<string, unknown>
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
@@ -63,23 +68,34 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
     ...parsed.data,
   }
 
-  const [offer] = await db
-    .update(hotelBookingOffers)
-    .set({
-      ...parsed.data,
-      importKey: toHotelBookingOfferImportKey({
-        city: merged.city,
-        tier: merged.tier,
-        hotelName: merged.hotelName,
-        periodStart: merged.periodStart,
-        periodEnd: merged.periodEnd,
-        roomBasis: merged.roomBasis,
-        offerLabel: merged.offerLabel,
-      }),
-      updatedAt: new Date(),
-    })
-    .where(eq(hotelBookingOffers.id, id))
-    .returning()
+  let offer: typeof hotelBookingOffers.$inferSelect
+  try {
+    const updated = await db
+      .update(hotelBookingOffers)
+      .set({
+        ...parsed.data,
+        importKey: toHotelBookingOfferImportKey({
+          city: merged.city,
+          tier: merged.tier,
+          hotelName: merged.hotelName,
+          periodStart: merged.periodStart,
+          periodEnd: merged.periodEnd,
+          roomBasis: merged.roomBasis,
+          offerLabel: merged.offerLabel,
+          roomType: merged.roomType,
+          rateLabel: merged.rateLabel,
+        }),
+        updatedAt: new Date(),
+      })
+      .where(eq(hotelBookingOffers.id, id))
+      .returning()
+    offer = updated[0]
+  } catch (error) {
+    if (isHotelBookingOfferUniqueViolation(error)) {
+      return NextResponse.json({ error: "An offer with the same rate identity already exists" }, { status: 409 })
+    }
+    throw error
+  }
 
   revalidatePath("/pesan-hotel")
 

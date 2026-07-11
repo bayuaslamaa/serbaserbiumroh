@@ -95,7 +95,7 @@ const existingOffer = {
   updatedAt: new Date("2026-01-01T00:00:00.000Z"),
 }
 
-function request(body: Record<string, unknown> = validPayload) {
+function request(body: unknown = validPayload) {
   return new NextRequest("http://localhost/api/admin/hotel-booking-offers", {
     body: JSON.stringify(body),
   })
@@ -107,6 +107,31 @@ beforeEach(() => {
 })
 
 describe("admin hotel booking offer routes", () => {
+  it("rejects a null JSON body", async () => {
+    const { POST } = await import("../route")
+
+    const response = await POST(request(null))
+
+    expect(response.status).toBe(400)
+    expect(response.body).toEqual({ error: "JSON body must be an object" })
+    expect(mockDb.insert).not.toHaveBeenCalled()
+  })
+
+  it("returns a conflict response for a duplicate offer identity", async () => {
+    mockDb.insert.mockReturnValue({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockRejectedValue({ code: "23505" }),
+      }),
+    })
+    const { POST } = await import("../route")
+
+    const response = await POST(request())
+
+    expect(response.status).toBe(409)
+    expect(response.body).toEqual({ error: "An offer with the same rate identity already exists" })
+    expect(mockRevalidatePath).not.toHaveBeenCalled()
+  })
+
   it("revalidates /pesan-hotel after creating an offer", async () => {
     mockDb.insert.mockReturnValue({
       values: vi.fn().mockReturnValue({

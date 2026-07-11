@@ -44,10 +44,6 @@ vi.mock("@/components/hotel-nusuk/HotelPriceList", () => ({
   ),
 }))
 
-vi.mock("@/components/hotel-nusuk/HotelBookingOfferCatalog", () => ({
-  HotelBookingOfferCatalog: () => <section>Booking Manual Tersedia</section>,
-}))
-
 import { db } from "@/lib/db"
 
 const mockSelect = db.select as ReturnType<typeof vi.fn>

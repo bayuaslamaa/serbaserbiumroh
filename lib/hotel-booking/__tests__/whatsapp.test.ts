@@ -32,7 +32,34 @@ describe("hotel booking WhatsApp helper", () => {
     expect(message).toContain("Harga katalog: SAR 1.450")
     expect(message).toContain("cek ketersediaan akhir")
     expect(message).not.toContain("paspor")
-    expect(message).not.toContain("payment")
+    expect(message).toContain("booking/payment berikutnya")
+  })
+
+  it("builds a quote-aware request message for selected stay dates", () => {
+    const message = buildHotelBookingWhatsappMessage(
+      {
+        ...offer,
+        roomType: "Double Standard Room",
+        rateLabel: "Free cancellation",
+      },
+      {
+        checkIn: "2026-07-01",
+        checkOut: "2026-07-05",
+        nights: 4,
+        rooms: 2,
+        adults: 4,
+        currency: "SAR",
+        pricePerNight: 250,
+        totalAmount: 2000,
+      }
+    )
+
+    expect(message).toContain("Tipe kamar: Double Standard Room")
+    expect(message).toContain("Rate: Free cancellation")
+    expect(message).toContain("Check-in: 2026-07-01")
+    expect(message).toContain("Durasi: 4 malam")
+    expect(message).toContain("Estimasi total: SAR 2.000")
+    expect(message).toContain("cek ketersediaan akhir")
   })
 
   it("builds encoded wa.me hrefs from phone numbers", () => {

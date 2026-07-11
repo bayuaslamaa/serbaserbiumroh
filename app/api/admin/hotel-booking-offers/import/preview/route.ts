@@ -21,7 +21,11 @@ export async function POST(req: NextRequest) {
 
   let body: { csv?: unknown }
   try {
-    body = await req.json()
+    const parsedBody: unknown = await req.json()
+    if (!parsedBody || typeof parsedBody !== "object" || Array.isArray(parsedBody)) {
+      return NextResponse.json({ error: "JSON body must be an object" }, { status: 400 })
+    }
+    body = parsedBody as { csv?: unknown }
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }

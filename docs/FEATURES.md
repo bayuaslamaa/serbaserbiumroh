@@ -1,6 +1,6 @@
 # Umroh Planner — Feature Summary
 
-> Last updated: 2026-06-24
+> Last updated: 2026-07-11
 
 All features built on the `feat/umroh-budget-estimator` branch. Stack: Next.js 14 App Router · TypeScript · Drizzle ORM + PostgreSQL (Neon) · NextAuth v5 · Anthropic Claude API · Tailwind CSS.
 
@@ -253,17 +253,20 @@ All changes are saved immediately (no publish step).
   - Imported new FAQs stay draft; publish status and ordering are managed in the admin UI
 
 ### Hotel Booking Offers (`/admin/content/hotel-booking-offers`)
-- Manage period-based hotel offers that can be requested manually from `/pesan-hotel`
-- Download a prefilled CSV generated from the current Hotel Nusuk pricing catalog, then bulk preview and import edited offers
+- Manage searchable hotel rate windows that can be requested manually from `/pesan-hotel`
+- Public `/pesan-hotel` search accepts check-in, check-out, room count, adult count, city, and hotel query, then groups matching rates by hotel
+- Public results show a calculated catalog quote for the selected stay; final availability, payment, and confirmation remain manual through WhatsApp/admin follow-up
+- Download a prefilled CSV generated from the current Hotel Nusuk pricing catalog, then bulk preview and import edited rates
 - Optional link to an existing Hotel Nusuk listing; standalone hotel names are also supported for hotels not bookable through OTA/app flows
-- Fields: city, tier, hotel name, offer label, booking period, room basis, currency, price, notes, terms, and status
+- Fields: city, tier, hotel name, offer label, room type, rate label, booking period, room basis, currency, price, occupancy limits, minimum nights, inclusions, cancellation policy, sort order, verified date, notes, terms, and status
 - Statuses:
-  - `ACTIVE` appears in the public booking catalog
-  - `UNAVAILABLE` and `INACTIVE` stay hidden from the public catalog
+  - `ACTIVE` can appear in public search results when the selected stay fits the rate window and occupancy rules
+  - `UNAVAILABLE` and `INACTIVE` stay hidden from public search results
 - CSV bulk import supports preview/confirm with create/update/invalid/conflict summaries
-  - Template columns include city, tier, hotel_name, hotel_listing_slug, period dates, room_basis, currency, price_amount, status, notes, and terms
-  - Existing rows are matched by normalized hotel, city, tier, period, room basis, and offer label
-- Public CTA opens WhatsApp with offer context only; payment, document handling, and final hotel availability checks remain manual
+  - Template columns include city, tier, hotel_name, hotel_listing_slug, offer_label, room_type, rate_label, period dates, room_basis, currency, price_amount, max_adults, max_guests, min_nights, inclusions, cancellation_policy, sort_order, verified_at, status, notes, and terms
+  - Existing rows are matched by normalized hotel, city, tier, period, room basis, offer label, room type, and rate label
+- Public CTA opens WhatsApp with selected stay and quote context only; payment, document handling, and final hotel availability checks remain manual
+- Operational details, CSV semantics, reset commands, and deployment checks are documented in [`docs/HOTEL_BOOKING_OFFERS.md`](HOTEL_BOOKING_OFFERS.md)
 
 ### Components
 - `InlineEditCell` — click-to-edit cell with save/cancel
@@ -311,6 +314,11 @@ All changes are saved immediately (no publish step).
 | `GET` | `/api/admin/faqs/import/template` | Admin | Download FAQ CSV template |
 | `POST` | `/api/admin/faqs/import/preview` | Admin | Preview FAQ CSV create/update/invalid/conflict rows without writes |
 | `POST` | `/api/admin/faqs/import/confirm` | Admin | Confirm valid FAQ CSV rows, creating missing groups and draft FAQ items |
+| `GET/POST` | `/api/admin/hotel-booking-offers` | Admin | List or create manual hotel rate windows |
+| `GET/PUT/DELETE` | `/api/admin/hotel-booking-offers/[id]` | Admin | Read, update, or delete a hotel rate window |
+| `GET` | `/api/admin/hotel-booking-offers/import/template` | Admin | Download the canonical hotel booking offer CSV template |
+| `POST` | `/api/admin/hotel-booking-offers/import/preview` | Admin | Preview create/update/invalid/conflict rows without writes |
+| `POST` | `/api/admin/hotel-booking-offers/import/confirm` | Admin | Apply valid hotel booking offer rows in a transaction |
 
 ---
 

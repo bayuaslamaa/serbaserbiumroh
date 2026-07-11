@@ -57,10 +57,10 @@ export default async function AdminHotelBookingOffersPage() {
         className="rounded-lg border overflow-x-auto"
         style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
       >
-        <table className="w-full min-w-[980px]">
+        <table className="w-full min-w-[1120px]">
           <thead style={{ background: "rgba(0,0,0,0.2)" }}>
             <tr>
-              {["Hotel", "Kota", "Periode", "Harga", "Status", "Update", "Aksi"].map((heading) => (
+              {["Hotel", "Kota", "Kamar & Rate", "Periode", "Harga", "Status", "Update", "Aksi"].map((heading) => (
                 <th
                   key={heading}
                   className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider"
@@ -75,7 +75,7 @@ export default async function AdminHotelBookingOffersPage() {
             {offers.length === 0 && (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-4 py-8 text-center text-sm italic"
                   style={{ color: "var(--color-text-muted)" }}
                 >
@@ -90,7 +90,7 @@ export default async function AdminHotelBookingOffersPage() {
                     {offer.hotelName}
                   </div>
                   <div className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>
-                    {offer.offerLabel || offer.roomBasis}
+                    {offer.offerLabel || "Manual booking offer"}
                   </div>
                 </td>
                 <td className="px-4 py-3 text-sm" style={{ color: "var(--color-text-muted)" }}>
@@ -98,7 +98,22 @@ export default async function AdminHotelBookingOffersPage() {
                   <span className="block text-xs">{offer.tier}</span>
                 </td>
                 <td className="px-4 py-3 text-sm" style={{ color: "var(--color-text-muted)" }}>
+                  <span className="font-medium" style={{ color: "var(--color-text)" }}>
+                    {offer.roomType}
+                  </span>
+                  <span className="block text-xs">
+                    {[offer.rateLabel, offer.roomBasis].filter(Boolean).join(" · ")}
+                  </span>
+                  <span className="block text-xs">
+                    Min {offer.minNights} malam
+                    {offer.maxAdults ? ` · max ${offer.maxAdults} dewasa/kamar` : ""}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-sm" style={{ color: "var(--color-text-muted)" }}>
                   {offer.periodLabel || `${formatDate(offer.periodStart)} - ${formatDate(offer.periodEnd)}`}
+                  {offer.verifiedAt && (
+                    <span className="block text-xs">Verified {formatDate(offer.verifiedAt)}</span>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-sm font-medium" style={{ color: "var(--color-text)" }}>
                   {offer.currency} {offer.priceAmount.toLocaleString("id-ID")}

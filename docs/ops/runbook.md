@@ -138,6 +138,8 @@ pg_restore --no-acl --no-owner \
    npx drizzle-kit migrate
    ```
 
+Hotel booking offer migrations and post-migration verification are documented in [`docs/HOTEL_BOOKING_OFFERS.md`](../HOTEL_BOOKING_OFFERS.md#deployment-checks).
+
 ---
 
 ## Smoke Test Checklist
