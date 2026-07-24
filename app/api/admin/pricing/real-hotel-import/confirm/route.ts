@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { hotelPrices } from "@/lib/db/schema"
-import { HOTEL_PRICING_IMPORT_MAX_BYTES } from "@/lib/admin/hotel-pricing-import"
+import { HOTEL_PRICING_IMPORT_MAX_BYTES, HOTEL_PRICING_IMPORT_MAX_ROWS } from "@/lib/admin/hotel-pricing-import"
 import { parseRealHotelPricingCsv, applyRealHotelPricing } from "@/lib/admin/real-hotel-pricing-import"
 
 // Import a real hotel price catalog (transcribed to the hotel-pricing CSV shape) into
@@ -42,6 +42,11 @@ export async function POST(req: NextRequest) {
   const plan = parseRealHotelPricingCsv(body.csv, existingHotels, body.sourceLabel.trim())
   if (plan.fileErrors.length > 0) {
     return NextResponse.json({ error: plan.fileErrors.join("; "), fileErrors: plan.fileErrors }, { status: 400 })
+  }
+  // Match the sibling estimate importer's row cap so a within-byte-limit CSV can't drive an
+  // unbounded per-(hotel,month) upsert loop inside a single transaction.
+  if (plan.rowsParsed > HOTEL_PRICING_IMPORT_MAX_ROWS) {
+    return NextResponse.json({ error: `csv must contain ${HOTEL_PRICING_IMPORT_MAX_ROWS} rows or fewer` }, { status: 413 })
   }
 
   const imported = await db.transaction((tx) => applyRealHotelPricing(tx, plan))

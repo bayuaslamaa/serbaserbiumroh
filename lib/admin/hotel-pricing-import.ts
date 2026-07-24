@@ -453,7 +453,7 @@ function normalizeOptionalUrl(value: string | undefined): string | null | false 
   }
 }
 
-function parsePositiveInteger(value: string | undefined): number | null {
+export function parsePositiveInteger(value: string | undefined): number | null {
   const normalized = (value ?? "").trim().replace(/,/g, "")
   if (!/^\d+$/.test(normalized)) return null
 

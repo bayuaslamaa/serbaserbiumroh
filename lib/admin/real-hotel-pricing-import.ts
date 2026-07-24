@@ -2,7 +2,7 @@ import { parse } from "csv-parse/sync"
 import type { DB } from "@/lib/db"
 import { realHotelPrices } from "@/lib/db/schema"
 import type { City, HotelTier } from "@/types"
-import { MONTH_COLUMNS, normalizeHotelPricingImportKey } from "./hotel-pricing-import"
+import { MONTH_COLUMNS, normalizeHotelPricingImportKey, parsePositiveInteger } from "./hotel-pricing-import"
 
 // Real-price catalogs are transcribed into the hotel-pricing CSV shape (city, tier, label, month
 // columns), but interpreted differently from the estimate import: prices land in real_hotel_prices,
@@ -31,6 +31,7 @@ export interface RealPriceUpsert {
 }
 
 export interface RealPricingImportPlan {
+  rowsParsed: number // data rows read from the CSV (excludes header) — lets callers enforce a row cap
   upserts: RealPriceUpsert[]
   hotelsMatched: number // distinct existing hotels that received ≥1 real month
   unmatched: Array<{ rowNumber: number; label: string }> // parsed rows with no existing hotel
@@ -39,6 +40,7 @@ export interface RealPricingImportPlan {
 }
 
 const EMPTY_PLAN = (fileErrors: string[]): RealPricingImportPlan => ({
+  rowsParsed: 0,
   upserts: [],
   hotelsMatched: 0,
   unmatched: [],
@@ -110,8 +112,10 @@ export function parseRealHotelPricingCsv(
     for (const { month, column } of MONTH_COLUMNS) {
       const cell = (record[column] ?? "").trim()
       if (cell === "") continue // only explicitly-filled months become real prices
-      const sar = Number(cell)
-      if (!Number.isInteger(sar) || sar <= 0) {
+      // Reuse the estimate importer's parser so the admin's familiar CSV conventions hold:
+      // thousands separators accepted ("1,300" → 1300), non-plain-integer formats rejected.
+      const sar = parsePositiveInteger(cell)
+      if (sar == null) {
         errors.push(`invalid ${column} "${cell}"`)
         continue
       }
@@ -124,7 +128,7 @@ export function parseRealHotelPricingCsv(
     else if (monthCount === 0) rowErrors.push({ rowNumber, errors: ["no real month prices provided"] })
   })
 
-  return { upserts, hotelsMatched: matched.size, unmatched, rowErrors, fileErrors: [] }
+  return { rowsParsed: records.length, upserts, hotelsMatched: matched.size, unmatched, rowErrors, fileErrors: [] }
 }
 
 type Tx = Parameters<Parameters<DB["transaction"]>[0]>[0]

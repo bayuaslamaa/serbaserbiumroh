@@ -351,10 +351,11 @@ function ComputedRow({
         <div className="flex items-center gap-1.5 flex-wrap">
           {row.hidden && <Badge tone="muted">disembunyikan</Badge>}
           {row.source === "overridden" && <Badge>manual</Badge>}
-          {/* Only auto/unit-driven hotel rows carry hotelDetail, so the source badge disappears
-              once the IDR amount is overridden — exactly when the layer no longer priced the row. */}
-          {row.hotelDetail?.priceSource === "real" && <Badge>harga real</Badge>}
-          {row.hotelDetail?.priceSource === "estimate" && <Badge tone="muted">estimasi</Badge>}
+          {/* Source badge only while the row is still layer-priced. A unit-price override keeps
+              hotelDetail (to show the formula at the edited rate) but the number is now manual, so
+              gate on source too — otherwise a hand-typed SAR rate would falsely read as "harga real". */}
+          {row.source !== "overridden" && row.hotelDetail?.priceSource === "real" && <Badge>harga real</Badge>}
+          {row.source !== "overridden" && row.hotelDetail?.priceSource === "estimate" && <Badge tone="muted">estimasi</Badge>}
           {row.stale && <Badge tone="warn">⚠ nilai mungkin usang</Badge>}
           {row.shared && pax > 1 && <Badge>÷{pax} org</Badge>}
         </div>

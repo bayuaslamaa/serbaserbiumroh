@@ -63,6 +63,14 @@ describe("parseRealHotelPricingCsv", () => {
     expect(p.rowErrors).toEqual([{ rowNumber: 2, errors: ['invalid feb_sar "abc"'] }])
   })
 
+  it("parses month cells like the estimate importer: thousands separators in, non-plain formats out", () => {
+    // "1,300" (grouped) → 1300 accepted; "1e3"/"0x10"/"1300.0" rejected as row errors, so a
+    // catalog transcribed with the same conventions as the estimate CSV behaves identically.
+    const p = plan(["city,tier,label,feb_sar,mar_sar,apr_sar", "MAKKAH,STANDARD,Safwa Tower 3,\"1,300\",1e3,1300.0"].join("\n"))
+    expect(p.upserts).toEqual([{ hotelPriceId: "h-makkah", month: 2, sarPerNight: 1300, sourceLabel: "Katalog Test" }])
+    expect(p.rowErrors).toEqual([{ rowNumber: 2, errors: ['invalid mar_sar "1e3"', 'invalid apr_sar "1300.0"'] }])
+  })
+
   it("plans only real-price writes (never estimate rows) — every upsert carries a sourceLabel", () => {
     const p = plan(["city,tier,label,feb_sar", "MAKKAH,STANDARD,Safwa Tower 3,2500"].join("\n"), "Katalog X")
     expect(p.upserts.every((u) => u.sourceLabel === "Katalog X")).toBe(true)
