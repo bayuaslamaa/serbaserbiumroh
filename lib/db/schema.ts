@@ -126,6 +126,26 @@ export const hotelMonthlyPrices = pgTable(
   (t) => [unique().on(t.hotelPriceId, t.month)]
 )
 
+// --- Real Hotel Prices (authoritative prices from catalog PDFs, per hotel entry, month 1-12) ---
+// Separate from hotel_monthly_prices (estimate): budget resolution prefers a real price for the
+// requested month, falling back to the estimate when absent. sourceLabel traces the catalog.
+export const realHotelPrices = pgTable(
+  "real_hotel_prices",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    hotelPriceId: text("hotel_price_id")
+      .notNull()
+      .references(() => hotelPrices.id, { onDelete: "cascade" }),
+    month: integer("month").notNull(), // 1-12
+    sarPerNight: integer("sar_per_night").notNull(),
+    sourceLabel: text("source_label").notNull().default(""), // e.g. "Katalog Emaar 2027"
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.hotelPriceId, t.month)]
+)
+
 // --- Airline Monthly Prices (per airline option, month 1-12, IDR round-trip per person) ---
 export const airlineMonthlyPrices = pgTable(
   "airline_monthly_prices",
@@ -378,6 +398,7 @@ export const visitorLogs = pgTable(
 export type ExchangeRate = typeof exchangeRates.$inferSelect
 export type HotelPrice = typeof hotelPrices.$inferSelect
 export type HotelMonthlyPrice = typeof hotelMonthlyPrices.$inferSelect
+export type RealHotelPrice = typeof realHotelPrices.$inferSelect
 export type AirlinePrice = typeof airlinePrices.$inferSelect
 export type AirlineMonthlyPrice = typeof airlineMonthlyPrices.$inferSelect
 export type ServiceFee = typeof serviceFees.$inferSelect
