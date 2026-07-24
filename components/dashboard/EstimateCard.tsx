@@ -40,12 +40,7 @@ export function EstimateCard({ estimate, onDelete, onDuplicate }: EstimateCardPr
       const res = await fetch("/api/estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rawInput: estimate.rawInput,
-          params: estimate.params,
-          aiNotes: estimate.aiNotes,
-          title: `Duplikat — ${estimate.title ?? "Estimasi"}`,
-        }),
+        body: JSON.stringify({ sourceEstimateId: estimate.id }),
       })
       if (!res.ok) throw new Error()
       const { estimate: newEstimate } = await res.json()

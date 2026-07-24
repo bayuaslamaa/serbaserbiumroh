@@ -257,16 +257,24 @@ export async function parseEstimate(
   let response: Anthropic.Message
   try {
     response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-sonnet-5",
       max_tokens: 1024,
       system: buildSystemPrompt(pricing),
       messages: [{ role: "user", content: input }],
+      // Sonnet 5 enables adaptive thinking by default; disable it so this JSON-extraction call
+      // stays fast/cheap and the first content block remains the text response (as before).
+      // @ts-expect-error `thinking` is absent from the pinned @anthropic-ai/sdk@0.36.3 types but is
+      // forwarded verbatim in the request body. Drop this directive if the SDK is upgraded.
+      thinking: { type: "disabled" },
     })
   } catch (err) {
     throw new Error(`Anthropic API error: ${err instanceof Error ? err.message : String(err)}`)
   }
 
-  const raw = response.content[0]?.type === "text" ? response.content[0].text : ""
+  // Scan for the first text block rather than assuming content[0]; keeps parsing correct even if
+  // a leading non-text block (e.g. thinking) ever appears before the JSON response.
+  const textBlock = response.content.find((b) => b.type === "text")
+  const raw = textBlock?.type === "text" ? textBlock.text : ""
 
   // Strip markdown code fences if present (e.g. ```json ... ```)
   const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim()

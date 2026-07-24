@@ -104,6 +104,10 @@ function resolveBaseRow(base: BaseRow, ov: RowOverride | undefined): BreakdownDi
   // plain-IDR rows), captured as value ÷ unit so an edited unit price re-derives the
   // final amount linearly. A direct `idr` override wins over the unit price.
   const factor = base.baseUnitPrice > 0 ? base.baseIdr / base.baseUnitPrice : 1
+  // A foreign-currency row with a 0 base has no recoverable rate, so the factor=1 fallback would
+  // silently treat a typed SAR/USD amount as raw IDR. Disable unit-price editing there; plain-IDR
+  // rows (factor 1 is genuinely correct) stay editable.
+  const unitEditable = base.unitCurrency === "IDR" || base.baseUnitPrice > 0
   const unitPrice = unitOverridden ? (ov!.unitPrice as number) : base.baseUnitPrice
   const idr = valueOverridden
     ? (ov!.idr as number)
@@ -141,6 +145,7 @@ function resolveBaseRow(base: BaseRow, ov: RowOverride | undefined): BreakdownDi
     amountDisplay,
     unitPrice,
     unitCurrency: base.unitCurrency,
+    unitEditable,
     idr,
     hotelDetail,
     shared: base.shared,
@@ -174,6 +179,7 @@ export function applyOverrides(
       amountDisplay: undefined,
       unitPrice: custom.idr, // plain IDR line, quantity 1 → unit price equals the amount
       unitCurrency: "IDR",
+      unitEditable: true,
       idr: custom.idr,
       hotelDetail: undefined,
       shared: false,

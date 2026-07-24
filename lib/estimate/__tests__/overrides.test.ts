@@ -30,6 +30,7 @@ describe("validateManualOverrides — accepts", () => {
 
   it("a unit-price override", () => {
     expect(validateManualOverrides({ overrides: { hotelMakkah: { unitPrice: 1300 } }, customRows: [] })).toBe(true)
+    expect(validateManualOverrides({ overrides: { hotelMakkah: { unitPrice: 0 } }, customRows: [] })).toBe(true)
   })
 })
 
@@ -62,6 +63,12 @@ describe("validateManualOverrides — rejects", () => {
   it("a negative or non-integer unit price", () => {
     expect(validateManualOverrides({ overrides: { hotelMakkah: { unitPrice: -1 } }, customRows: [] })).toBe(false)
     expect(validateManualOverrides({ overrides: { hotelMakkah: { unitPrice: 1.5 } }, customRows: [] })).toBe(false)
+  })
+
+  it("an override carrying both idr and unitPrice (mutually exclusive)", () => {
+    expect(
+      validateManualOverrides({ overrides: { hotelMakkah: { idr: 13_000_000, unitPrice: 1300 } }, customRows: [] }),
+    ).toBe(false)
   })
 
   it("an over-length label", () => {

@@ -157,4 +157,29 @@ describe("EstimatorClient override orchestration", () => {
     expect(request.manualOverrides.overrides.flight.idr).toBe(12_000_000)
     expect(request.manualOverrides.overrides.flight.unitPrice).toBeUndefined()
   })
+
+  it("a unit-price edit supersedes a prior value override and drops its stale baseline", async () => {
+    render(
+      <EstimatorClient
+        pricingConfig={{} as PricingConfig}
+        estimateId="e1"
+        existingParams={params}
+        existingOverrides={{ overrides: {}, customRows: [] }}
+        savedAt="2026-07-12T00:00:00.000Z"
+      />,
+    )
+
+    fireEvent.click(screen.getByText("override flight")) // sets idr + captures autoIdrAtOverride
+    fireEvent.click(screen.getByText("unit flight")) // unit-price edit clears idr and its baseline
+    expect(screen.getByTestId("flight").textContent).toBe("8000000")
+
+    fireEvent.click(screen.getByText("Perbarui Estimasi"))
+    fireEvent.click(screen.getByText("Simpan", { selector: "button" }))
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+    const request = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string)
+    expect(request.manualOverrides.overrides.flight.unitPrice).toBe(8_000_000)
+    expect(request.manualOverrides.overrides.flight.idr).toBeUndefined()
+    expect(request.manualOverrides.overrides.flight.autoIdrAtOverride).toBeUndefined()
+  })
 })

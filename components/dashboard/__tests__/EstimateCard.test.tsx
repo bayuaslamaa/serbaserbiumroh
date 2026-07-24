@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { EstimateCard } from "../EstimateCard"
 import type { Estimate } from "@/lib/db/schema"
 
@@ -18,6 +18,7 @@ const mockEstimate: Estimate = {
     services: ["VISA", "SISKOPATUH", "TRANSPORT"],
     fullboard: true,
   },
+  manualOverrides: null,
   totalIdrPax: 35_000_000,
   totalIdrGrp: 105_000_000,
   createdAt: new Date("2026-04-01"),
@@ -61,5 +62,27 @@ describe("EstimateCard", () => {
     const noTitle = { ...mockEstimate, title: null }
     render(<EstimateCard estimate={noTitle} onDelete={vi.fn()} onDuplicate={vi.fn()} />)
     expect(screen.getByText("Tanpa Judul")).toBeDefined()
+  })
+
+  it("requests a server-side duplicate from the persisted source estimate", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({ estimate: { ...mockEstimate, id: "copy-id" } }),
+    })
+    vi.stubGlobal("fetch", fetchMock)
+    render(
+      <EstimateCard
+        estimate={mockEstimate}
+        onDelete={vi.fn()}
+        onDuplicate={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByText("Duplikat"))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled())
+    const request = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(request).toEqual({ sourceEstimateId: "test-id-1" })
+    vi.unstubAllGlobals()
   })
 })

@@ -5,10 +5,11 @@ import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { estimates } from "@/lib/db/schema"
 import { fetchPricingConfig, calculateBudget } from "@/lib/budget/calculate"
+import { applyOverrides } from "@/lib/budget/overrides"
 import { generateWhatsAppText } from "@/lib/export/whatsapp"
 import { generatePDF } from "@/lib/export/pdf"
 import { eq } from "drizzle-orm"
-import type { EstimateParams } from "@/types"
+import type { EstimateParams, ManualOverrides } from "@/types"
 
 type RouteCtx = { params: Promise<{ id: string }> }
 
@@ -32,17 +33,19 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
 
   const pricing = await fetchPricingConfig(db)
   const params = estimate.params as EstimateParams
+  const overrides = (estimate.manualOverrides as ManualOverrides | null) ?? null
   const breakdown = calculateBudget(params, pricing)
+  const display = applyOverrides(breakdown, overrides, params.pax)
 
   if (format === "whatsapp") {
-    const text = generateWhatsAppText(params, breakdown, estimate.title)
+    const text = generateWhatsAppText(params, breakdown, display, estimate.title)
     return new Response(text, {
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     })
   }
 
   // PDF
-  const pdfBytes = await generatePDF(params, breakdown, estimate.title, estimate.id)
+  const pdfBytes = await generatePDF(params, breakdown, display, estimate.title, estimate.id)
   return new Response(Buffer.from(pdfBytes), {
     headers: {
       "Content-Type": "application/pdf",

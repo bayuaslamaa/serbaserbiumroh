@@ -47,6 +47,9 @@ function isValidRowOverride(v: unknown): boolean {
   if (o.label !== undefined && !isValidLabel(o.label)) return false
   if (o.idr !== undefined && !isValidIdr(o.idr)) return false
   if (o.unitPrice !== undefined && !isValidIdr(o.unitPrice)) return false
+  // idr and unitPrice are mutually exclusive value sources (the UI clears one when setting the
+  // other); reject a payload carrying both so a hand-crafted override can't desync the columns.
+  if (o.idr !== undefined && o.unitPrice !== undefined) return false
   if (o.hidden !== undefined && typeof o.hidden !== "boolean") return false
   if (o.autoIdrAtOverride !== undefined && !isValidIdr(o.autoIdrAtOverride)) return false
   return true

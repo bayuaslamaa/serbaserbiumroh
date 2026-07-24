@@ -170,6 +170,41 @@ describe("applyOverrides — unit price column", () => {
     const custom = applyOverrides(makeBreakdown(), ov, 4).rows.find((r) => r.key === "custom:c1")!
     expect(custom.unitPrice).toBe(300_000)
     expect(custom.unitCurrency).toBe("IDR")
+    expect(custom.unitEditable).toBe(true)
+  })
+
+  it("rescales a divide-by-pax service and keeps the group total consistent", () => {
+    // TRANSPORT is shared (÷pax); 325 → 650 SAR doubles its per-person value
+    const ov: ManualOverrides = { overrides: { "service:TRANSPORT": { unitPrice: 650 } }, customRows: [] }
+    const d = applyOverrides(makeBreakdown(), ov, 4)
+    const transport = d.rows.find((r) => r.key === "service:TRANSPORT")!
+    expect(transport.idr).toBe(3_000_000) // 650/325 × 1,500,000
+    expect(transport.shared).toBe(true)
+    expect(d.totalIdrGrp).toBe(d.totalIdrPax * 4)
+  })
+
+  it("rounds a non-clean rescale to an integer", () => {
+    // 650 → 651 on a 3,000,000 base: 651/650 × 3,000,000 = 3,004,615.38…
+    const ov: ManualOverrides = { overrides: { hotelMadinah: { unitPrice: 651 } }, customRows: [] }
+    const madinah = applyOverrides(makeBreakdown(), ov, 4).rows.find((r) => r.key === "hotelMadinah")!
+    expect(madinah.idr).toBe(3_004_615)
+    expect(Number.isInteger(madinah.idr)).toBe(true)
+  })
+
+  it("marks a zero-base foreign-currency row as non-unit-editable, but keeps plain-IDR rows editable", () => {
+    // A waived service still priced in SAR has no recoverable rate → unit editing must be disabled
+    // so a typed SAR amount is never mistaken for raw IDR (factor=1 fallback ambiguity).
+    const b = makeBreakdown()
+    b.serviceItems = [
+      ...b.serviceItems,
+      { key: "TASREH", label: "Tasreh", amountDisplay: "SAR 0", unitAmount: 0, currency: "SAR", idr: 0, divideByPax: false },
+    ]
+    const d = applyOverrides(b, null, 4)
+    expect(d.rows.find((r) => r.key === "service:TASREH")!.unitEditable).toBe(false)
+    // a plain-IDR row with a 0 base (flight NONE) keeps factor=1 correctly and stays editable
+    const zeroFlight = makeBreakdown()
+    zeroFlight.flightIdr = 0
+    expect(applyOverrides(zeroFlight, null, 4).rows.find((r) => r.key === "flight")!.unitEditable).toBe(true)
   })
 })
 

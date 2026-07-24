@@ -1,9 +1,9 @@
+import { SERVICE_KEYS } from "@/types"
 import type { City, EstimateParams, PricingConfig } from "@/types"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
 const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"]
 const AIRLINE_TIERS = ["NONE", "BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
-const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"]
 
 export function validateEstimateParamsShape(p: unknown): p is EstimateParams {
   if (!p || typeof p !== "object") return false
@@ -26,7 +26,7 @@ export function validateEstimateParamsShape(p: unknown): p is EstimateParams {
     ROOM_TYPES.includes(o.roomType as string) &&
     AIRLINE_TIERS.includes(o.airline as string) &&
     Array.isArray(o.services) &&
-    (o.services as string[]).every((s) => SERVICE_KEYS.includes(s)) &&
+    (o.services as string[]).every((s) => SERVICE_KEYS.includes(s as (typeof SERVICE_KEYS)[number])) &&
     typeof o.fullboard === "boolean" &&
     travelMonthValid
   )
