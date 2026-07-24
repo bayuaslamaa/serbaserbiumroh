@@ -277,4 +277,62 @@ describe("parseEstimate", () => {
     mockCreate.mockRejectedValueOnce(new Error("Network error"))
     await expect(parseEstimate("some input", mockPricing)).rejects.toThrow("Anthropic API error")
   })
+
+  // --- U5: prefer real-priced hotels among comparable options ---
+
+  // Clone mockPricing and attach realMonthlyPrices to specific hotel options by id.
+  function withRealPrices(real: Record<string, Record<number, number>>): PricingConfig {
+    const clone = structuredClone(mockPricing)
+    for (const city of ["MADINAH", "MAKKAH"] as const) {
+      for (const h of clone.hotelOptions?.[city] ?? []) {
+        if (real[h.id]) h.realMonthlyPrices = real[h.id]
+      }
+    }
+    return clone
+  }
+
+  it("prefers a real-priced same-tier option over the default pick when the month has a real price", async () => {
+    // Default same-tier fallback for a missing Madinah hotel is kayan-hotel; taiba-front carries a
+    // real price for month 11, so it should win when travelMonth=11.
+    const pricing = withRealPrices({ "taiba-front": { 11: 850 } })
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, madinahHotel: "Hotel Tidak Ada", travelMonth: 11 }))
+    const result = await parseEstimate("hotel tidak ada bulan november", pricing)
+    expect(result.params.madinahHotelId).toBe("taiba-front")
+  })
+
+  it("keeps the default same-tier pick when the requested month has no real price", async () => {
+    // taiba-front only has a real price for month 11; a request for month 6 falls back to kayan-hotel.
+    const pricing = withRealPrices({ "taiba-front": { 11: 850 } })
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, madinahHotel: "Hotel Tidak Ada", travelMonth: 6 }))
+    const result = await parseEstimate("hotel tidak ada bulan juni", pricing)
+    expect(result.params.madinahHotelId).toBe("kayan-hotel")
+  })
+
+  it("does not prefer real when no travelMonth is set (real prices are month-gated)", async () => {
+    const pricing = withRealPrices({ "taiba-front": { 11: 850 } })
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, madinahHotel: "Hotel Tidak Ada" }))
+    const result = await parseEstimate("hotel tidak ada", pricing)
+    expect(result.params.madinahHotelId).toBe("kayan-hotel")
+  })
+
+  it("prefers the closest real-priced option under proximity intent, keeping distance ranking", async () => {
+    // Proximity intent ranks by distance; safwa-close (250m) is the closest and is real-priced, so it
+    // stays the pick — real preference doesn't drag in a farther estimate-only option.
+    const pricing = withRealPrices({ "safwa-close": { 3: 1400 } })
+    mockCreate.mockResolvedValueOnce(claudeResponse({ ...defaultParams, makkahHotel: "Hotel Dekat Haram Tidak Ada", travelMonth: 3 }))
+    const result = await parseEstimate("hotel jalan kaki dekat haram bulan maret", pricing)
+    expect(result.params.makkahHotelId).toBe("safwa-close")
+  })
+
+  it("marks catalog-priced options with real=catalog in the system prompt", async () => {
+    const pricing = withRealPrices({ "safwa-close": { 3: 1400 } })
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh makkah", pricing)
+
+    const system = mockCreate.mock.calls[0][0].system as Array<{ text: string }>
+    expect(system[1].text).toContain("id=safwa-close")
+    expect(system[1].text).toMatch(/id=safwa-close[^\n]*real=catalog/)
+    // Estimate-only options are not marked.
+    expect(system[1].text).not.toMatch(/id=olayan-ajyad[^\n]*real=catalog/)
+  })
 })

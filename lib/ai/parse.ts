@@ -84,12 +84,32 @@ function rankComparableHotels(
   })
 }
 
+function hasRealPrice(hotel: HotelOptionConfig, travelMonth?: number): boolean {
+  return travelMonth != null && hotel.realMonthlyPrices?.[travelMonth] != null
+}
+
+// Among candidates already ordered by tag/distance/price comparability, prefer the first that has
+// an authoritative real (catalog) price for the requested month. Falls back to the top-ranked
+// option when none is real-priced — real prices are a preference, never an exclusion (U5).
+function pickPreferringReal(
+  ordered: HotelOptionConfig[],
+  travelMonth?: number
+): HotelOptionConfig | undefined {
+  if (ordered.length === 0) return undefined
+  if (travelMonth != null) {
+    const real = ordered.find((hotel) => hasRealPrice(hotel, travelMonth))
+    if (real) return real
+  }
+  return ordered[0]
+}
+
 function findComparableHotel(
   pricing: PricingConfig,
   city: City,
   tier: HotelTier,
   requestedLabel?: string,
-  sourceInput = ""
+  sourceInput = "",
+  travelMonth?: number
 ): HotelOptionConfig | undefined {
   const options = pricing.hotelOptions?.[city] ?? []
   if (requestedLabel) {
@@ -100,10 +120,12 @@ function findComparableHotel(
   const useDistance = hasProximityIntent(`${sourceInput} ${requestedLabel ?? ""}`, city)
   const fallback = pricing.hotels[city][tier]
   const sameTier = options.filter((hotel) => hotel.tier === tier)
-  if (sameTier.length > 0 && !useDistance) return sameTier[0]
-  if (sameTier.length > 0) return rankComparableHotels(sameTier, fallback, useDistance)[0]
+  // Preserve the established ordering per branch (same-tier insertion order when no proximity intent,
+  // distance/price ranking otherwise), then let a real catalog price break the pick within it.
+  if (sameTier.length > 0 && !useDistance) return pickPreferringReal(sameTier, travelMonth)
+  if (sameTier.length > 0) return pickPreferringReal(rankComparableHotels(sameTier, fallback, useDistance), travelMonth)
 
-  return rankComparableHotels(options, fallback, useDistance)[0]
+  return pickPreferringReal(rankComparableHotels(options, fallback, useDistance), travelMonth)
 }
 
 function getRequestedHotelLabel(raw: Record<string, unknown>, city: City): string | undefined {
@@ -118,7 +140,8 @@ function resolveHotelId(
   pricing: PricingConfig,
   city: City,
   tier: HotelTier,
-  sourceInput: string
+  sourceInput: string,
+  travelMonth?: number
 ): { id?: string; note?: string } {
   const idField = CITY_HOTEL_FIELDS[city].id
   const requestedId = raw[idField]
@@ -131,7 +154,7 @@ function resolveHotelId(
   }
 
   if (requestedLabel || (typeof requestedId === "string" && requestedId.trim().length > 0)) {
-    const comparable = findComparableHotel(pricing, city, tier, requestedLabel, sourceInput)
+    const comparable = findComparableHotel(pricing, city, tier, requestedLabel, sourceInput, travelMonth)
     if (!comparable) return {}
 
     if (requestedLabel && hotelMatchesRequest(comparable, requestedLabel)) {
@@ -147,7 +170,7 @@ function resolveHotelId(
   }
 
   if (hasProximityIntent(sourceInput, city)) {
-    const comparable = findComparableHotel(pricing, city, tier, undefined, sourceInput)
+    const comparable = findComparableHotel(pricing, city, tier, undefined, sourceInput, travelMonth)
     if (comparable) return { id: comparable.id }
   }
 
@@ -196,8 +219,8 @@ function validateParams(raw: Record<string, unknown>, pricing: PricingConfig, so
   }
 
   const extraNotes: string[] = []
-  const madinahHotel = resolveHotelId(raw, pricing, "MADINAH", hotelTier, sourceInput)
-  const makkahHotel = resolveHotelId(raw, pricing, "MAKKAH", hotelTier, sourceInput)
+  const madinahHotel = resolveHotelId(raw, pricing, "MADINAH", hotelTier, sourceInput, params.travelMonth)
+  const makkahHotel = resolveHotelId(raw, pricing, "MAKKAH", hotelTier, sourceInput, params.travelMonth)
   if (madinahHotel.id) params.madinahHotelId = madinahHotel.id
   if (makkahHotel.id) params.makkahHotelId = makkahHotel.id
   if (madinahHotel.note) extraNotes.push(madinahHotel.note)
