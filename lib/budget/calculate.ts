@@ -23,12 +23,20 @@ function formatAmountDisplay(currency: string, amount: number): string {
   return `Rp ${amount.toLocaleString("id-ID")}`
 }
 
-function resolveHotelSar(config: HotelPriceConfig, travelMonth?: number): number {
+// Resolve the SAR/night for a hotel + month, preferring the authoritative real price when one
+// exists for that month (real prices are seasonal, so this only fires when travelMonth is set),
+// then the monthly estimate override, then the base estimate. Reports which source was used.
+function resolveHotelSar(
+  config: HotelPriceConfig,
+  travelMonth?: number
+): { sarPerNight: number; source: "real" | "estimate" } {
   if (travelMonth != null) {
+    const real = config.realMonthlyPrices?.[travelMonth]
+    if (real != null) return { sarPerNight: real, source: "real" }
     const monthly = config.monthlyPrices[travelMonth]
-    if (monthly != null) return monthly
+    if (monthly != null) return { sarPerNight: monthly, source: "estimate" }
   }
-  return config.sarPerNight
+  return { sarPerNight: config.sarPerNight, source: "estimate" }
 }
 
 function resolveCityHotel(
@@ -48,6 +56,7 @@ function resolveCityHotel(
     label: fallback.label,
     sublabel: fallback.sublabel,
     monthlyPrices: fallback.monthlyPrices,
+    realMonthlyPrices: fallback.realMonthlyPrices,
   }
 }
 
@@ -82,8 +91,10 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   const madinahHotel = resolveCityHotel(pricing, "MADINAH", params.madinahHotelId, params.hotelTier)
   const makkahHotel = resolveCityHotel(pricing, "MAKKAH", params.makkahHotelId, params.hotelTier)
   const room = pricing.roomMultipliers[params.roomType]
-  const madinahSarPerNight = resolveHotelSar(madinahHotel, params.travelMonth)
-  const makkahSarPerNight = resolveHotelSar(makkahHotel, params.travelMonth)
+  const madinahPrice = resolveHotelSar(madinahHotel, params.travelMonth)
+  const makkahPrice = resolveHotelSar(makkahHotel, params.travelMonth)
+  const madinahSarPerNight = madinahPrice.sarPerNight
+  const makkahSarPerNight = makkahPrice.sarPerNight
 
   const madinahHotelCost = calculateHotelIdrPerPerson(
     madinahSarPerNight,
@@ -156,6 +167,7 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       roomCount: madinahHotelCost.roomCount,
       totalPax: params.pax,
       roomMultiplier: room.multiplier,
+      priceSource: madinahPrice.source,
     },
     hotelMakkahDetail: {
       id: makkahHotel.id,
@@ -167,6 +179,7 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       roomCount: makkahHotelCost.roomCount,
       totalPax: params.pax,
       roomMultiplier: room.multiplier,
+      priceSource: makkahPrice.source,
     },
     servicesIdr,
     serviceItems,
@@ -186,15 +199,17 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
     serviceFees,
     roomMultipliers,
     hotelMonthlyPrices,
+    realHotelPrices,
     airlineMonthlyPrices,
   } = await import("@/lib/db/schema")
-  const [rates, hotels, airlines, services, rooms, monthlyPrices, airlineMonthlyRows] = await Promise.all([
+  const [rates, hotels, airlines, services, rooms, monthlyPrices, realPrices, airlineMonthlyRows] = await Promise.all([
     db.select().from(exchangeRates),
     db.select().from(hotelPrices).orderBy(asc(hotelPrices.updatedAt)),
     db.select().from(airlinePrices).orderBy(desc(airlinePrices.isDefault), asc(airlinePrices.updatedAt)),
     db.select().from(serviceFees),
     db.select().from(roomMultipliers),
     db.select().from(hotelMonthlyPrices),
+    db.select().from(realHotelPrices),
     db.select().from(airlineMonthlyPrices),
   ])
 
@@ -205,6 +220,12 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
   for (const mp of monthlyPrices) {
     if (!monthlyByHotelId[mp.hotelPriceId]) monthlyByHotelId[mp.hotelPriceId] = {}
     monthlyByHotelId[mp.hotelPriceId][mp.month] = mp.sarPerNight
+  }
+
+  const realByHotelId: Record<string, Record<number, number>> = {}
+  for (const rp of realPrices) {
+    if (!realByHotelId[rp.hotelPriceId]) realByHotelId[rp.hotelPriceId] = {}
+    realByHotelId[rp.hotelPriceId][rp.month] = rp.sarPerNight
   }
 
   const hotelsMap: PricingConfig["hotels"] = {} as PricingConfig["hotels"]
@@ -223,6 +244,7 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
       sublabel: h.sublabel,
       distance: h.distance,
       monthlyPrices: monthlyByHotelId[h.id] ?? {},
+      realMonthlyPrices: realByHotelId[h.id] ?? {},
     }
     hotelOptionsMap[h.city].push(config)
     if (!hotelsMap[h.city][h.tier]) {

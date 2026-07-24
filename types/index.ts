@@ -122,7 +122,10 @@ export interface HotelPriceConfig {
   bookingcomUrl?: string | null
   tripcomUrl?: string | null
   bookingUrl?: string | null
-  monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override
+  monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override (estimate)
+  // month 1-12 → authoritative catalog price (real). Optional: absent/undefined means no real
+  // price is known, so resolution falls back to the estimate. fetchPricingConfig always sets it.
+  realMonthlyPrices?: Record<number, number>
 }
 
 export interface HotelOptionConfig extends HotelPriceConfig {
@@ -141,6 +144,7 @@ export interface HotelCostDetail {
   roomCount: number
   totalPax: number
   roomMultiplier: number
+  priceSource?: "real" | "estimate" // which layer priced this hotel; undefined treated as estimate
 }
 
 export interface AirlinePriceConfig {
