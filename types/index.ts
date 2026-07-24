@@ -4,13 +4,8 @@ export type HotelTier = "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM"
 export type RoomType = "QUAD" | "TRIPLE" | "DOUBLE" | "SINGLE"
 export type AirlineTier = "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"
 export type EstimateAirline = AirlineTier | "NONE"
-export type ServiceKey =
-  | "VISA"
-  | "SISKOPATUH"
-  | "TASREH"
-  | "TRANSPORT"
-  | "TOUR_MAKKAH"
-  | "TOUR_MADINAH"
+export const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
+export type ServiceKey = (typeof SERVICE_KEYS)[number]
 
 // Core estimation parameters (stored as JSONB snapshot in estimates table)
 export interface EstimateParams {
@@ -38,10 +33,74 @@ export interface BudgetBreakdown {
     key: ServiceKey
     label: string
     amountDisplay: string
+    unitAmount: number // native per-unit price (e.g. 165 for $165, 325 for SAR 325)
+    currency: string // "SAR" | "USD" | "IDR" — currency the unitAmount is expressed in
     idr: number
     divideByPax: boolean
   }[]
   flightIdr: number
+  totalIdrPax: number
+  totalIdrGrp: number
+  sarRate: number
+  usdRate: number
+}
+
+// --- Manual overrides (spreadsheet-style editing of the computed breakdown) ---
+
+// Canonical row keys used to pin overrides to computed breakdown rows.
+// Stable across parameter recomputes so overrides stay sticky (R5).
+export const HOTEL_MADINAH_ROW_KEY = "hotelMadinah"
+export const HOTEL_MAKKAH_ROW_KEY = "hotelMakkah"
+export const FLIGHT_ROW_KEY = "flight"
+export function serviceRowKey(key: ServiceKey): string {
+  return `service:${key}`
+}
+
+// A manual override applied to one computed row, keyed by its canonical row key.
+// `idr` (final per-person amount) and `unitPrice` (native unit rate) are mutually
+// exclusive value sources: editing one clears the other. When unitPrice is set the
+// per-person amount is re-derived live via linear scaling in applyOverrides.
+export interface RowOverride {
+  label?: string // rename the row
+  idr?: number // override the per-person amount directly
+  unitPrice?: number // override the native unit price (SAR/USD/IDR) → value recomputes
+  hidden?: boolean // remove the row from totals (still shown struck-through with a reset)
+  autoIdrAtOverride?: number // auto-computed idr captured when the override was set → staleness detection
+}
+
+// A custom line-item the admin adds (e.g. "Manasik", "Handling").
+export interface CustomRow {
+  id: string
+  label: string
+  idr: number
+}
+
+// Persisted override layer (stored as JSONB on estimates.manual_overrides; null = no edits).
+export interface ManualOverrides {
+  overrides: Record<string, RowOverride>
+  customRows: CustomRow[]
+}
+
+// One row of the merged, override-aware display model consumed by UI + exports.
+export interface BreakdownDisplayRow {
+  key: string
+  label: string // verbose label for UI/PDF, e.g. "Hotel Madinah - Emaar Group"
+  shortLabel: string // compact label for WhatsApp, e.g. "Hotel Madinah:"
+  amountDisplay?: string // foreign-currency display for services, e.g. "SAR 200"; undefined for plain IDR / overridden rows
+  unitPrice: number // native per-unit rate shown in the editable "Harga satuan" column
+  unitCurrency: string // "SAR" | "USD" | "IDR" — currency the unitPrice is expressed in
+  unitEditable: boolean // false when the unit price can't scale (foreign-currency row with a 0 base) → input is disabled
+  idr: number // per-person amount shown in the row
+  hotelDetail?: HotelCostDetail // present on auto (non-amount-overridden) hotel rows so each surface renders its own formula
+  shared: boolean // divide-by-pax service; drives the ÷pax badge
+  hidden: boolean
+  stale: boolean // override captured against an auto value that has since changed
+  source: "computed" | "overridden" | "custom"
+}
+
+// Full override-aware display model returned by applyOverrides.
+export interface BreakdownDisplay {
+  rows: BreakdownDisplayRow[]
   totalIdrPax: number
   totalIdrGrp: number
   sarRate: number

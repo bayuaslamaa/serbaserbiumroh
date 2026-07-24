@@ -209,6 +209,7 @@ export const estimates = pgTable("estimates", {
   rawInput: text("raw_input").notNull(),
   aiNotes: text("ai_notes"),
   params: jsonb("params").notNull(), // EstimateParams snapshot
+  manualOverrides: jsonb("manual_overrides"), // ManualOverrides layer; null = no manual edits
   totalIdrPax: integer("total_idr_pax").notNull(),
   totalIdrGrp: integer("total_idr_grp").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -17,8 +17,8 @@ type ResolvedHotelConfig = HotelPriceConfig & {
 }
 
 function formatAmountDisplay(currency: string, amount: number): string {
-  if (currency === "USD") return `$${amount}`
-  if (currency === "SAR") return `SAR ${amount}`
+  if (currency === "USD") return `$${amount.toLocaleString("id-ID")}`
+  if (currency === "SAR") return `SAR ${amount.toLocaleString("id-ID")}`
   // IDR
   return `Rp ${amount.toLocaleString("id-ID")}`
 }
@@ -130,6 +130,8 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       key: key as ServiceKey,
       label: svc.label,
       amountDisplay: formatAmountDisplay(svc.currency, svc.amount),
+      unitAmount: svc.amount,
+      currency: svc.currency,
       idr,
       divideByPax: svc.divideByPax,
     })

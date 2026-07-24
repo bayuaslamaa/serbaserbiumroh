@@ -1,7 +1,8 @@
 import { Document, Page, Text, View, StyleSheet, renderToBuffer, Image } from "@react-pdf/renderer"
 import { createElement } from "react"
 import path from "path"
-import type { BudgetBreakdown, EstimateParams } from "@/types"
+import type { BreakdownDisplay, BudgetBreakdown, EstimateParams } from "@/types"
+import { rp, rowCalc, exportLabel, basisNote, kursLine, EXPORT_NOTES } from "./summary"
 
 const GOLD = "#c9a84c"
 const GREEN = "#2c6b42"
@@ -37,21 +38,13 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 11, color: WHITE },
 })
 
-function rp(amount: number): string {
-  return `Rp ${amount.toLocaleString("id-ID")}`
-}
-
-function hotelFormula(detail: BudgetBreakdown["hotelMadinahDetail"]): string {
-  const multiplier = detail.roomMultiplier === 1 ? "" : ` x ${detail.roomMultiplier}`
-  return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} x ${detail.nights} malam x ${detail.roomCount} kamar${multiplier} / ${detail.totalPax} org (${detail.roomPax} org/kamar)`
-}
-
 const ROOM_LABELS: Record<string, string> = { QUAD: "Quad (4 org/kamar)", TRIPLE: "Triple (3 org/kamar)", DOUBLE: "Double (2 org/kamar)", SINGLE: "Single" }
 const AIRLINE_LABELS: Record<string, string> = { BUDGET: "Budget (Lion/AirAsia)", STANDARD: "Batik Air", GARUDA: "Garuda Indonesia", BUSINESS: "Business Class" }
 
 export async function generatePDF(
   params: EstimateParams,
   breakdown: BudgetBreakdown,
+  display: BreakdownDisplay,
   title?: string | null,
   estimateId?: string
 ): Promise<Uint8Array> {
@@ -128,49 +121,33 @@ export async function generatePDF(
       createElement(
         View,
         { style: styles.section },
-        createElement(Text, { style: styles.sectionTitle }, "Rincian Biaya per Orang"),
-        createElement(
-          View,
-          { style: styles.row },
-          createElement(
-            View,
-            { style: styles.rowLabelWrap },
-            createElement(Text, { style: styles.label }, `Hotel Madinah - ${breakdown.hotelMadinahDetail.label}`),
-            createElement(Text, { style: styles.sublabel }, hotelFormula(breakdown.hotelMadinahDetail))
-          ),
-          createElement(Text, { style: styles.value }, rp(breakdown.hotelMadinahIdr))
-        ),
-        createElement(
-          View,
-          { style: styles.row },
-          createElement(
-            View,
-            { style: styles.rowLabelWrap },
-            createElement(Text, { style: styles.label }, `Hotel Makkah - ${breakdown.hotelMakkahDetail.label}`),
-            createElement(Text, { style: styles.sublabel }, hotelFormula(breakdown.hotelMakkahDetail))
-          ),
-          createElement(Text, { style: styles.value }, rp(breakdown.hotelMakkahIdr))
-        ),
-        ...breakdown.serviceItems.map((svc) =>
-          createElement(
-            View,
-            { style: styles.row, key: svc.key },
-            createElement(Text, { style: styles.label }, `${svc.label} (${svc.amountDisplay})`),
-            createElement(Text, { style: styles.value }, rp(svc.idr))
-          )
-        ),
-        createElement(
-          View,
-          { style: styles.row },
-          createElement(Text, { style: styles.label }, "Penerbangan"),
-          createElement(Text, { style: styles.value }, rp(breakdown.flightIdr))
-        ),
+        createElement(Text, { style: styles.sectionTitle }, `Rincian Biaya per Orang${basisNote(display)}`),
+        // Itemized rows from the override-aware display model; hidden rows are dropped.
+        ...display.rows
+          .filter((r) => !r.hidden)
+          .map((r) => {
+            // ASCII x / to keep the built-in Helvetica PDF font rendering safe.
+            const calc = rowCalc(r, params.pax, { times: "x", div: "/" })
+            return createElement(
+              View,
+              { style: styles.row, key: r.key },
+              calc
+                ? createElement(
+                    View,
+                    { style: styles.rowLabelWrap },
+                    createElement(Text, { style: styles.label }, exportLabel(r)),
+                    createElement(Text, { style: styles.sublabel }, calc)
+                  )
+                : createElement(Text, { style: styles.label }, exportLabel(r)),
+              createElement(Text, { style: styles.value }, rp(r.idr))
+            )
+          }),
         // Total per person
         createElement(
           View,
           { style: styles.totalRow },
           createElement(Text, { style: styles.totalLabel }, "TOTAL PER ORANG"),
-          createElement(Text, { style: styles.totalValue }, rp(breakdown.totalIdrPax))
+          createElement(Text, { style: styles.totalValue }, rp(display.totalIdrPax))
         ),
         // Group total
         params.pax > 1
@@ -178,7 +155,7 @@ export async function generatePDF(
               View,
               { style: styles.groupBox },
               createElement(Text, { style: styles.groupLabel }, `Total ${params.pax} orang`),
-              createElement(Text, { style: styles.groupValue }, rp(breakdown.totalIdrGrp))
+              createElement(Text, { style: styles.groupValue }, rp(display.totalIdrGrp))
             )
           : null
       ),
@@ -186,9 +163,11 @@ export async function generatePDF(
       createElement(
         View,
         { style: styles.footer },
-        createElement(Text, { style: styles.footerText }, `Kurs: SAR 1 = Rp ${breakdown.sarRate.toLocaleString("id-ID")} · USD 1 = Rp ${breakdown.usdRate.toLocaleString("id-ID")}`),
+        createElement(Text, { style: styles.footerText }, kursLine(display)),
         createElement(Text, { style: styles.footerText }, `Digenerate: ${generatedDate}${estimateId ? ` · ID: ${estimateId}` : ""}`),
-        createElement(Text, { style: styles.footerText }, "⚠️ Estimasi menggunakan kurs terkini. Harga dapat berubah.")
+        createElement(Text, { style: styles.footerText }, EXPORT_NOTES.exclusions),
+        createElement(Text, { style: styles.footerText }, EXPORT_NOTES.priceChange),
+        createElement(Text, { style: styles.footerText }, EXPORT_NOTES.contact)
       )
     )
   )

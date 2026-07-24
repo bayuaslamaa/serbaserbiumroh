@@ -6,7 +6,7 @@ import { estimates } from "@/lib/db/schema"
 import { fetchPricingConfig } from "@/lib/budget/calculate"
 import { EstimatorClient } from "@/components/estimator/EstimatorClient"
 import { eq } from "drizzle-orm"
-import type { EstimateParams } from "@/types"
+import type { EstimateParams, ManualOverrides } from "@/types"
 
 export const metadata = { title: "Edit Estimasi" }
 
@@ -49,10 +49,12 @@ export default async function EstimateDetailPage({ params }: Props) {
         pricingConfig={pricingConfig}
         estimateId={estimate.id}
         existingParams={estimate.params as EstimateParams}
+        existingOverrides={(estimate.manualOverrides as ManualOverrides | null) ?? undefined}
         existingRawInput={estimate.rawInput}
         existingAiNotes={estimate.aiNotes ?? undefined}
         existingTitle={estimate.title}
         savedAt={estimate.updatedAt.toISOString()}
+        canEditOverrides={session.user.role === "ADMIN"}
       />
     </div>
   )
