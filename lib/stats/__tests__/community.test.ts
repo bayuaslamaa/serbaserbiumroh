@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-// unstable_cache wraps the query helper; make it a pass-through so the test
-// exercises the query, not Next's cache machinery.
+// unstable_cache wraps the read; make it a pass-through so the test exercises
+// the query, not Next's cache machinery — but keep the spy so the cache key
+// and TTL it was configured with can still be asserted.
+const unstableCacheSpy = vi.hoisted(() => vi.fn((fn: unknown) => fn))
+
 vi.mock("next/cache", () => ({
-  unstable_cache: (fn: unknown) => fn,
+  unstable_cache: unstableCacheSpy,
 }))
 
 vi.mock("@/lib/db", () => ({
@@ -59,7 +62,9 @@ describe("formatVisitorCount", () => {
 
 describe("getPublicVisitorCount", () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    // Only the db spy — unstable_cache was called once at import time, and
+    // clearing it would erase the config these tests assert against.
+    mockSelect.mockReset()
   })
 
   it("returns the raw count with no offset applied", async () => {
@@ -88,5 +93,26 @@ describe("getPublicVisitorCount", () => {
     expect(consoleError).toHaveBeenCalled()
 
     consoleError.mockRestore()
+  })
+
+  it("keeps the failure OUTSIDE the cache so a blip is not memoized", async () => {
+    // The cached function must reject on failure — unstable_cache stores what
+    // its callback resolves to, so a caught null in there would blank the
+    // figure for the whole TTL on every page sharing the key.
+    const cachedFn = unstableCacheSpy.mock.calls[0][0] as () => Promise<number>
+    selectRejects(new Error("connection refused"))
+
+    await expect(cachedFn()).rejects.toThrow("connection refused")
+  })
+
+  it("configures the cache with a stable key and a 60 second window", () => {
+    const [, keyParts, options] = unstableCacheSpy.mock.calls[0] as [
+      unknown,
+      string[],
+      { revalidate: number },
+    ]
+
+    expect(keyParts).toEqual(["public-visitor-count"])
+    expect(options.revalidate).toBe(60)
   })
 })

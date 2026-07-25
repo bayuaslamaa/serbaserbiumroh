@@ -4,11 +4,15 @@ import { CommunityStats } from '@/components/stats/CommunityStats'
 
 interface HeroSectionProps {
   isAdmin?: boolean
-  /** Raw unique-visitor count, already resolved by the page. Null when unreadable. */
-  visitorCount?: number | null
+  /**
+   * Raw unique-visitor count, already resolved by the page. Null when
+   * unreadable. Required on purpose — a default would let a caller drop the
+   * prop and silently lose the pill with nothing failing.
+   */
+  visitorCount: number | null
 }
 
-export function HeroSection({ isAdmin = false, visitorCount = null }: HeroSectionProps) {
+export function HeroSection({ isAdmin = false, visitorCount }: HeroSectionProps) {
   return (
     <section className="py-16 text-center">
       <h1

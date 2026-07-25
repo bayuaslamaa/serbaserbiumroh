@@ -1,5 +1,8 @@
 import { requireAdmin } from "@/lib/auth"
-import { VISITOR_BASELINE_OFFSET } from "@/lib/stats/community"
+import {
+  VISITOR_BASELINE_OFFSET,
+  formatVisitorCount,
+} from "@/lib/stats/community"
 import { db } from "@/lib/db"
 import { visitorLogs } from "@/lib/db/schema"
 import { desc, count, countDistinct } from "drizzle-orm"
@@ -35,10 +38,11 @@ export default async function VisitorStatsPage() {
     .orderBy(desc(visitorLogs.createdAt))
     .limit(50)
 
-  // The same offset the public badge applies, so this figure is the one a
-  // visitor is shown. The query above stays uncached — this is an analytics
-  // view, where a stale number is the wrong trade.
-  const promoCount = (stats?.uniqueVisitors || 0) + VISITOR_BASELINE_OFFSET
+  // Formatted by the same helper the public badge uses, so the offset and the
+  // grouping can never drift between the two. The query above stays uncached —
+  // this is an analytics view, where a stale number is the wrong trade, so this
+  // figure can lead the public one by up to the public cache's TTL.
+  const promoCount = formatVisitorCount(stats?.uniqueVisitors ?? 0)
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -84,11 +88,11 @@ export default async function VisitorStatsPage() {
 
         <Card style={{ borderColor: "rgba(201, 168, 76, 0.4)", background: "rgba(201, 168, 76, 0.04)" }}>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium">Angka Promosi (Navbar)</CardTitle>
+            <CardTitle className="text-sm font-medium">Angka Promosi (Beranda &amp; Layanan)</CardTitle>
             <BarChart3 className="h-4 w-4 text-[var(--color-gold)] animate-pulse" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-gold)]">{promoCount.toLocaleString("id-ID")}+</div>
+            <div className="text-2xl font-bold text-[var(--color-gold)]">{promoCount}+</div>
             <p className="text-xs text-[var(--color-text-muted)]">
               Pengunjung unik + offset promo ({VISITOR_BASELINE_OFFSET})
             </p>
