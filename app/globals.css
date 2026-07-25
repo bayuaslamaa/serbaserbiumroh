@@ -9,10 +9,13 @@
   --color-border: rgba(201, 168, 76, 0.18);
   --color-gold: #c9a84c;
   --color-gold-muted: rgba(201, 168, 76, 0.5);
+  --color-gold-hover: #d9bc66;
   --color-green: #2c6b42;
   --color-green-text: #7a9e84;
   --color-text: #f0ece0;
   --color-text-muted: #9ab39e;
+  --color-text-soft: #d9d4c4;
+  --color-danger-text: #e08585;
   --font-heading: "Amiri", serif;
   --font-body: "DM Sans", sans-serif;
   --radius: 0.5rem;
@@ -26,6 +29,18 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
+}
+
+/* Nav overlay entry animation (mega menu + dropdowns) */
+@keyframes ssuFadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Scrollbar styling */
