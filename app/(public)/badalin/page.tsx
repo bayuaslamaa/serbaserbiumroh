@@ -6,8 +6,15 @@ import {
   badalVideos,
   badalinHero,
   badalinPrice,
+  isPlaceholderVideo,
 } from "@/lib/badalin/content"
 import { badalConsultHref } from "@/lib/services/catalog"
+
+// Only videos with a real YouTube id are watchable; the rest render as
+// "segera tayang" posters, so the page must not advertise them as available.
+const readyVideoCount = badalVideos.filter(
+  (video) => !isPlaceholderVideo(video.youtubeId)
+).length
 
 export const metadata = {
   title: "Badalin — Badal Umroh Terdokumentasi | Serba Serbi Umroh",
@@ -109,12 +116,15 @@ export default function BadalinPage() {
             Dokumentasi Badal
           </h2>
           <span className="text-[13px] text-text-muted">
-            {badalVideos.length} video · diperbarui setiap keberangkatan
+            {readyVideoCount > 0
+              ? `${readyVideoCount} video · diperbarui setiap keberangkatan`
+              : "Diperbarui setiap keberangkatan"}
           </span>
         </div>
         <p className="mb-5 max-w-[560px] text-sm leading-relaxed text-text-muted">
-          Bukan sekadar janji — tonton sendiri bagaimana setiap amanah badal kami
-          jalankan di Tanah Suci.
+          {readyVideoCount > 0
+            ? "Bukan sekadar janji — tonton sendiri bagaimana setiap amanah badal kami jalankan di Tanah Suci."
+            : "Rekaman pelaksanaan sedang kami siapkan. Daftar di bawah adalah dokumentasi yang akan tayang."}
         </p>
 
         <VideoDocGrid />

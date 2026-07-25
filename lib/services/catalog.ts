@@ -102,3 +102,15 @@ export const badalConsultHref = whatsappHref(
 export function isExternalHref(href: string): boolean {
   return href.startsWith("http")
 }
+
+/**
+ * Border and surface treatment for a service card. Shared by all three card
+ * densities (mega menu, mobile overlay, /layanan) so the "new service"
+ * highlight cannot drift between them.
+ */
+export function serviceCardTreatment(isNew?: boolean) {
+  return {
+    borderColor: isNew ? "rgba(201,168,76,0.45)" : "rgba(201,168,76,0.16)",
+    background: isNew ? "rgba(201,168,76,0.07)" : "rgba(255,255,255,0.02)",
+  }
+}

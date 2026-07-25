@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { createPortal } from "react-dom"
 import {
   ChevronDown,
@@ -13,7 +14,11 @@ import {
 } from "lucide-react"
 import { EstimateCta } from "./EstimateCta"
 import { adminLinks, exploreLinks } from "./links"
-import { isExternalHref, services } from "@/lib/services/catalog"
+import {
+  isExternalHref,
+  serviceCardTreatment,
+  services,
+} from "@/lib/services/catalog"
 
 interface MobileMenuProps {
   userEmail?: string | null
@@ -54,6 +59,9 @@ export function MobileMenu({
   const [isOpen, setIsOpen] = React.useState(false)
   const [isAdminOpen, setIsAdminOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
+  const pathname = usePathname()
+  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null)
 
   React.useEffect(() => {
     setMounted(true)
@@ -71,7 +79,38 @@ export function MobileMenu({
     }
   }, [isOpen])
 
-  const close = () => setIsOpen(false)
+  // Any route change closes the overlay — including back/forward and links
+  // that are not part of the overlay's own list, which the onClick handlers
+  // would otherwise miss (leaving a full-screen overlay with scroll locked).
+  React.useEffect(() => {
+    setIsOpen(false)
+  }, [pathname])
+
+  // Escape closes the overlay, matching the desktop menus.
+  React.useEffect(() => {
+    if (!isOpen) return
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setIsOpen(false)
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen])
+
+  // Move focus into the overlay on open, and back to the hamburger on close.
+  React.useEffect(() => {
+    if (isOpen) {
+      closeButtonRef.current?.focus()
+    } else {
+      setIsAdminOpen(false)
+    }
+  }, [isOpen])
+
+  const close = () => {
+    setIsOpen(false)
+    triggerRef.current?.focus()
+  }
 
   const bar = (
     <div className="flex h-14 items-center justify-between gap-2.5 px-4 nav:hidden" data-testid="mobile-nav">
@@ -81,9 +120,11 @@ export function MobileMenu({
       <div className="flex items-center gap-2">
         <EstimateCta variant="mobileBar" isAdmin={isAdmin} />
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Buka menu"
+          aria-expanded={isOpen}
           className="flex p-2 text-text transition-colors"
         >
           <Menu size={24} />
@@ -101,6 +142,9 @@ export function MobileMenu({
       {isOpen &&
         createPortal(
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu navigasi"
             className="fixed inset-0 z-[99] flex flex-col"
             style={{
               background: "rgba(11, 28, 18, 0.98)",
@@ -115,6 +159,7 @@ export function MobileMenu({
                 <Wordmark withTagline />
               </Link>
               <button
+                ref={closeButtonRef}
                 type="button"
                 onClick={close}
                 aria-label="Tutup menu"
@@ -149,14 +194,7 @@ export function MobileMenu({
                       target={external ? "_blank" : undefined}
                       rel={external ? "noopener noreferrer" : undefined}
                       className="flex flex-col gap-2 rounded-[10px] border p-3"
-                      style={{
-                        borderColor: service.isNew
-                          ? "rgba(201,168,76,0.45)"
-                          : "rgba(201,168,76,0.16)",
-                        background: service.isNew
-                          ? "rgba(201,168,76,0.07)"
-                          : "rgba(255,255,255,0.02)",
-                      }}
+                      style={serviceCardTreatment(service.isNew)}
                     >
                       <span className="flex items-center justify-between">
                         <span
@@ -272,7 +310,7 @@ export function MobileMenu({
                     >
                       <button
                         type="submit"
-                        className="flex w-full items-center gap-3 py-3 pl-1 text-[15px] text-danger-text transition-colors hover:text-[#f0a0a0]"
+                        className="flex w-full items-center gap-3 py-3 pl-1 text-[15px] text-danger-text transition-colors hover:text-danger-text-hover"
                       >
                         <LogOut size={17} className="flex-shrink-0" />
                         Keluar

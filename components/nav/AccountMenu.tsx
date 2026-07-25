@@ -29,6 +29,12 @@ export function AccountMenu({
 }) {
   const [isAdminOpen, setIsAdminOpen] = React.useState(false)
 
+  // Collapse the admin group when the account menu closes, so reopening it
+  // does not show a pre-expanded submenu.
+  React.useEffect(() => {
+    if (!isOpen) setIsAdminOpen(false)
+  }, [isOpen])
+
   return (
     <div className="relative" data-nav-menu="account">
       <button
@@ -114,7 +120,7 @@ export function AccountMenu({
           >
             <button
               type="submit"
-              className="flex w-full items-center gap-2.5 rounded-[7px] px-3 py-2.5 text-sm text-danger-text transition-colors hover:bg-white/[0.04] hover:text-[#f0a0a0]"
+              className="flex w-full items-center gap-2.5 rounded-[7px] px-3 py-2.5 text-sm text-danger-text transition-colors hover:bg-white/[0.04] hover:text-danger-text-hover"
             >
               <LogOut size={15} className="flex-shrink-0" />
               Keluar

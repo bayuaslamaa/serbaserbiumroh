@@ -3,7 +3,11 @@
 import Link from "next/link"
 import { ArrowRight, ChevronDown } from "lucide-react"
 import { MegaPanel } from "./NavDropdown"
-import { isExternalHref, services } from "@/lib/services/catalog"
+import {
+  isExternalHref,
+  serviceCardTreatment,
+  services,
+} from "@/lib/services/catalog"
 
 /**
  * The trigger and the panel render in different places — the trigger sits in
@@ -26,7 +30,9 @@ export function LayananTrigger({
       className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 py-[7px] text-sm font-semibold text-gold transition-colors"
       style={{
         background: isOpen ? "rgba(201,168,76,0.1)" : "rgba(201,168,76,0.05)",
-        borderColor: isOpen ? "rgba(201,168,76,0.5)" : "rgba(201,168,76,0.25)",
+        borderColor: isOpen
+          ? "var(--color-gold-muted)"
+          : "rgba(201,168,76,0.25)",
       }}
     >
       Layanan
@@ -55,14 +61,7 @@ export function LayananPanel({ onNavigate }: { onNavigate: () => void }) {
                 target={external ? "_blank" : undefined}
                 rel={external ? "noopener noreferrer" : undefined}
                 className="flex items-start gap-3.5 rounded-[10px] border p-3.5 transition-colors hover:border-[rgba(201,168,76,0.4)] hover:bg-[rgba(201,168,76,0.08)]"
-                style={{
-                  borderColor: service.isNew
-                    ? "rgba(201,168,76,0.45)"
-                    : "rgba(201,168,76,0.16)",
-                  background: service.isNew
-                    ? "rgba(201,168,76,0.07)"
-                    : "rgba(255,255,255,0.02)",
-                }}
+                style={serviceCardTreatment(service.isNew)}
               >
                 <span
                   className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-[9px] border"

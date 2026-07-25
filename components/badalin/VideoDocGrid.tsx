@@ -39,9 +39,23 @@ export function VideoDocGrid() {
                   src={`https://www.youtube.com/embed/${video.youtubeId}?autoplay=1`}
                   title={video.title}
                   className="block h-full w-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
+              </div>
+            ) : placeholder ? (
+              // No real video id yet — render an inert poster. Never mount an
+              // embed for a placeholder id: it resolves to a dead YouTube page.
+              <div
+                className="relative flex aspect-video items-center justify-center"
+                style={{ background: stripePoster }}
+              >
+                <span
+                  className="rounded-full px-3 py-1 text-[11px] font-semibold text-text-muted"
+                  style={{ background: "rgba(11,28,18,0.8)" }}
+                >
+                  Video segera tayang
+                </span>
               </div>
             ) : (
               <button
@@ -50,18 +64,13 @@ export function VideoDocGrid() {
                 aria-label={`Putar video: ${video.title}`}
                 className="block w-full cursor-pointer border-0 p-0 text-left"
               >
-                <span
-                  className="relative block aspect-video"
-                  style={placeholder ? { background: stripePoster } : undefined}
-                >
-                  {!placeholder && (
-                    <img
-                      src={`https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`}
-                      alt=""
-                      className="absolute inset-0 h-full w-full object-cover"
-                      loading="lazy"
-                    />
-                  )}
+                <span className="relative block aspect-video">
+                  <img
+                    src={`https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover"
+                    loading="lazy"
+                  />
                   <span className="absolute inset-0 flex items-center justify-center">
                     <span
                       className="flex h-[52px] w-[52px] items-center justify-center rounded-full"
@@ -73,14 +82,6 @@ export function VideoDocGrid() {
                       <Play size={22} className="ml-[3px] text-bg" fill="currentColor" />
                     </span>
                   </span>
-                  {placeholder && (
-                    <span
-                      className="absolute bottom-2.5 left-2.5 rounded-[5px] px-1.5 py-[3px] font-mono text-[10px] text-text-muted"
-                      style={{ background: "rgba(11,28,18,0.8)" }}
-                    >
-                      thumbnail menyusul
-                    </span>
-                  )}
                   <span
                     className="absolute bottom-2.5 right-2.5 rounded-[5px] px-1.5 py-[3px] text-[11px] font-bold text-text"
                     style={{ background: "rgba(0,0,0,0.7)" }}
@@ -97,6 +98,7 @@ export function VideoDocGrid() {
               </div>
               <div className="mt-1.5 text-xs text-text-muted">
                 {video.meta} · {VIDEO_META_SUFFIX}
+                {placeholder ? " · belum tayang" : ""}
               </div>
             </div>
           </div>

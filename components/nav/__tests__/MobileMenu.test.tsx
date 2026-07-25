@@ -1,5 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+const mockPathname = vi.fn(() => "/")
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => mockPathname(),
+}))
+
 import { MobileMenu } from "../MobileMenu"
 
 const signOutAction = vi.fn(async () => {})
@@ -23,6 +30,7 @@ function openOverlay() {
 
 afterEach(() => {
   document.body.style.overflow = ""
+  mockPathname.mockReturnValue("/")
   vi.clearAllMocks()
 })
 
@@ -110,6 +118,70 @@ describe("MobileMenu overlay", () => {
     fireEvent.click(screen.getByRole("link", { name: "Panduan" }))
     expect(screen.queryByText("JELAJAHI")).toBeNull()
     expect(document.body.style.overflow).toBe("unset")
+  })
+
+  it("exposes dialog semantics so assistive tech treats it as modal", () => {
+    renderMenu()
+    openOverlay()
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveAttribute("aria-modal", "true")
+    expect(dialog).toHaveAttribute("aria-label")
+  })
+
+  it("closes on Escape, matching the desktop menus", () => {
+    renderMenu()
+    openOverlay()
+
+    fireEvent.keyDown(document, { key: "Escape" })
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(document.body.style.overflow).toBe("unset")
+  })
+
+  it("closes on a route change that did not come from its own links", () => {
+    const { rerender } = renderMenu()
+    openOverlay()
+    expect(screen.getByRole("dialog")).toBeDefined()
+
+    // Browser back/forward: the pathname changes with no click on the overlay.
+    mockPathname.mockReturnValue("/panduan")
+    rerender(
+      <MobileMenu
+        isLoggedIn
+        isAdmin={false}
+        showAdmin={false}
+        userEmail="test@example.com"
+        signOutAction={signOutAction}
+      />
+    )
+
+    expect(screen.queryByRole("dialog")).toBeNull()
+    expect(document.body.style.overflow).toBe("unset")
+  })
+
+  it("moves focus to the close button on open and back to the hamburger on close", () => {
+    renderMenu()
+    openOverlay()
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Tutup menu" })
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Tutup menu" }))
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Buka menu" })
+    )
+  })
+
+  it("collapses the admin group when the overlay is reopened", () => {
+    renderMenu({ showAdmin: true, isAdmin: true })
+    openOverlay()
+    fireEvent.click(screen.getByRole("button", { name: /Panel Admin/ }))
+    expect(screen.getByRole("link", { name: "Kelola Harga" })).toBeDefined()
+
+    fireEvent.click(screen.getByRole("button", { name: "Tutup menu" }))
+    openOverlay()
+
+    expect(screen.queryByRole("link", { name: "Kelola Harga" })).toBeNull()
   })
 })
 

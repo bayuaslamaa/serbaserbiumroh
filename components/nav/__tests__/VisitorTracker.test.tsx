@@ -41,17 +41,13 @@ describe("VisitorTracker", () => {
   })
 
   it.each(["/dashboard", "/admin/pricing", "/login", "/api/estimate"])(
-    "GETs without a body on the blacklisted path %s",
+    "makes no request at all on the blacklisted path %s",
     async (path) => {
       mockPathname.mockReturnValue(path)
       render(<VisitorTracker />)
 
-      await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1))
-
-      const [, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0]
-      expect(init.method).toBe("GET")
-      expect(init.body).toBeUndefined()
-      expect(init.headers).toBeUndefined()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(fetch).not.toHaveBeenCalled()
     }
   )
 

@@ -29,6 +29,7 @@ const config: Config = {
         "text-muted": "var(--color-text-muted)",
         "text-soft": "var(--color-text-soft)",
         "danger-text": "var(--color-danger-text)",
+        "danger-text-hover": "var(--color-danger-text-hover)",
       },
       animation: {
         "fade-down": "ssuFadeDown 0.18s ease",

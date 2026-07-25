@@ -17,14 +17,16 @@ export function VisitorTracker() {
   const pathname = usePathname()
 
   useEffect(() => {
-    const isBlacklisted = BLACKLIST_PATHS.some((path) => pathname?.startsWith(path))
+    // Nothing reads the response, so a non-tracked path makes no request at all.
+    // (The old VisitorCounter issued a GET here only because it rendered the count.)
+    if (BLACKLIST_PATHS.some((path) => pathname?.startsWith(path))) return
 
-    // Track (POST) for public pages, otherwise just touch the endpoint (GET)
-    const method = isBlacklisted ? "GET" : "POST"
-    const body = isBlacklisted ? undefined : JSON.stringify({ path: pathname })
-    const headers = isBlacklisted ? undefined : { "Content-Type": "application/json" }
-
-    fetch("/api/visitor", { method, body, headers }).catch((err) => {
+    fetch("/api/visitor", {
+      method: "POST",
+      body: JSON.stringify({ path: pathname }),
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+    }).catch((err) => {
       console.error("Error tracking visit:", err)
     })
   }, [pathname])

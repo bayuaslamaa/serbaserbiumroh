@@ -1,6 +1,10 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
-import { isExternalHref, type Service } from "@/lib/services/catalog"
+import {
+  isExternalHref,
+  serviceCardTreatment,
+  type Service,
+} from "@/lib/services/catalog"
 
 /** Full-density catalog card used on /layanan. */
 export function ServiceCard({ service }: { service: Service }) {
@@ -13,14 +17,7 @@ export function ServiceCard({ service }: { service: Service }) {
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
       className="flex flex-col gap-3.5 rounded-[14px] border p-[22px] transition-colors hover:border-[rgba(201,168,76,0.45)] hover:bg-[rgba(201,168,76,0.06)]"
-      style={{
-        borderColor: service.isNew
-          ? "rgba(201,168,76,0.45)"
-          : "rgba(201,168,76,0.16)",
-        background: service.isNew
-          ? "rgba(201,168,76,0.07)"
-          : "rgba(255,255,255,0.02)",
-      }}
+      style={serviceCardTreatment(service.isNew)}
     >
       <span className="flex items-center justify-between">
         <span

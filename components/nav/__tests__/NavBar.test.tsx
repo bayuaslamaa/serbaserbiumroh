@@ -104,6 +104,24 @@ describe("NavBar single-open coordination", () => {
     vi.clearAllMocks()
   })
 
+  it("points every Lainnya entry at its real destination", async () => {
+    await renderNav(null)
+    fireEvent.click(desktop().getByRole("button", { name: "Lainnya" }))
+
+    const expected = [
+      ["Cerita Jamaah", "/cerita-jamaah"],
+      ["Hotel Nusuk", "/hotel-nusuk"],
+      ["FAQ", "/faq"],
+      ["Webinar", "/webinar-umroh-mandiri"],
+    ]
+    for (const [label, href] of expected) {
+      expect(desktop().getByRole("link", { name: label })).toHaveAttribute(
+        "href",
+        href
+      )
+    }
+  })
+
   it("closes Layanan when Lainnya is opened", async () => {
     await renderNav(null)
 
@@ -167,6 +185,31 @@ describe("NavBar account area", () => {
     )
     expect(desktop().getByRole("button", { name: "Keluar" })).toBeDefined()
     expect(desktop().queryByRole("button", { name: /Panel Admin/ })).toBeNull()
+  })
+
+  it("derives the avatar initial from the name, then the email, then a fallback", async () => {
+    await renderNav({ user: { name: "bayu aslama", email: "b@x.com", role: "USER" } })
+    expect(desktop().getByRole("button", { name: "Menu akun" }).textContent).toBe("B")
+
+    document.body.innerHTML = ""
+    await renderNav({ user: { email: "zaid@example.com", role: "USER" } })
+    expect(desktop().getByRole("button", { name: "Menu akun" }).textContent).toBe("Z")
+
+    document.body.innerHTML = ""
+    await renderNav({ user: { role: "USER" } })
+    expect(desktop().getByRole("button", { name: "Menu akun" }).textContent).toBe("?")
+  })
+
+  it("collapses the admin group when the account menu is reopened", async () => {
+    await renderNav(adminSession)
+    fireEvent.click(desktop().getByRole("button", { name: "Menu akun" }))
+    fireEvent.click(desktop().getByRole("button", { name: /Panel Admin/ }))
+    expect(desktop().getByRole("link", { name: "Kelola Harga" })).toBeDefined()
+
+    fireEvent.click(desktop().getByRole("button", { name: "Menu akun" }))
+    fireEvent.click(desktop().getByRole("button", { name: "Menu akun" }))
+
+    expect(desktop().queryByRole("link", { name: "Kelola Harga" })).toBeNull()
   })
 
   it("exposes every admin sub-page behind the Panel Admin group for an admin", async () => {

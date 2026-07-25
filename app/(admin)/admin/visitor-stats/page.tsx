@@ -34,7 +34,9 @@ export default async function VisitorStatsPage() {
     .orderBy(desc(visitorLogs.createdAt))
     .limit(50)
 
-  // Same promotional baseline offset used in components/layanan/StatBadges.tsx
+  // Admin-side promotional offset. Deliberately NOT the same number as the
+  // public pill in components/layanan/StatBadges.tsx (100) — this view reports
+  // the figure the admin dashboard has always shown.
   const BASELINE_OFFSET = 1420
   const promoCount = (stats?.uniqueVisitors || 0) + BASELINE_OFFSET
 
