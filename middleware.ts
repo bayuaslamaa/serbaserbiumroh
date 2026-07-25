@@ -14,10 +14,13 @@ export function isPublicPath(pathname: string) {
     pathname.startsWith("/panduan") ||
     pathname.startsWith("/cerita-jamaah") ||
     pathname.startsWith("/hotel-nusuk") ||
+    pathname.startsWith("/faq") ||
     pathname.startsWith("/komunitas") ||
     pathname.startsWith("/webinar-umroh-mandiri") ||
     pathname.startsWith("/visa") ||
-    pathname.startsWith("/transportasi")
+    pathname.startsWith("/transportasi") ||
+    pathname.startsWith("/layanan") ||
+    pathname.startsWith("/badalin")
   )
 }
 

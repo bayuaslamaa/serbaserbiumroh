@@ -11,16 +11,28 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Nav switches between the desktop bar and the mobile bar at 900px —
+      // the condensed desktop row is still cramped at Tailwind's `md` (768px).
+      screens: {
+        nav: "900px",
+      },
       colors: {
         bg: "var(--color-bg)",
         surface: "var(--color-surface)",
         border: "var(--color-border)",
         gold: "var(--color-gold)",
         "gold-muted": "var(--color-gold-muted)",
+        "gold-hover": "var(--color-gold-hover)",
         green: "var(--color-green)",
         "green-text": "var(--color-green-text)",
         text: "var(--color-text)",
         "text-muted": "var(--color-text-muted)",
+        "text-soft": "var(--color-text-soft)",
+        "danger-text": "var(--color-danger-text)",
+        "danger-text-hover": "var(--color-danger-text-hover)",
+      },
+      animation: {
+        "fade-down": "ssuFadeDown 0.18s ease",
       },
       fontFamily: {
         heading: ["var(--font-heading)", "serif"],
