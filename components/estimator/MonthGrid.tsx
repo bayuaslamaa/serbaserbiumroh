@@ -1,13 +1,11 @@
 "use client"
 
+import { MONTH_LABELS } from "@/lib/estimate/months"
+
 interface MonthGridProps {
   value: number | undefined
   onChange: (month: number | undefined) => void
 }
-
-// Mirrors ParamsPanel.tsx's MONTH_LABELS — same 12 short Indonesian month
-// labels, 1-indexed (index 0 = "Jan" = month 1). Do not diverge.
-const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"]
 
 /**
  * Standalone, responsive month picker grid. Extracted from ParamsPanel.tsx's

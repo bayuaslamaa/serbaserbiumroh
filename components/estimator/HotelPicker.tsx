@@ -5,6 +5,7 @@ import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import type { HotelOptionConfig, HotelTier } from "@/types"
+import { resolveMonthlyHotelSar, sarLabel } from "@/lib/estimate/hotel-pricing"
 
 interface HotelPickerProps {
   hotels: HotelOptionConfig[]
@@ -22,21 +23,6 @@ const TIER_FILTERS: { value: HotelTier | "ALL"; label: string }[] = [
 ]
 
 const PRICE_THRESHOLD_SAR = 300
-
-// Mirrors ParamsPanel.tsx's resolveMonthlyHotelSar/sarLabel helpers — same
-// resolution logic (monthlyPrices[travelMonth] if present, else base
-// sarPerNight). Do not diverge from that behavior.
-function resolveMonthlyHotelSar(
-  config: { sarPerNight: number; monthlyPrices: Record<number, number> },
-  month?: number
-): number {
-  if (month != null && config.monthlyPrices[month] != null) return config.monthlyPrices[month]
-  return config.sarPerNight
-}
-
-function sarLabel(amount: number): string {
-  return `SAR ${amount}/mlm`
-}
 
 export function HotelPicker({ hotels, selectedId, travelMonth, onSelect }: HotelPickerProps) {
   const [search, setSearch] = useState("")

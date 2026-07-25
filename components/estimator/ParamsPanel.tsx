@@ -6,26 +6,14 @@ import { Stepper } from "./Stepper"
 import { ServiceCheckboxGrid } from "./ServiceCheckboxGrid"
 import { Badge } from "@/components/ui/badge"
 import { resolveCityHotelOptions, resolveHotelSelection } from "@/lib/estimate/hotel-selection"
+import { resolveMonthlyHotelSar, sarLabel } from "@/lib/estimate/hotel-pricing"
+import { MONTH_LABELS } from "@/lib/estimate/months"
 
 interface ParamsPanelProps {
   params: EstimateParams
   pricing: PricingConfig
   onChange: (patch: Partial<EstimateParams>) => void
   storySource?: string
-}
-
-const MONTH_LABELS = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"]
-
-function sarLabel(amount: number): string {
-  return `SAR ${amount}/mlm`
-}
-
-function resolveMonthlyHotelSar(
-  config: { sarPerNight: number; monthlyPrices: Record<number, number> },
-  month?: number
-): number {
-  if (month != null && config.monthlyPrices[month] != null) return config.monthlyPrices[month]
-  return config.sarPerNight
 }
 
 function cityLabel(city: City): string {

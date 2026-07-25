@@ -76,6 +76,19 @@ describe("HotelPicker", () => {
     expect(screen.getByText("Dar Al Eiman Royal")).toBeDefined()
   })
 
+  it("narrows results to hotels at or below the SAR 300 price threshold", () => {
+    renderPicker()
+
+    fireEvent.click(screen.getByText("≤ SAR 300"))
+    expect(screen.getByText("Dar Al Eiman Royal")).toBeDefined() // 250 SAR
+    expect(screen.queryByText("Al Ansar Mall Hotel")).toBeNull() // 650 SAR
+    expect(screen.queryByText("Anwar Al Madinah Mövenpick")).toBeNull() // 900 SAR
+
+    fireEvent.click(screen.getByText("≤ SAR 300"))
+    expect(screen.getByText("Al Ansar Mall Hotel")).toBeDefined()
+    expect(screen.getByText("Anwar Al Madinah Mövenpick")).toBeDefined()
+  })
+
   it("calls onSelect with the hotel id when a row is clicked", () => {
     const onSelect = renderPicker()
 

@@ -43,12 +43,12 @@ export function MobileTotalBar({ display, waOpen, onWaOpenChange }: MobileTotalB
       </div>
       <button
         type="button"
-        onClick={() => onWaOpenChange(true)}
+        onClick={() => onWaOpenChange(!waOpen)}
         aria-pressed={waOpen}
         className="shrink-0 rounded-md px-4 py-2 text-sm font-medium"
         style={{ background: "var(--color-gold)", color: "var(--color-bg)" }}
       >
-        Kirim WA
+        {waOpen ? "Tutup" : "Kirim WA"}
       </button>
     </div>
   )
