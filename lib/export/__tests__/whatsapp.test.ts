@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
-import { generateWhatsAppText } from "@/lib/export/whatsapp"
+import { generateWhatsAppText, buildWhatsAppMessage } from "@/lib/export/whatsapp"
 import { applyOverrides } from "@/lib/budget/overrides"
+import { EXPORT_NOTES } from "@/lib/export/summary"
 import type { BudgetBreakdown, EstimateParams, ManualOverrides } from "@/types"
 
 // Helper: build the override-aware display the renderer now consumes.
@@ -167,5 +168,61 @@ describe("generateWhatsAppText with manual overrides", () => {
     const withEmpty = generateWhatsAppText(params, breakdown, d(breakdown, { overrides: {}, customRows: [] }), null)
     const raw = generateWhatsAppText(params, breakdown, d(breakdown), null)
     expect(withEmpty).toBe(raw)
+  })
+})
+
+// buildWhatsAppMessage is a distinct, friendlier greeting-style message for the always-visible
+// estimator rail's "Kirim WA" flow — not the same shape as generateWhatsAppText's itemized copy
+// above, nor BudgetBreakdown's "Salin rincian" text (which stays as-is).
+describe("buildWhatsAppMessage", () => {
+  it("includes a greeting line", () => {
+    const text = buildWhatsAppMessage(d(breakdown), params, params.pax)
+    expect(text).toContain("Assalamu'alaikum")
+  })
+
+  it("includes a trip summary line with total days, pax, and month", () => {
+    const withMonth = { ...params, travelMonth: 11 }
+    const text = buildWhatsAppMessage(d(breakdown), withMonth, withMonth.pax)
+    // 4 nights Madinah + 9 nights Makkah = 13 days
+    expect(text).toContain("Umroh 13 hari untuk 1 orang di bulan November")
+  })
+
+  it("omits the month clause when travelMonth is not set", () => {
+    const text = buildWhatsAppMessage(d(breakdown), params, params.pax)
+    expect(text).toContain("Umroh 13 hari untuk 1 orang")
+    expect(text).not.toContain(" di bulan ")
+  })
+
+  it("includes nights and hotel name lines for Madinah and Makkah", () => {
+    const text = buildWhatsAppMessage(d(breakdown), params, params.pax)
+    expect(text).toContain("Madinah: 4 malam di Kayan Hotel")
+    expect(text).toContain("Makkah: 9 malam di Olayan Ajyad")
+  })
+
+  it("includes the formatted total per person", () => {
+    const text = buildWhatsAppMessage(d(breakdown), params, params.pax)
+    expect(text).toContain("Total per orang: Rp 35.884.500")
+  })
+
+  it("includes a group total line only when pax > 1", () => {
+    const groupBreakdown = { ...breakdown, totalIdrGrp: breakdown.totalIdrPax * 3 }
+    const single = buildWhatsAppMessage(d(breakdown), params, 1)
+    const group = buildWhatsAppMessage(d(groupBreakdown, null, 3), { ...params, pax: 3 }, 3)
+    expect(single).not.toContain("Total 1 orang")
+    expect(group).toContain("Total 3 orang: Rp 107.653.500")
+  })
+
+  it("reuses the shared EXPORT_NOTES contact/disclaimer lines verbatim", () => {
+    const text = buildWhatsAppMessage(d(breakdown), params, params.pax)
+    expect(text).toContain(EXPORT_NOTES.exclusions)
+    expect(text).toContain(EXPORT_NOTES.priceChange)
+    expect(text).toContain(EXPORT_NOTES.contact)
+  })
+
+  it("produces a different, friendlier shape than the itemized generateWhatsAppText output", () => {
+    const friendly = buildWhatsAppMessage(d(breakdown), params, params.pax)
+    const itemized = generateWhatsAppText(params, breakdown, d(breakdown))
+    expect(friendly).not.toBe(itemized)
+    expect(friendly).not.toContain("*RINCIAN PER ORANG*")
   })
 })
