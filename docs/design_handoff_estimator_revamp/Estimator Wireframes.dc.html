@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f0eee9;font-family:'DM Sans',system-ui,sans-serif}
+a{color:#2a78d6}a:hover{color:#1b57a3}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 'DM Sans',sans-serif;color:#1a1a1a}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 'DM Sans',sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;padding:18px}
+.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 'DM Sans',sans-serif;color:rgba(0,0,0,.5)}
+.h{font-family:'Kalam',cursive}
+.f{background:#fff;border:1.5px solid #111;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.nav{height:22px;border-bottom:1.5px solid #111;display:flex;align-items:center;gap:8px;padding:0 8px;background:#f4f2ee;flex:none}
+.nav i{display:block;height:5px;width:26px;background:#c9c5bd;border-radius:2px}
+.lbl{font:700 7.5px/1 'DM Sans',sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#8d8878}
+.ln{height:6px;background:#dcd8d1;border-radius:3px}
+.box{border:1.2px solid #b9b4a9;border-radius:5px;background:#fbfaf8}
+.dash{border:1.2px dashed #b9b4a9;border-radius:5px;background:repeating-linear-gradient(135deg,#fbfaf8 0 6px,#f2f0ea 6px 12px)}
+.btn{border:1.4px solid #111;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 9px 'DM Sans',sans-serif;color:#111;background:#fff}
+.gbtn{border:1.4px solid #a8862f;background:#e8d6a4;border-radius:5px;display:flex;align-items:center;justify-content:center;font:700 9px 'DM Sans',sans-serif;color:#5c4a15}
+.pill{border:1.2px solid #b9b4a9;border-radius:20px;font:500 8px 'DM Sans',sans-serif;color:#6b6659;padding:3px 8px;background:#fff;white-space:nowrap}
+.gold{color:#a8862f}
+.note{font:400 11px/1.45 'Kalam',cursive;color:#6b6659}
+.note b{color:#a8862f;font-weight:700}
+.ttl{font:700 11px 'DM Sans',sans-serif;color:#111}
+.sm{font:400 8px/1.35 'DM Sans',sans-serif;color:#8d8878}
+.ann{font:400 10.5px/1.35 'Kalam',cursive;color:#2a78d6;display:flex;gap:5px;align-items:flex-start}
+.ann::before{content:"→";flex:none}
+</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Revamp /estimate/new — 4 arah struktur (tesis C: cerita dulu → koreksi)</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a">
+<div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Cerita full-bleed → hasil 2 kolom. Perubahan paling kecil dari yang sekarang.</div>
+<div class="dv-card" style="width:1010px">
+<div style="display:flex;gap:20px;align-items:flex-start">
+
+<div class="f" style="width:700px;height:680px">
+<div class="nav"><i></i><i style="width:16px"></i><i style="width:20px"></i><div style="flex:1"></div><div class="pill" style="border-color:#a8862f">Buat Estimasi</div></div>
+<div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+<div style="display:flex;flex-direction:column;gap:4px"><div class="h gold" style="font-size:15px;font-weight:700">Estimasi Biaya Umroh</div><div class="ln" style="width:280px;height:5px"></div></div>
+
+<div class="box" style="padding:12px;display:flex;flex-direction:column;gap:9px;border-color:#a8862f;background:#fdfbf5">
+<div style="display:flex;align-items:baseline;gap:7px"><div class="gbtn" style="width:14px;height:14px;border-radius:50%;font-size:8px">1</div><div class="ttl">Ceritakan rencana Kakak</div><div class="sm">— sistem yang isi detailnya</div></div>
+<div class="box" style="height:64px;padding:7px;display:flex;flex-direction:column;gap:5px"><div class="ln" style="width:88%"></div><div class="ln" style="width:74%"></div><div class="ln" style="width:52%"></div></div>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><div class="pill">12 hari, 2 pax, Nov…</div><div class="pill">9 hari, 4 pax, Mar…</div><div class="pill">14 hari, Ramadhan…</div></div>
+<div class="gbtn" style="height:26px">Hitung Estimasi</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:1px;background:#ddd9d1"></div><div class="sm h" style="font-size:10px">hasil di bawah — semuanya bisa dikoreksi</div><div style="flex:1;height:1px;background:#ddd9d1"></div></div>
+
+<div style="display:flex;gap:12px;align-items:flex-start">
+  <div style="flex:1;display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;align-items:baseline;gap:7px"><div class="btn" style="width:14px;height:14px;border-radius:50%;font-size:8px">2</div><div class="ttl">Koreksi detail</div></div>
+    <div class="box" style="padding:9px;display:flex;flex-direction:column;gap:7px">
+      <div class="lbl">Dasar</div>
+      <div style="display:flex;gap:8px"><div class="box" style="flex:1;height:22px"></div><div class="box" style="flex:1;height:22px"></div><div class="box" style="flex:1;height:22px"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px">
+        <div class="box" style="height:16px"></div><div class="box" style="height:16px"></div><div class="box" style="height:16px"></div><div class="box" style="height:16px"></div><div class="box" style="height:16px"></div><div class="box" style="height:16px;border-color:#a8862f;background:#e8d6a4"></div></div>
+    </div>
+    <div class="box" style="padding:9px;display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="lbl">Hotel &amp; Kamar</div><div class="sm">Emaar Taibah · Al Fouad ▾</div></div>
+      <div class="box" style="height:18px;display:flex;align-items:center;padding:0 6px"><div class="sm">⌕ cari hotel…</div></div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div class="box" style="height:30px;border-color:#a8862f;background:#fdfbf5;display:flex;align-items:center;justify-content:space-between;padding:0 7px"><div style="display:flex;flex-direction:column;gap:3px"><div class="ln" style="width:90px;height:5px;background:#b9b4a9"></div><div class="ln" style="width:60px;height:4px"></div></div><div class="pill gold" style="border-color:#a8862f">SAR 235</div></div>
+        <div class="box" style="height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 7px"><div style="display:flex;flex-direction:column;gap:3px"><div class="ln" style="width:110px;height:5px"></div><div class="ln" style="width:50px;height:4px"></div></div><div class="pill">SAR 340</div></div>
+        <div class="box" style="height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 7px"><div style="display:flex;flex-direction:column;gap:3px"><div class="ln" style="width:80px;height:5px"></div><div class="ln" style="width:66px;height:4px"></div></div><div class="pill">SAR 470</div></div>
+      </div>
+    </div>
+    <div class="box" style="padding:9px;display:flex;justify-content:space-between;align-items:center"><div class="lbl">Penerbangan &amp; Layanan</div><div class="sm">4 dipilih ▾</div></div>
+  </div>
+
+  <div style="width:250px;display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;align-items:baseline;gap:7px"><div class="btn" style="width:14px;height:14px;border-radius:50%;font-size:8px">3</div><div class="ttl">Rincian biaya</div></div>
+    <div class="box" style="padding:9px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div class="ln" style="width:96px"></div><div class="box" style="width:52px;height:15px"></div></div>
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div class="ln" style="width:80px"></div><div class="box" style="width:52px;height:15px"></div></div>
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div class="ln" style="width:104px"></div><div class="box" style="width:52px;height:15px;border-color:#a8862f;background:#fdfbf5"></div></div>
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div class="ln" style="width:70px"></div><div class="box" style="width:52px;height:15px"></div></div>
+        <div style="display:flex;justify-content:space-between;gap:6px;align-items:center"><div class="ln" style="width:92px"></div><div class="box" style="width:52px;height:15px"></div></div>
+      </div>
+      <div class="dash" style="height:17px;display:flex;align-items:center;justify-content:center"><div class="sm">+ Tambah baris</div></div>
+      <div style="height:1px;background:#ddd9d1"></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div class="sm">Total / orang</div><div class="h gold" style="font-size:15px;font-weight:700">Rp 47.780.750</div></div>
+      <div class="gbtn" style="height:24px">Simpan &amp; kirim ke jamaah</div>
+      <div class="btn" style="height:20px;font-weight:500">Salin ringkasan WA</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="f" style="width:246px;height:680px">
+<div class="nav" style="height:18px"><i style="width:14px"></i><div style="flex:1"></div><i style="width:12px"></i></div>
+<div style="padding:10px;display:flex;flex-direction:column;gap:9px;overflow:hidden">
+  <div class="h gold" style="font-size:12px;font-weight:700">Estimasi Biaya Umroh</div>
+  <div class="box" style="padding:8px;display:flex;flex-direction:column;gap:6px;border-color:#a8862f;background:#fdfbf5">
+    <div class="ttl" style="font-size:9.5px">1 · Ceritakan rencana Kakak</div>
+    <div class="box" style="height:46px;padding:6px;display:flex;flex-direction:column;gap:4px"><div class="ln" style="width:86%"></div><div class="ln" style="width:60%"></div></div>
+    <div class="gbtn" style="height:34px">Hitung Estimasi</div>
+  </div>
+  <div class="ttl" style="font-size:9.5px">2 · Koreksi detail</div>
+  <div class="box" style="padding:8px;display:flex;flex-direction:column;gap:6px">
+    <div class="lbl">Dasar</div>
+    <div style="display:flex;gap:6px;align-items:center"><div class="sm" style="flex:1">Madinah</div><div class="btn" style="width:24px;height:24px">−</div><div class="ttl">4</div><div class="btn" style="width:24px;height:24px">+</div></div>
+    <div style="display:flex;gap:6px;align-items:center"><div class="sm" style="flex:1">Makkah</div><div class="btn" style="width:24px;height:24px">−</div><div class="ttl">9</div><div class="btn" style="width:24px;height:24px">+</div></div>
+    <div class="lbl">Bulan</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+      <div class="box" style="height:26px"></div><div class="box" style="height:26px"></div><div class="box" style="height:26px"></div>
+      <div class="box" style="height:26px"></div><div class="box" style="height:26px;border-color:#a8862f;background:#e8d6a4"></div><div class="box" style="height:26px"></div>
+    </div>
+  </div>
+  <div class="box" style="padding:8px;display:flex;justify-content:space-between;align-items:center"><div class="lbl">Hotel &amp; Kamar</div><div class="sm">▾</div></div>
+  <div class="box" style="padding:8px;display:flex;justify-content:space-between;align-items:center"><div class="lbl">Layanan</div><div class="sm">▾</div></div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;border-top:1.5px solid #a8862f;background:#fdfbf5;padding:8px 10px;display:flex;align-items:center;gap:8px">
+  <div style="flex:1;display:flex;flex-direction:column"><div class="sm">Total / orang</div><div class="h gold" style="font-size:12px;font-weight:700">Rp 47,78 jt</div></div>
+  <div class="gbtn" style="height:30px;padding:0 10px">Lihat rincian ↑</div>
+</div>
+</div>
+
+</div>
+<div style="display:flex;gap:24px;margin-top:14px;padding-top:12px;border-top:1px dashed #ddd9d1">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Langkah bernomor 1-2-3 bikin urutan “cerita dulu” eksplisit tanpa ganti struktur data.</div>
+<div class="ann">Grid bulan jadi 6 kol desktop / 3 kol mobile, stepper 44px.</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Hotel &amp; Kamar jadi accordion + search — 10-30 hotel per kota tidak lagi jadi dinding kartu.</div>
+<div class="ann">Mobile: bar total sticky di bawah, tap → scroll ke rincian.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b">
+<div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Wizard 2 langkah. Cerita full-screen, lalu layar “Review &amp; koreksi”.</div>
+<div class="dv-card" style="width:1010px">
+<div style="display:flex;gap:20px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div class="f" style="width:700px;height:330px">
+<div class="nav"><i></i><i style="width:16px"></i><div style="flex:1"></div><div class="pill">Langkah 1 dari 2</div></div>
+<div style="padding:20px 90px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center">
+  <div style="display:flex;gap:8px;align-items:center"><div class="gbtn" style="width:18px;height:18px;border-radius:50%">1</div><div style="width:40px;height:2px;background:#ddd9d1"></div><div class="btn" style="width:18px;height:18px;border-radius:50%;color:#b9b4a9;border-color:#b9b4a9">2</div></div>
+  <div class="h gold" style="font-size:16px;font-weight:700">Cerita dulu, Kak</div>
+  <div class="sm" style="font-size:9px">Tulis rencananya sebebas mungkin — nanti kami rapikan jadi rincian biaya.</div>
+  <div class="box" style="height:72px;width:100%;padding:8px;display:flex;flex-direction:column;gap:5px"><div class="ln" style="width:92%"></div><div class="ln" style="width:80%"></div><div class="ln" style="width:44%"></div></div>
+  <div style="display:flex;gap:6px"><div class="pill">12 hari, 2 pax, Nov…</div><div class="pill">9 hari, 4 pax, Mar…</div></div>
+  <div class="gbtn" style="height:28px;width:190px">Hitung Estimasi →</div>
+</div>
+</div>
+
+<div class="f" style="width:700px;height:298px">
+<div class="nav"><i></i><i style="width:16px"></i><div style="flex:1"></div><div class="pill">Langkah 2 dari 2</div></div>
+<div style="padding:11px 14px;display:flex;flex-direction:column;gap:9px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center">
+  <div style="display:flex;gap:7px;align-items:center"><div class="sm">← Ubah cerita</div><div class="pill">12 hari · 2 pax · Nov · Madinah 4 · Makkah 9</div></div>
+  <div class="h gold" style="font-size:13px;font-weight:700">Rp 47.780.750 <span class="sm" style="font-family:'DM Sans'">/orang</span></div>
+</div>
+<div style="display:flex;gap:11px;align-items:flex-start">
+  <div style="width:210px;display:flex;flex-direction:column;gap:6px">
+    <div class="lbl">Yang bisa diubah</div>
+    <div class="box" style="padding:7px;display:flex;flex-direction:column;gap:5px">
+      <div style="display:flex;justify-content:space-between"><div class="sm">Malam</div><div class="ttl" style="font-size:9px">4 + 9</div></div>
+      <div style="display:flex;justify-content:space-between"><div class="sm">Peserta</div><div class="ttl" style="font-size:9px">2</div></div>
+      <div style="display:flex;justify-content:space-between"><div class="sm">Bulan</div><div class="ttl gold" style="font-size:9px">Nov</div></div>
+      <div style="height:1px;background:#ddd9d1"></div>
+      <div style="display:flex;justify-content:space-between"><div class="sm">Hotel Madinah</div><div class="ttl" style="font-size:9px">Emaar ▾</div></div>
+      <div style="display:flex;justify-content:space-between"><div class="sm">Hotel Makkah</div><div class="ttl" style="font-size:9px">Al Fouad ▾</div></div>
+      <div style="display:flex;justify-content:space-between"><div class="sm">Kamar</div><div class="ttl" style="font-size:9px">Quad ▾</div></div>
+      <div style="display:flex;justify-content:space-between"><div class="sm">Layanan</div><div class="ttl" style="font-size:9px">4 dipilih ▾</div></div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+    <div class="lbl">Rincian biaya — klik angka untuk override</div>
+    <div class="box" style="padding:7px;display:flex;flex-direction:column;gap:5px">
+      <div style="display:flex;gap:6px;align-items:center"><div class="ln" style="flex:1"></div><div class="box" style="width:44px;height:14px"></div><div class="box" style="width:58px;height:14px"></div></div>
+      <div style="display:flex;gap:6px;align-items:center"><div class="ln" style="flex:1"></div><div class="box" style="width:44px;height:14px"></div><div class="box" style="width:58px;height:14px"></div></div>
+      <div style="display:flex;gap:6px;align-items:center"><div class="ln" style="flex:1"></div><div class="box" style="width:44px;height:14px;border-color:#a8862f;background:#fdfbf5"></div><div class="box" style="width:58px;height:14px"></div></div>
+      <div style="display:flex;gap:6px;align-items:center"><div class="ln" style="flex:1"></div><div class="box" style="width:44px;height:14px"></div><div class="box" style="width:58px;height:14px"></div></div>
+      <div style="display:flex;gap:6px;align-items:center"><div class="ln" style="flex:1"></div><div class="box" style="width:44px;height:14px"></div><div class="box" style="width:58px;height:14px"></div></div>
+      <div class="dash" style="height:15px;display:flex;align-items:center;justify-content:center"><div class="sm">+ Tambah baris</div></div>
+    </div>
+    <div style="display:flex;gap:6px"><div class="gbtn" style="flex:1;height:24px">Simpan</div><div class="btn" style="flex:1;height:24px">Kirim WA</div></div>
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="f" style="width:246px;height:638px">
+<div class="nav" style="height:18px"><div class="sm">← Ubah cerita</div><div style="flex:1"></div><div class="pill">2/2</div></div>
+<div style="padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden">
+  <div class="box" style="padding:7px;background:#fdfbf5;border-color:#a8862f"><div class="sm" style="font-size:8.5px">12 hari · 2 pax · Nov · Emaar Taibah · Al Fouad</div></div>
+  <div class="lbl">Yang bisa diubah</div>
+  <div class="box" style="padding:7px;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="sm">Malam Madinah</div><div class="ttl" style="font-size:9px">4 ▾</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="sm">Malam Makkah</div><div class="ttl" style="font-size:9px">9 ▾</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="sm">Peserta</div><div class="ttl" style="font-size:9px">2 ▾</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="sm">Bulan</div><div class="ttl gold" style="font-size:9px">Nov ▾</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="sm">Hotel Madinah</div><div class="ttl" style="font-size:9px">Emaar ▾</div></div>
+  </div>
+  <div class="lbl">Rincian</div>
+  <div class="box" style="padding:7px;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:78px"></div><div class="ln" style="width:44px"></div></div>
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:64px"></div><div class="ln" style="width:44px"></div></div>
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:88px"></div><div class="ln" style="width:44px"></div></div>
+  </div>
+  <div class="dash" style="height:22px;display:flex;align-items:center;justify-content:center"><div class="sm">tap baris untuk override →  bottom sheet</div></div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;border-top:1.5px solid #a8862f;background:#fdfbf5;padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline"><div class="sm">Total / orang</div><div class="h gold" style="font-size:13px;font-weight:700">Rp 47,78 jt</div></div>
+  <div style="display:flex;gap:6px"><div class="gbtn" style="flex:1;height:32px">Simpan</div><div class="btn" style="flex:1;height:32px">Kirim WA</div></div>
+</div>
+</div>
+
+</div>
+<div style="display:flex;gap:24px;margin-top:14px;padding-top:12px;border-top:1px dashed #ddd9d1">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Scroll mobile paling pendek — parameter jadi baris ringkas yang membuka sheet, bukan 8 section terbuka.</div>
+<div class="ann">Total selalu terlihat di header desktop &amp; footer mobile.</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Risiko: dua kali render layar berarti admin yang cuma mau ubah 1 angka harus lewat langkah 1.</div>
+<div class="ann">Perlu state “sudah pernah dihitung” — bisa langsung masuk langkah 2 di halaman /estimate/[id].</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1c">
+<div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Rincian sebagai pusat halaman. Parameter jadi kontrol di dalam baris biayanya.</div>
+<div class="dv-card" style="width:1010px">
+<div style="display:flex;gap:20px;align-items:flex-start">
+
+<div class="f" style="width:700px;height:560px">
+<div class="nav"><i></i><i style="width:16px"></i><div style="flex:1"></div><div class="pill" style="border-color:#a8862f">Buat Estimasi</div></div>
+<div style="padding:13px 16px;display:flex;flex-direction:column;gap:10px;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:flex-end">
+  <div class="h gold" style="font-size:15px;font-weight:700">Estimasi Biaya Umroh</div>
+  <div class="sm">tersimpan otomatis</div>
+</div>
+<div class="box" style="padding:9px 11px;display:flex;align-items:center;gap:10px;background:#fdfbf5;border-color:#a8862f">
+  <div class="lbl" style="color:#a8862f">Cerita Kakak</div>
+  <div class="sm" style="flex:1;font-size:9px">“Umroh 12 hari untuk 2 orang bulan Nov. Madinah 4 malam, Makkah 9 malam, quad, fullboard…”</div>
+  <div class="btn" style="height:22px;padding:0 9px;font-weight:500">Ubah &amp; hitung ulang</div>
+</div>
+
+<div style="display:flex;gap:12px;align-items:flex-start">
+<div style="flex:1;display:flex;flex-direction:column;gap:6px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline"><div class="lbl">Rincian biaya — tiap baris bisa dibuka</div><div class="sm">Salin</div></div>
+
+  <div class="box" style="padding:9px;display:flex;flex-direction:column;gap:7px;border-color:#a8862f">
+    <div style="display:flex;gap:8px;align-items:center"><div class="ttl" style="flex:1;font-size:9.5px">Hotel Madinah — Emaar Taibah</div><div class="pill">SAR 235</div><div class="ttl" style="font-size:9.5px">4.606.000</div><div class="sm">▴</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;padding-left:2px">
+      <div style="display:flex;gap:5px;align-items:center"><div class="sm">malam</div><div class="btn" style="width:20px;height:20px">−</div><div class="ttl" style="font-size:9px">4</div><div class="btn" style="width:20px;height:20px">+</div></div>
+      <div style="display:flex;gap:5px;align-items:center"><div class="sm">kamar</div><div class="pill">Quad ▾</div></div>
+      <div style="display:flex;gap:5px;align-items:center"><div class="sm">hotel</div><div class="pill" style="border-color:#a8862f">Ganti hotel ⌕</div></div>
+    </div>
+    <div class="dash" style="height:52px;padding:6px;display:flex;flex-direction:column;gap:5px">
+      <div class="box" style="height:15px;display:flex;align-items:center;padding:0 5px;background:#fff"><div class="sm">⌕ cari dari 24 hotel Madinah…</div></div>
+      <div style="display:flex;gap:5px"><div class="pill">Premium</div><div class="pill">Standard</div><div class="pill">≤ SAR 300</div><div class="pill">Dekat Nabawi</div></div>
+    </div>
+  </div>
+
+  <div class="box" style="padding:9px;display:flex;gap:8px;align-items:center"><div class="ttl" style="flex:1;font-size:9.5px">Hotel Makkah — Al Fouad Tower</div><div class="pill">SAR 300</div><div class="ttl" style="font-size:9.5px">13.230.000</div><div class="sm">▾</div></div>
+  <div class="box" style="padding:9px;display:flex;gap:8px;align-items:center"><div class="ttl" style="flex:1;font-size:9.5px">Penerbangan</div><div class="pill">Rp 14,5 jt</div><div class="ttl" style="font-size:9.5px">14.500.000</div><div class="sm">▾</div></div>
+  <div class="box" style="padding:9px;display:flex;gap:8px;align-items:center"><div class="ttl" style="flex:1;font-size:9.5px">Visa Umroh Reguler</div><div class="pill">$165</div><div class="ttl" style="font-size:9.5px">2.994.750</div><div class="sm">▾</div></div>
+  <div class="box" style="padding:9px;display:flex;gap:8px;align-items:center;background:#fdfbf5"><div class="ttl" style="flex:1;font-size:9.5px">Transportasi Full Rute <span class="pill gold" style="border-color:#a8862f">manual</span></div><div class="pill">SAR 2.500</div><div class="ttl" style="font-size:9.5px">12.250.000</div><div class="sm">▾</div></div>
+  <div class="box" style="padding:9px;display:flex;gap:8px;align-items:center"><div class="ttl" style="flex:1;font-size:9.5px">Siskopatuh</div><div class="pill">Rp 200 rb</div><div class="ttl" style="font-size:9.5px">200.000</div><div class="sm">▾</div></div>
+  <div class="dash" style="height:22px;display:flex;align-items:center;justify-content:center"><div class="sm">+ Tambah baris biaya</div></div>
+</div>
+
+<div style="width:210px;display:flex;flex-direction:column;gap:7px">
+  <div class="box" style="padding:10px;display:flex;flex-direction:column;gap:7px;border-color:#a8862f;background:#fdfbf5">
+    <div class="lbl" style="color:#a8862f">Total / orang</div>
+    <div class="h gold" style="font-size:17px;font-weight:700;line-height:1">Rp 47.780.750</div>
+    <div class="sm" style="font-size:7.5px">SAR 1 ≈ 4.900 · USD 1 ≈ 18.150</div>
+    <div style="height:1px;background:#e0d6b8"></div>
+    <div style="display:flex;justify-content:space-between"><div class="sm">Hotel</div><div class="sm">17,8 jt</div></div>
+    <div style="display:flex;justify-content:space-between"><div class="sm">Penerbangan</div><div class="sm">14,5 jt</div></div>
+    <div style="display:flex;justify-content:space-between"><div class="sm">Visa &amp; layanan</div><div class="sm">15,4 jt</div></div>
+    <div class="gbtn" style="height:26px">Simpan Estimasi</div>
+    <div class="btn" style="height:24px">Kirim ke jamaah (WA)</div>
+  </div>
+  <div class="box" style="padding:8px"><div class="sm" style="font-size:8px">2 baris sudah dioverride manual · <span class="gold">reset semua</span></div></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="f" style="width:246px;height:560px">
+<div class="nav" style="height:18px"><i style="width:14px"></i><div style="flex:1"></div><i style="width:12px"></i></div>
+<div style="padding:10px;display:flex;flex-direction:column;gap:8px;overflow:hidden">
+  <div class="box" style="padding:7px;display:flex;gap:6px;align-items:center;background:#fdfbf5;border-color:#a8862f"><div class="sm" style="flex:1;font-size:8px">“12 hari, 2 pax, Nov, quad…”</div><div class="sm gold" style="font-size:8px">Ubah</div></div>
+  <div class="lbl">Rincian biaya</div>
+  <div class="box" style="padding:8px;display:flex;flex-direction:column;gap:6px;border-color:#a8862f">
+    <div style="display:flex;justify-content:space-between;align-items:center"><div class="ttl" style="font-size:9px">Hotel Madinah</div><div class="sm">▴</div></div>
+    <div class="sm" style="font-size:8px">Emaar Taibah · SAR 235 × 4 mlm</div>
+    <div style="display:flex;gap:6px;align-items:center"><div class="btn" style="width:28px;height:28px">−</div><div class="ttl">4</div><div class="btn" style="width:28px;height:28px">+</div><div style="flex:1"></div><div class="pill gold" style="border-color:#a8862f">Ganti ⌕</div></div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><div class="sm">Total /orang</div><div class="ttl">4.606.000</div></div>
+  </div>
+  <div class="box" style="padding:8px;display:flex;justify-content:space-between;align-items:center"><div><div class="ttl" style="font-size:9px">Hotel Makkah</div><div class="sm" style="font-size:8px">SAR 300 × 9 mlm</div></div><div class="ttl" style="font-size:9px">13,23 jt</div></div>
+  <div class="box" style="padding:8px;display:flex;justify-content:space-between;align-items:center"><div><div class="ttl" style="font-size:9px">Penerbangan</div><div class="sm" style="font-size:8px">Rp 14,5 jt</div></div><div class="ttl" style="font-size:9px">14,5 jt</div></div>
+  <div class="box" style="padding:8px;display:flex;justify-content:space-between;align-items:center"><div><div class="ttl" style="font-size:9px">Visa Reguler</div><div class="sm" style="font-size:8px">$165</div></div><div class="ttl" style="font-size:9px">2,99 jt</div></div>
+  <div class="dash" style="height:22px;display:flex;align-items:center;justify-content:center"><div class="sm">+ Tambah baris</div></div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;border-top:1.5px solid #a8862f;background:#fdfbf5;padding:8px 10px;display:flex;align-items:center;gap:8px">
+  <div style="flex:1"><div class="sm">Total / orang</div><div class="h gold" style="font-size:12px;font-weight:700">Rp 47,78 jt</div></div>
+  <div class="gbtn" style="height:30px;padding:0 9px">Simpan</div>
+</div>
+</div>
+
+</div>
+<div style="display:flex;gap:24px;margin-top:14px;padding-top:12px;border-top:1px dashed #ddd9d1">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Cocok karena override “hampir selalu” dipakai: parameter ada persis di baris yang terpengaruh.</div>
+<div class="ann">Pemilih hotel jadi search + filter di dalam baris — skala ke 30 hotel.</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Menghapus kolom kiri yang kepanjangan (temuan #6) — tidak ada lagi ruang kosong kanan.</div>
+<div class="ann">Risiko: paling jauh dari struktur komponen sekarang, ParamsPanel harus dipecah per baris.</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1d">
+<div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Cerita jadi kalimat hidup. Chip di dalam kalimat = parameter.</div>
+<div class="dv-card" style="width:1010px">
+<div style="display:flex;gap:20px;align-items:flex-start">
+
+<div class="f" style="width:700px;height:560px">
+<div class="nav"><i></i><i style="width:16px"></i><div style="flex:1"></div><div class="pill" style="border-color:#a8862f">Buat Estimasi</div></div>
+<div style="padding:14px 16px;display:flex;flex-direction:column;gap:11px;overflow:hidden">
+<div class="h gold" style="font-size:15px;font-weight:700">Estimasi Biaya Umroh</div>
+<div class="box" style="padding:13px;display:flex;flex-direction:column;gap:9px;border-color:#a8862f;background:#fdfbf5">
+  <div class="lbl" style="color:#a8862f">Rencana Kakak — klik bagian bergaris untuk ubah</div>
+  <div class="h" style="font-size:14px;line-height:2.1;color:#333">
+    Umroh <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">12 hari</span>
+    untuk <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">2 orang</span>
+    bulan <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">November</span>.
+    Madinah <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">4 malam</span>
+    di <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">Emaar Taibah ⌕</span>,
+    Makkah <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">9 malam</span>
+    di <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">Al Fouad Tower ⌕</span>,
+    kamar <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">quad</span>,
+    <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">fullboard</span>,
+    naik <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">Saudia</span>,
+    plus <span class="pill" style="border-color:#a8862f;font-size:11px;font-family:'DM Sans'">visa + siskopatuh + transport</span>.
+  </div>
+  <div style="display:flex;gap:7px;align-items:center"><div class="btn" style="height:22px;padding:0 9px;font-weight:500">✎ Tulis ulang dari nol</div><div class="sm">atau mulai dari contoh:</div><div class="pill">Ramadhan 14 hari</div></div>
+</div>
+
+<div style="display:flex;gap:12px;align-items:flex-start">
+<div style="flex:1;display:flex;flex-direction:column;gap:6px">
+  <div class="lbl">Rincian biaya</div>
+  <div class="box" style="padding:9px;display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;gap:8px;align-items:center"><div class="sm" style="flex:1;font-size:9px">Hotel Madinah — Emaar Taibah</div><div class="box" style="width:52px;height:16px"></div><div class="box" style="width:66px;height:16px"></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="sm" style="flex:1;font-size:9px">Hotel Makkah — Al Fouad Tower</div><div class="box" style="width:52px;height:16px"></div><div class="box" style="width:66px;height:16px"></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="sm" style="flex:1;font-size:9px">Penerbangan — Saudia</div><div class="box" style="width:52px;height:16px"></div><div class="box" style="width:66px;height:16px"></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="sm" style="flex:1;font-size:9px">Visa Umroh Reguler</div><div class="box" style="width:52px;height:16px;border-color:#a8862f;background:#fdfbf5"></div><div class="box" style="width:66px;height:16px"></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="sm" style="flex:1;font-size:9px">Siskopatuh</div><div class="box" style="width:52px;height:16px"></div><div class="box" style="width:66px;height:16px"></div></div>
+    <div style="display:flex;gap:8px;align-items:center"><div class="sm" style="flex:1;font-size:9px">Transportasi Full Rute</div><div class="box" style="width:52px;height:16px"></div><div class="box" style="width:66px;height:16px"></div></div>
+    <div class="dash" style="height:20px;display:flex;align-items:center;justify-content:center"><div class="sm">+ Tambah baris</div></div>
+  </div>
+</div>
+<div style="width:210px;display:flex;flex-direction:column;gap:8px">
+  <div class="box" style="padding:10px;display:flex;flex-direction:column;gap:7px;border-color:#a8862f;background:#fdfbf5">
+    <div class="lbl" style="color:#a8862f">Total / orang</div>
+    <div class="h gold" style="font-size:17px;font-weight:700;line-height:1">Rp 47.780.750</div>
+    <div class="sm" style="font-size:7.5px">Belum termasuk biaya tak terduga.</div>
+    <div class="gbtn" style="height:26px">Simpan Estimasi</div>
+    <div class="btn" style="height:24px">Kirim ke jamaah (WA)</div>
+  </div>
+  <div class="dash" style="padding:8px"><div class="sm" style="font-size:8px">Preview pesan WA<br>“Assalamualaikum Kak, ini estimasi…”</div></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="f" style="width:246px;height:560px">
+<div class="nav" style="height:18px"><i style="width:14px"></i><div style="flex:1"></div><i style="width:12px"></i></div>
+<div style="padding:10px;display:flex;flex-direction:column;gap:9px;overflow:hidden">
+  <div class="lbl">Rencana Kakak</div>
+  <div class="box" style="padding:9px;border-color:#a8862f;background:#fdfbf5">
+    <div class="h" style="font-size:12px;line-height:2.2;color:#333">Umroh <span class="pill" style="border-color:#a8862f">12 hari</span> untuk <span class="pill" style="border-color:#a8862f">2 orang</span> bulan <span class="pill" style="border-color:#a8862f">Nov</span>. Madinah <span class="pill" style="border-color:#a8862f">4 mlm</span> di <span class="pill" style="border-color:#a8862f">Emaar ⌕</span>, Makkah <span class="pill" style="border-color:#a8862f">9 mlm</span>…</div>
+  </div>
+  <div class="dash" style="padding:8px;display:flex;flex-direction:column;gap:5px">
+    <div class="sm" style="font-size:8px">tap chip → bottom sheet</div>
+    <div class="box" style="height:22px;background:#fff;display:flex;align-items:center;padding:0 6px"><div class="sm">⌕ cari hotel Madinah</div></div>
+    <div style="display:flex;gap:4px"><div class="pill">Premium</div><div class="pill">≤300</div></div>
+  </div>
+  <div class="lbl">Rincian biaya</div>
+  <div class="box" style="padding:8px;display:flex;flex-direction:column;gap:7px">
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:84px"></div><div class="ln" style="width:46px"></div></div>
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:70px"></div><div class="ln" style="width:46px"></div></div>
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:92px"></div><div class="ln" style="width:46px"></div></div>
+    <div style="display:flex;justify-content:space-between"><div class="ln" style="width:62px"></div><div class="ln" style="width:46px"></div></div>
+  </div>
+</div>
+<div style="position:absolute;left:0;right:0;bottom:0;border-top:1.5px solid #a8862f;background:#fdfbf5;padding:8px 10px;display:flex;align-items:center;gap:8px">
+  <div style="flex:1"><div class="sm">Total / orang</div><div class="h gold" style="font-size:12px;font-weight:700">Rp 47,78 jt</div></div>
+  <div class="gbtn" style="height:30px;padding:0 9px">Kirim WA</div>
+</div>
+</div>
+
+</div>
+<div style="display:flex;gap:24px;margin-top:14px;padding-top:12px;border-top:1px dashed #ddd9d1">
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Paling “hangat”: hasil AI tampil sebagai kalimat, bukan 8 section form — koreksi terasa seperti membetulkan kalimat.</div>
+<div class="ann">Scroll mobile paling pendek dari semua opsi.</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;gap:4px">
+<div class="ann">Risiko: chip tidak sanggup menampung layanan tambahan yang banyak; perlu fallback “form lengkap”.</div>
+<div class="ann">Paling banyak kerjaan komponen baru — ParamsPanel praktis diganti.</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p class="dv-next">Coba lanjut: “lanjut hi-fi dari <a class="dv-oid" href="#1c">1c</a>” · “gabung kalimat hidup <a class="dv-oid" href="#1d">1d</a> ke atas rincian <a class="dv-oid" href="#1c">1c</a>” · “tunjukkan state kosong &amp; loading untuk <a class="dv-oid" href="#1a">1a</a>”</p>
+</section>
+</x-dc>
+</body>
+</html>
