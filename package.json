@@ -12,6 +12,7 @@
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
     "seed": "dotenv -e .env.local -- tsx lib/db/seed.ts",
+    "import:real-prices": "dotenv -e .env.local -- tsx scripts/import-real-prices.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
