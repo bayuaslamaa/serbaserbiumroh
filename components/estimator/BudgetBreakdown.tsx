@@ -316,13 +316,15 @@ function AmountField({
   disabled?: boolean
   readOnly?: boolean
 }) {
+  // w-full only while the row stacks (<sm). From sm: up the row is a flex-row, where a
+  // full-width sibling would starve the label column — so the field sizes to its input.
   return (
-    <div className="flex w-full flex-col items-end gap-0.5 lg:w-auto">
+    <div className="flex w-full flex-col items-end gap-0.5 sm:w-auto">
       <span className="text-[10px] uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>
         {label}
       </span>
       <div
-        className="flex w-full items-center gap-1 lg:w-auto"
+        className="flex w-full items-center gap-1 sm:w-auto"
         style={{ "--field-w": `${width}px` } as React.CSSProperties}
       >
         {prefix && (
@@ -404,7 +406,9 @@ function ComputedRow({
           {row.shared && pax > 1 && <Badge>÷{pax} org</Badge>}
         </div>
       </div>
-      <div className="flex w-full flex-col items-end gap-1.5 shrink-0 lg:contents">
+      {/* shrink-0 keeps the amounts from compressing, but w-full must stop at sm: — together they
+          would claim the whole flex-row and collapse the min-w-0 label column (tablet / Z Fold). */}
+      <div className="flex w-full flex-col items-end gap-1.5 shrink-0 sm:w-auto lg:contents">
         <AmountField
           label="Harga satuan"
           prefix={unitPrefix(row.unitCurrency)}
@@ -475,7 +479,9 @@ function CustomRowEditor({
         />
         <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>per orang</span>
       </div>
-      <div className="flex w-full flex-col items-end gap-1.5 shrink-0 lg:contents">
+      {/* shrink-0 keeps the amounts from compressing, but w-full must stop at sm: — together they
+          would claim the whole flex-row and collapse the min-w-0 label column (tablet / Z Fold). */}
+      <div className="flex w-full flex-col items-end gap-1.5 shrink-0 sm:w-auto lg:contents">
         {/* Custom rows are plain IDR at quantity 1, so unit price always equals the total.
             Show it as a read-only mirror and keep the total as the single editable amount. */}
         <AmountField
