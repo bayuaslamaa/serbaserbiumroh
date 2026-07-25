@@ -1,12 +1,10 @@
 /**
  * Copy and video list for /badalin.
  *
- * PLACEHOLDERS — replace before this page is promoted:
- *   - every `youtubeId` still reading `VIDEO_ID_n` (take the part after
- *     `watch?v=` in the real YouTube URL)
- *   - `badalinPrice`, if the real starting price differs
- * Cards whose id is still a placeholder render a striped poster instead of a
- * YouTube thumbnail, so unfilled entries are obvious on the page.
+ * Every entry here must be a published video. The placeholder guard below
+ * stays as a safety net: an id of the form `VIDEO_ID_n` renders an inert
+ * "segera tayang" poster instead of a dead embed, it is left out of the
+ * video count, and it downgrades the page's "tonton sendiri" claim.
  */
 
 export const PLACEHOLDER_PREFIX = "VIDEO_ID_"
@@ -15,7 +13,19 @@ export function isPlaceholderVideo(youtubeId: string): boolean {
   return youtubeId.startsWith(PLACEHOLDER_PREFIX)
 }
 
-export const badalinPrice = "Rp 3,5 juta"
+/**
+ * The Badalin starting price, in millions of rupiah. This is the single source
+ * for both renderings — the /badalin hero prose and the service-catalog card —
+ * so the two can never drift apart.
+ */
+const BADALIN_PRICE_JUTA = 1.8
+const badalinPriceFigure = BADALIN_PRICE_JUTA.toLocaleString("id-ID")
+
+/** Long form for prose: "Rp 1,8 juta". */
+export const badalinPrice = `Rp ${badalinPriceFigure} juta`
+
+/** Short form for the catalog card: "Rp 1,8 jt". */
+export const badalinPriceShort = `Rp ${badalinPriceFigure} jt`
 
 export const badalinHero = {
   eyebrow: "LAYANAN BARU",
@@ -60,61 +70,43 @@ export interface BadalVideo {
   youtubeId: string
 }
 
+/**
+ * Real published recordings. Titles and durations are taken verbatim from the
+ * YouTube channel — do not paraphrase them, and never add an entry whose video
+ * is not published yet.
+ */
 export const badalVideos: BadalVideo[] = [
   {
-    title: "Dokumentasi Badal Umroh — Alm. Bapak H. Soleh (Full)",
-    duration: "12:40",
-    meta: "Dokumentasi lengkap",
-    youtubeId: "VIDEO_ID_1",
+    title: "Badal Umroh Syawal Pak Tata Kurnia bin Saderin",
+    duration: "26:39",
+    meta: "Badal Syawal",
+    youtubeId: "AHfWg5JoFsQ",
   },
   {
-    title: "Proses Miqat & Niat Badal di Masjid Aisyah",
-    duration: "8:15",
-    meta: "Miqat & niat",
-    youtubeId: "VIDEO_ID_2",
+    title: "Badal Umroh Musim Haji Bu Atay binti Sulaeman",
+    duration: "11:47",
+    meta: "Badal Musim Haji",
+    youtubeId: "OEToPrd_Vns",
   },
   {
-    title: "Tawaf Badal Umroh — Live dari Masjidil Haram",
-    duration: "15:02",
-    meta: "Tawaf",
-    youtubeId: "VIDEO_ID_3",
+    title:
+      "Badal Umroh Syawal Pak Kasmiran Wongsorejo bin Martotinoyo Rahimahullah",
+    duration: "17:31",
+    meta: "Badal Syawal",
+    youtubeId: "Xw2op5dW4VU",
   },
   {
-    title: "Sa'i & Tahallul — Dokumentasi Badal Ibu Siti",
-    duration: "10:30",
-    meta: "Sa'i & tahallul",
-    youtubeId: "VIDEO_ID_4",
+    title: "Badal Umroh Syawal Bu Entin Kartini binti Didi",
+    duration: "24:43",
+    meta: "Badal Syawal",
+    youtubeId: "PnVmMfrvH5o",
   },
   {
-    title: "Serah Terima Sertifikat Badal Umroh",
-    duration: "4:45",
-    meta: "Sertifikat",
-    youtubeId: "VIDEO_ID_5",
-  },
-  {
-    title: "Q&A: Bagaimana Badalin Memastikan Amanah?",
-    duration: "9:20",
-    meta: "Tanya jawab",
-    youtubeId: "VIDEO_ID_6",
-  },
-  {
-    title: "Vlog: Sehari Bersama Tim Badalin di Makkah",
-    duration: "18:05",
-    meta: "Vlog tim",
-    youtubeId: "VIDEO_ID_7",
-  },
-  {
-    title: "Doa Khusus untuk Almarhum — Momen di Multazam",
-    duration: "6:50",
-    meta: "Doa",
-    youtubeId: "VIDEO_ID_8",
-  },
-  {
-    title: "Testimoni Keluarga Jamaah Badal Umroh",
-    duration: "7:33",
-    meta: "Testimoni",
-    youtubeId: "VIDEO_ID_9",
+    title: "Badal Umroh Syawal Pak Qomar bin Didi",
+    duration: "27:28",
+    meta: "Badal Syawal",
+    youtubeId: "Cng3uxddxXQ",
   },
 ]
 
-export const VIDEO_META_SUFFIX = "Tim Badalin"
+export const VIDEO_META_SUFFIX = "Serba Serbi Umroh"

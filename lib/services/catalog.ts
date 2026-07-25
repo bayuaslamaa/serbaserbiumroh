@@ -7,6 +7,7 @@ import {
   UserCheck,
   type LucideIcon,
 } from "lucide-react"
+import { badalinPriceShort } from "@/lib/badalin/content"
 
 // Admin WhatsApp — the same number used by WhatsAppFloatingButton and the visa page.
 export const SSU_WHATSAPP_NUMBER = "6285161134844"
@@ -20,7 +21,12 @@ export interface Service {
   name: string
   /** Short blurb shown on the mega menu card and the /layanan card. */
   description: string
-  /** Display-only marketing figure ("mulai dari"), never used in a calculation. */
+  /**
+   * Display-only price line, never used in a calculation. Usually a
+   * starting-from figure ("Mulai USD 165"), but some services quote a fee
+   * instead ("+Rp 100 rb/orang"), so the string carries its own qualifier —
+   * the renderers print it verbatim and do not prepend one.
+   */
   price: string
   icon: LucideIcon
   href: string
@@ -34,7 +40,7 @@ export const services: Service[] = [
     name: "Visa Umroh",
     description:
       "Pengurusan visa umroh mandiri, cepat dan resmi tanpa harus lewat travel.",
-    price: "Mulai Rp 2,1 jt",
+    price: "Mulai USD 165",
     icon: Stamp,
     href: "/visa",
   },
@@ -43,7 +49,7 @@ export const services: Service[] = [
     name: "Badalin — Badal Umroh",
     description:
       "Badal umroh amanah dengan dokumentasi video lengkap dan sertifikat.",
-    price: "Mulai Rp 3,5 jt",
+    price: `Mulai ${badalinPriceShort}`,
     icon: HeartHandshake,
     href: "/badalin",
     isNew: true,
@@ -53,7 +59,9 @@ export const services: Service[] = [
     name: "Sewa Transportasi",
     description:
       "Antar-jemput bandara, Makkah–Madinah, dan city tour dengan driver Indonesia.",
-    price: "Mulai Rp 350 rb",
+    // Matches the cheapest figure /transportasi actually renders:
+    // Sedan base 120 + the flat 50 SAR SSU fee.
+    price: "Mulai SAR 170",
     icon: Bus,
     href: "/transportasi",
   },
@@ -68,10 +76,10 @@ export const services: Service[] = [
   },
   {
     id: "hhr",
-    name: "Booking HHR",
+    name: "Jasa Booking HHR",
     description:
-      "Tiket kereta cepat Haramain Makkah–Madinah tanpa ribet akun Saudi.",
-    price: "Mulai Rp 250 rb",
+      "Kami bantu pesan Tiket kereta cepat Haramain Makkah–Madinah tanpa ribet akun Saudi.",
+    price: "+Rp 100 rb/orang (tidak termasuk tiket)",
     icon: TrainFront,
     href: whatsappHref(
       "Assalamualaikum, saya ingin memesan tiket kereta cepat Haramain (HHR)."
@@ -82,7 +90,7 @@ export const services: Service[] = [
     name: "Muthowwif",
     description:
       "Pendamping ibadah berbahasa Indonesia untuk umroh yang tenang dan sah.",
-    price: "Mulai Rp 1,2 jt/hari",
+    price: "Mulai Rp 1,4 jt/sesi",
     icon: UserCheck,
     href: whatsappHref(
       "Assalamualaikum, saya ingin memesan layanan muthowwif (pendamping ibadah)."

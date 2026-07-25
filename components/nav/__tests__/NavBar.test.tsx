@@ -8,6 +8,7 @@ vi.mock("@/auth", () => ({
 }))
 
 import { auth } from "@/auth"
+import { services } from "@/lib/services/catalog"
 import { NavBar } from "../NavBar"
 
 const mockAuth = auth as ReturnType<typeof vi.fn>
@@ -76,12 +77,10 @@ describe("NavBar Layanan mega menu", () => {
     fireEvent.click(desktop().getByRole("button", { name: "Layanan" }))
 
     const panel = desktop()
-    expect(panel.getByText("Visa Umroh")).toBeDefined()
-    expect(panel.getByText("Badalin — Badal Umroh")).toBeDefined()
-    expect(panel.getByText("Sewa Transportasi")).toBeDefined()
-    expect(panel.getByText("Booking Hotel")).toBeDefined()
-    expect(panel.getByText("Booking HHR")).toBeDefined()
-    expect(panel.getByText("Muthowwif")).toBeDefined()
+    for (const service of services) {
+      expect(panel.getByText(service.name)).toBeDefined()
+      expect(panel.getByText(service.price)).toBeDefined()
+    }
 
     expect(panel.getAllByText("BARU")).toHaveLength(1)
     expect(
@@ -93,9 +92,10 @@ describe("NavBar Layanan mega menu", () => {
     await renderNav(null)
     fireEvent.click(desktop().getByRole("button", { name: "Layanan" }))
 
-    const hhr = desktop().getByRole("link", { name: /Booking HHR/ })
-    expect(hhr.getAttribute("href")).toContain("https://wa.me/")
-    expect(hhr).toHaveAttribute("target", "_blank")
+    const whatsappService = services.find((s) => s.href.startsWith("http"))!
+    const link = desktop().getByRole("link", { name: new RegExp(whatsappService.name) })
+    expect(link.getAttribute("href")).toContain("https://wa.me/")
+    expect(link).toHaveAttribute("target", "_blank")
   })
 })
 

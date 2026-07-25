@@ -7,6 +7,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname(),
 }))
 
+import { services } from "@/lib/services/catalog"
 import { MobileMenu } from "../MobileMenu"
 
 const signOutAction = vi.fn(async () => {})
@@ -77,15 +78,9 @@ describe("MobileMenu overlay", () => {
     openOverlay()
 
     expect(screen.getByText("LAYANAN")).toBeDefined()
-    for (const name of [
-      "Visa Umroh",
-      "Badalin — Badal Umroh",
-      "Sewa Transportasi",
-      "Booking Hotel",
-      "Booking HHR",
-      "Muthowwif",
-    ]) {
-      expect(screen.getByText(name)).toBeDefined()
+    for (const service of services) {
+      expect(screen.getByText(service.name)).toBeDefined()
+      expect(screen.getByText(service.price)).toBeDefined()
     }
     expect(screen.getAllByText("BARU")).toHaveLength(1)
     expect(screen.getByRole("link", { name: /Lihat semua/ })).toHaveAttribute(

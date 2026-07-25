@@ -31,6 +31,8 @@ vi.mock("@/lib/badalin/content", async (importOriginal) => {
 })
 
 import { VideoDocGrid } from "../VideoDocGrid"
+// Spread through the mock factory, so this is the real channel label.
+import { VIDEO_META_SUFFIX } from "@/lib/badalin/content"
 
 describe("VideoDocGrid", () => {
   it("renders one card per video with its title and meta", () => {
@@ -38,7 +40,9 @@ describe("VideoDocGrid", () => {
 
     for (const video of fixture.videos) {
       expect(screen.getByText(video.title)).toBeDefined()
-      expect(screen.getByText(new RegExp(`${video.meta} · Tim Badalin`))).toBeDefined()
+      expect(
+        screen.getByText(new RegExp(`${video.meta} · ${VIDEO_META_SUFFIX}`))
+      ).toBeDefined()
     }
   })
 
@@ -69,7 +73,9 @@ describe("VideoDocGrid", () => {
       screen.queryByRole("button", { name: "Putar video: Video belum tayang" })
     ).toBeNull()
     expect(screen.getByText("Video segera tayang")).toBeDefined()
-    expect(screen.getByText(/Tawaf · Tim Badalin · belum tayang/)).toBeDefined()
+    expect(
+      screen.getByText(new RegExp(`Tawaf · ${VIDEO_META_SUFFIX} · belum tayang`))
+    ).toBeDefined()
   })
 
   it("never advertises a duration for a video that cannot be played", () => {
@@ -108,10 +114,8 @@ describe("VideoDocGrid", () => {
   })
 })
 
-describe("badalin content placeholders", () => {
-  it("flags every entry that still carries a placeholder id", async () => {
-    // Guards the shipping state: while this is 9, /badalin advertises no
-    // watchable video and the page copy must stay in "segera tayang" mode.
+describe("badalin content", () => {
+  it("ships no unpublished video", async () => {
     const actual = await vi.importActual<typeof import("@/lib/badalin/content")>(
       "@/lib/badalin/content"
     )
@@ -119,6 +123,19 @@ describe("badalin content placeholders", () => {
       actual.isPlaceholderVideo(v.youtubeId)
     )
 
-    expect(unfilled).toHaveLength(9)
+    expect(unfilled).toEqual([])
+  })
+
+  it("gives every entry a real-looking YouTube id and a duration", async () => {
+    const actual = await vi.importActual<typeof import("@/lib/badalin/content")>(
+      "@/lib/badalin/content"
+    )
+
+    expect(actual.badalVideos.length).toBeGreaterThan(0)
+    for (const video of actual.badalVideos) {
+      expect(video.youtubeId).toMatch(/^[A-Za-z0-9_-]{11}$/)
+      expect(video.duration).toMatch(/^\d{1,2}:\d{2}$/)
+      expect(video.title.length).toBeGreaterThan(0)
+    }
   })
 })

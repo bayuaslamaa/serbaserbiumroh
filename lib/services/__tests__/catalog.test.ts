@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { badalinPrice, badalinPriceShort } from "@/lib/badalin/content"
 import {
   SSU_WHATSAPP_NUMBER,
   isExternalHref,
@@ -18,6 +19,34 @@ describe("service catalog", () => {
       expect(service.price.length).toBeGreaterThan(0)
       expect(service.href.length).toBeGreaterThan(0)
     }
+  })
+
+  it("pins the customer-facing price line for every service", () => {
+    // Pinned here, in the data module's own test, so a wrong or typo'd price
+    // fails loudly. The render tests read these values from the catalog, so
+    // they cannot catch a wrong figure — this is the guard that can.
+    expect(Object.fromEntries(services.map((s) => [s.id, s.price]))).toEqual({
+      visa: "Mulai USD 165",
+      badalin: "Mulai Rp 1,8 jt",
+      transportasi: "Mulai SAR 170",
+      hotel: "Mulai Rp 900 rb/malam",
+      hhr: "+Rp 100 rb/orang (tidak termasuk tiket)",
+      muthowwif: "Mulai Rp 1,4 jt/sesi",
+    })
+  })
+
+  it("quotes every price in a named currency", () => {
+    for (const service of services) {
+      expect(service.price, `${service.id} price`).toMatch(/\b(Rp|USD|SAR)\b/)
+    }
+  })
+
+  it("keeps the Badalin card and the /badalin hero on one figure", () => {
+    const badalin = services.find((s) => s.id === "badalin")!
+
+    expect(badalin.price).toContain(badalinPriceShort)
+    expect(badalinPrice).toContain("1,8")
+    expect(badalinPriceShort).toContain("1,8")
   })
 
   it("uses unique ids", () => {
