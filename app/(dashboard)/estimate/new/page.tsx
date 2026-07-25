@@ -100,7 +100,7 @@ export default async function NewEstimatePage({
   const storyName = searchParams.storyName?.trim() || undefined
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-[1400px] mx-auto">
       <div className="mb-6">
         <h1
           className="text-2xl font-bold"

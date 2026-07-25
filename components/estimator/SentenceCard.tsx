@@ -15,6 +15,7 @@ import { RadioCardGrid } from "./RadioCardGrid"
 import { ServiceCheckboxGrid } from "./ServiceCheckboxGrid"
 import { HotelPicker } from "./HotelPicker"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +75,7 @@ interface SentenceCardProps {
   pricing: PricingConfig
   onChange: (patch: Partial<EstimateParams>) => void
   onStartOver?: () => void
+  storySource?: string
 }
 
 function selectedHotelId(city: City, hotelOptions: HotelOptionConfig[], params: EstimateParams): string | undefined {
@@ -84,7 +86,7 @@ function selectedHotelId(city: City, hotelOptions: HotelOptionConfig[], params: 
   return hotelOptions.find((option) => option.tier === params.hotelTier)?.id ?? hotelOptions[0]?.id
 }
 
-export function SentenceCard({ params, pricing, onChange, onStartOver }: SentenceCardProps) {
+export function SentenceCard({ params, pricing, onChange, onStartOver, storySource }: SentenceCardProps) {
   const isDesktop = useIsDesktop()
   const [openField, setOpenField] = useState<FieldKey | null>(null)
 
@@ -253,6 +255,15 @@ export function SentenceCard({ params, pricing, onChange, onStartOver }: Sentenc
       className="rounded-xl border p-5 flex flex-col gap-4"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
+      {storySource && (
+        <Badge
+          variant="outline"
+          className="text-xs self-start"
+          style={{ borderColor: "var(--color-gold-muted)", color: "var(--color-gold)" }}
+        >
+          berdasarkan cerita {storySource}
+        </Badge>
+      )}
       <p
         className="text-lg leading-relaxed flex flex-wrap items-center gap-x-1.5 gap-y-2"
         style={{ color: "var(--color-text)" }}

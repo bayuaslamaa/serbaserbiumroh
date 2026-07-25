@@ -172,8 +172,8 @@ describe("EstimatorClient — initialParams pre-fill", () => {
         initialParams={{ nightsMakkah: 10 }}
       />
     )
-    // Stepper renders an <input type="number" value="10"> — use getByDisplayValue
-    expect(screen.getByDisplayValue("10")).toBeDefined()
+    // SentenceCard is the default view now; the Makkah-nights chip shows "10 malam".
+    expect(screen.getByText("10 malam")).toBeDefined()
   })
 
   it("uses initialParams to override default pax", () => {
@@ -183,20 +183,20 @@ describe("EstimatorClient — initialParams pre-fill", () => {
         initialParams={{ pax: 3 }}
       />
     )
-    // pax stepper input should show 3
-    expect(screen.getByDisplayValue("3")).toBeDefined()
+    // SentenceCard's pax chip should show "3 orang".
+    expect(screen.getByText("3 orang")).toBeDefined()
   })
 
   it("falls back to DEFAULT_PARAMS nightsMakkah=9 when initialParams is undefined", () => {
     render(<EstimatorClient pricingConfig={mockPricing} />)
-    // DEFAULT_PARAMS has nightsMakkah: 9
-    expect(screen.getByDisplayValue("9")).toBeDefined()
+    // DEFAULT_PARAMS has nightsMakkah: 9 — shown on SentenceCard's Makkah-nights chip.
+    expect(screen.getByText("9 malam")).toBeDefined()
   })
 
   it("falls back to DEFAULT_PARAMS when initialParams is empty object", () => {
     render(<EstimatorClient pricingConfig={mockPricing} initialParams={{}} />)
-    // DEFAULT_PARAMS has nightsMakkah: 9
-    expect(screen.getByDisplayValue("9")).toBeDefined()
+    // DEFAULT_PARAMS has nightsMakkah: 9 — shown on SentenceCard's Makkah-nights chip.
+    expect(screen.getByText("9 malam")).toBeDefined()
   })
 
   it("passes storySource badge down to ParamsPanel", () => {

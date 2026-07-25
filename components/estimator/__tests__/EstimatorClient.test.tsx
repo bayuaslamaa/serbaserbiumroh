@@ -11,6 +11,11 @@ vi.mock("../ParamsPanel", () => ({
     <button onClick={() => onChange({ nightsMakkah: 9 })}>change params</button>
   ),
 }))
+// SentenceCard is the new default view; it needs real hotel/airline/service data from
+// pricingConfig to render its chips, but this suite passes a minimal `{} as PricingConfig`
+// stub since it only exercises override orchestration, not the narrative UI (covered by
+// SentenceCard.test.tsx). Mock it out like every other rendered child in this file.
+vi.mock("../SentenceCard", () => ({ SentenceCard: () => null }))
 vi.mock("../BudgetBreakdown", () => ({
   BudgetBreakdown: ({ display, onSetAmount, onSetUnitPrice, onResetRow }: {
     display: { rows: { key: string; idr: number; unitPrice: number }[]; totalIdrPax: number }
@@ -96,6 +101,9 @@ describe("EstimatorClient override orchestration", () => {
     fireEvent.click(screen.getByText("override flight"))
     expect(screen.getByTestId("flight").textContent).toBe("12000000")
 
+    // ParamsPanel (mocked above) only mounts behind the "Buka form lengkap" toggle now that
+    // SentenceCard is the default view — reach it the same way a real user would.
+    fireEvent.click(screen.getByText("Buka form lengkap"))
     fireEvent.click(screen.getByText("change params"))
     expect(screen.getByTestId("flight").textContent).toBe("12000000")
     expect(screen.getByTestId("total").textContent).toBe("25000000")
