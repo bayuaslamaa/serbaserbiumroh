@@ -130,7 +130,7 @@ export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPa
         <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-text-muted)" }}>
           Bulan Keberangkatan
         </h3>
-        <div className="grid grid-cols-6 gap-1.5">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
           {MONTH_LABELS.map((label, i) => {
             const month = i + 1
             const isSelected = params.travelMonth === month
