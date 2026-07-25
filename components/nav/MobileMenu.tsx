@@ -3,8 +3,17 @@
 import * as React from "react"
 import Link from "next/link"
 import { createPortal } from "react-dom"
-import { Menu, X, ChevronDown, Settings, LogOut, FileText, Compass, Users, HelpCircle, Hotel, PlusCircle, MessageCircle, Briefcase, CalendarDays } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  PlusCircle,
+  Settings,
+  X,
+} from "lucide-react"
+import { adminLinks, exploreLinks } from "./links"
+import { isExternalHref, services } from "@/lib/services/catalog"
 
 interface MobileMenuProps {
   userEmail?: string | null
@@ -14,10 +23,36 @@ interface MobileMenuProps {
   signOutAction: () => Promise<void>
 }
 
-export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, signOutAction }: MobileMenuProps) {
+const sectionLabelClass = "text-[11px] font-bold tracking-[0.12em]"
+const rowClass =
+  "flex items-center gap-3 border-b py-3 pl-1 pr-1 text-[15px] text-text-soft transition-colors hover:text-text"
+const rowBorder = { borderColor: "rgba(201,168,76,0.1)" } as const
+
+function Wordmark({ withTagline = false }: { withTagline?: boolean }) {
+  return (
+    <span className="flex items-baseline gap-1.5">
+      <span
+        className="text-[21px] font-bold text-gold"
+        style={{ fontFamily: "var(--font-heading)" }}
+      >
+        SSU
+      </span>
+      {withTagline && (
+        <span className="text-[11px] text-text-muted">Serba Serbi Umroh</span>
+      )}
+    </span>
+  )
+}
+
+export function MobileMenu({
+  userEmail,
+  showAdmin,
+  isAdmin = false,
+  isLoggedIn,
+  signOutAction,
+}: MobileMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const [isAdminOpen, setIsAdminOpen] = React.useState(false)
-  const [isLayananOpen, setIsLayananOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
@@ -36,226 +71,289 @@ export function MobileMenu({ userEmail, showAdmin, isAdmin = false, isLoggedIn, 
     }
   }, [isOpen])
 
-  const adminLinks = [
-    { href: "/admin/pricing", label: "Kelola Harga" },
-    { href: "/admin/users", label: "Kelola User" },
-    { href: "/admin/community-requests", label: "Pengajuan Komunitas" },
-    { href: "/admin/content/stories", label: "Kelola Cerita" },
-    { href: "/admin/content/hotels", label: "Kelola Hotel" },
-    { href: "/admin/content/faqs", label: "Kelola FAQ" },
-    { href: "/admin/visitor-stats", label: "Statistik Pengunjung" },
-  ]
+  const close = () => setIsOpen(false)
 
-  const triggerButton = (
-    <button
-      onClick={() => setIsOpen(true)}
-      className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-      aria-label="Open Menu"
+  const estimateCta = isAdmin ? (
+    <Link
+      href="/estimate/new"
+      onClick={close}
+      className="flex items-center justify-center gap-2 rounded-[10px] bg-gold py-3.5 text-[15px] font-bold text-bg"
     >
-      <Menu size={24} />
+      <PlusCircle size={17} />
+      Buat Estimasi
+    </Link>
+  ) : (
+    <button
+      type="button"
+      disabled
+      className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-[10px] border py-3.5 text-[15px] font-semibold text-text-muted opacity-60"
+      style={{
+        background: "var(--color-surface)",
+        borderColor: "var(--color-border)",
+      }}
+    >
+      <PlusCircle size={17} />
+      Buat Estimasi (Coming Soon)
     </button>
   )
 
-  if (!mounted) {
-    return <div className="md:hidden">{triggerButton}</div>
-  }
+  const bar = (
+    <div className="flex h-14 items-center justify-between gap-2.5 px-4 nav:hidden" data-testid="mobile-nav">
+      <Link href={isLoggedIn ? "/dashboard" : "/"}>
+        <Wordmark />
+      </Link>
+      <div className="flex items-center gap-2">
+        {isAdmin ? (
+          <Link
+            href="/estimate/new"
+            className="whitespace-nowrap rounded-lg bg-gold px-3 py-2 text-xs font-bold text-bg"
+          >
+            Buat Estimasi
+          </Link>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="cursor-not-allowed whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold text-text-muted opacity-60"
+            style={{
+              background: "var(--color-surface)",
+              borderColor: "var(--color-border)",
+            }}
+          >
+            Buat Estimasi
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label="Buka menu"
+          className="flex p-2 text-text transition-colors"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+    </div>
+  )
+
+  if (!mounted) return bar
 
   return (
-    <div className="md:hidden">
-      {triggerButton}
+    <>
+      {bar}
 
-      {isOpen && createPortal(
-        <div
-          className="fixed inset-0 z-[999] flex flex-col transition-all duration-300"
-          style={{
-            background: "rgba(11, 28, 18, 0.98)",
-            backdropFilter: "blur(16px)",
-          }}
-        >
-          {/* Header */}
-          <div className="flex h-14 items-center justify-between px-4 border-b border-[var(--color-border)]">
-            <Link
-              href={isLoggedIn ? "/dashboard" : "/"}
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 font-bold text-lg"
-              style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
+      {isOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[99] flex flex-col"
+            style={{
+              background: "rgba(11, 28, 18, 0.98)",
+              backdropFilter: "blur(16px)",
+            }}
+          >
+            <div
+              className="flex h-14 flex-shrink-0 items-center justify-between border-b px-4"
+              style={{ borderColor: "var(--color-border)" }}
             >
-              <img src="/logo.png" alt="SSU Logo" className="h-8 w-auto object-contain" />
-            </Link>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-              aria-label="Close Menu"
-            >
-              <X size={24} />
-            </button>
-          </div>
+              <Link href={isLoggedIn ? "/dashboard" : "/"} onClick={close}>
+                <Wordmark withTagline />
+              </Link>
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Tutup menu"
+                className="flex p-2 text-text-muted transition-colors hover:text-text"
+              >
+                <X size={24} />
+              </button>
+            </div>
 
-          {/* Links */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-            <div className="flex flex-col space-y-4">
-              <Link
-                href="/panduan"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-              >
-                <Compass size={18} /> Panduan
-              </Link>
-              <Link
-                href="/cerita-jamaah"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-              >
-                <Users size={18} /> Cerita Jamaah
-              </Link>
-              <Link
-                href="/hotel-nusuk"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-              >
-                <Hotel size={18} /> Hotel Nusuk
-              </Link>
-
-              {/* Layanan Group */}
-              <div className="flex flex-col">
-                <button
-                  onClick={() => setIsLayananOpen(!isLayananOpen)}
-                  className="flex items-center justify-between w-full text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
+            <div className="flex-1 overflow-y-auto px-4 pb-6 pt-5">
+              <div className="mb-2.5 flex items-center justify-between">
+                <span className={`${sectionLabelClass} text-gold`}>LAYANAN</span>
+                <Link
+                  href="/layanan"
+                  onClick={close}
+                  className="text-xs font-semibold text-gold"
                 >
-                  <span className="flex items-center gap-3">
-                    <Briefcase size={18} /> Layanan
-                  </span>
-                  <ChevronDown size={18} className={`transition-transform duration-200 ${isLayananOpen ? "rotate-180" : ""}`} />
-                </button>
-                {isLayananOpen && (
-                  <div className="pl-6 mt-2 space-y-2 border-l border-[var(--color-border)] ml-2">
+                  Lihat semua →
+                </Link>
+              </div>
+
+              <div className="mb-[26px] grid grid-cols-2 gap-2">
+                {services.map((service) => {
+                  const Icon = service.icon
+                  const external = isExternalHref(service.href)
+
+                  return (
                     <Link
-                      href="/visa"
-                      onClick={() => setIsOpen(false)}
-                      className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                      key={service.id}
+                      href={service.href}
+                      onClick={close}
+                      target={external ? "_blank" : undefined}
+                      rel={external ? "noopener noreferrer" : undefined}
+                      className="flex flex-col gap-2 rounded-[10px] border p-3"
+                      style={{
+                        borderColor: service.isNew
+                          ? "rgba(201,168,76,0.45)"
+                          : "rgba(201,168,76,0.16)",
+                        background: service.isNew
+                          ? "rgba(201,168,76,0.07)"
+                          : "rgba(255,255,255,0.02)",
+                      }}
                     >
-                      Visa Umroh
+                      <span className="flex items-center justify-between">
+                        <span
+                          className="flex h-8 w-8 items-center justify-center rounded-lg border"
+                          style={{
+                            background: "rgba(201,168,76,0.1)",
+                            borderColor: "rgba(201,168,76,0.25)",
+                          }}
+                        >
+                          <Icon size={16} className="text-gold" />
+                        </span>
+                        {service.isNew && (
+                          <span className="rounded-full bg-gold px-1.5 py-0.5 text-[9px] font-bold tracking-[0.06em] text-bg">
+                            BARU
+                          </span>
+                        )}
+                      </span>
+                      <span>
+                        <span className="block text-[13px] font-semibold text-text">
+                          {service.name}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] font-semibold text-gold">
+                          {service.price}
+                        </span>
+                      </span>
                     </Link>
+                  )
+                })}
+              </div>
+
+              <div className={`${sectionLabelClass} mb-1.5 text-text-muted`}>
+                JELAJAHI
+              </div>
+              <div className="mb-[26px] flex flex-col">
+                {exploreLinks.map((link) => {
+                  const Icon = link.icon
+                  return (
                     <Link
-                      href="/transportasi"
-                      onClick={() => setIsOpen(false)}
-                      className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+                      key={link.href}
+                      href={link.href}
+                      onClick={close}
+                      className={rowClass}
+                      style={rowBorder}
                     >
-                      Sewa Transportasi
+                      <Icon size={17} className="flex-shrink-0" />
+                      {link.label}
                     </Link>
-                  </div>
+                  )
+                })}
+              </div>
+
+              <div className={`${sectionLabelClass} mb-1.5 text-text-muted`}>
+                AKUN
+              </div>
+              <div className="flex flex-col">
+                {isLoggedIn ? (
+                  <>
+                    <Link
+                      href="/dashboard"
+                      onClick={close}
+                      className={rowClass}
+                      style={rowBorder}
+                    >
+                      <LayoutDashboard size={17} className="flex-shrink-0" />
+                      Dashboard
+                    </Link>
+
+                    {showAdmin && (
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => setIsAdminOpen((open) => !open)}
+                          aria-expanded={isAdminOpen}
+                          className={`${rowClass} justify-between`}
+                          style={rowBorder}
+                        >
+                          <span className="flex items-center gap-3">
+                            <Settings size={17} className="flex-shrink-0" />
+                            Panel Admin
+                          </span>
+                          <ChevronDown
+                            size={18}
+                            className={`transition-transform duration-200 ${
+                              isAdminOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {isAdminOpen && (
+                          <div
+                            className="ml-2 border-l pl-6"
+                            style={{ borderColor: "var(--color-border)" }}
+                          >
+                            {adminLinks.map((link) => (
+                              <Link
+                                key={link.href}
+                                href={link.href}
+                                onClick={close}
+                                className="block py-2 text-base text-text-muted transition-colors hover:text-text"
+                              >
+                                {link.label}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <form
+                      action={async () => {
+                        close()
+                        await signOutAction()
+                      }}
+                    >
+                      <button
+                        type="submit"
+                        className="flex w-full items-center gap-3 py-3 pl-1 text-[15px] text-danger-text transition-colors hover:text-[#f0a0a0]"
+                      >
+                        <LogOut size={17} className="flex-shrink-0" />
+                        Keluar
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={close}
+                    className={rowClass}
+                    style={rowBorder}
+                  >
+                    <LayoutDashboard size={17} className="flex-shrink-0" />
+                    Masuk
+                  </Link>
                 )}
               </div>
-              <Link
-                href="/faq"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-              >
-                <HelpCircle size={18} /> FAQ
-              </Link>
-              <Link
-                href="/komunitas"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-              >
-                <MessageCircle size={18} /> Komunitas
-              </Link>
-              <Link
-                href="/webinar-umroh-mandiri"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-              >
-                <CalendarDays size={18} /> Webinar
-              </Link>
-              {isLoggedIn && (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-                >
-                  <FileText size={18} /> Dashboard
-                </Link>
-              )}
+            </div>
 
-              {/* Admin Panel Group */}
-              {showAdmin && (
-                <div className="flex flex-col">
-                  <button
-                    onClick={() => setIsAdminOpen(!isAdminOpen)}
-                    className="flex items-center justify-between w-full text-lg font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-2 border-b border-[var(--color-surface)]"
-                  >
-                    <span className="flex items-center gap-3">
-                      <Settings size={18} /> Panel Admin
-                    </span>
-                    <ChevronDown size={18} className={`transition-transform duration-200 ${isAdminOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {isAdminOpen && (
-                    <div className="pl-6 mt-2 space-y-2 border-l border-[var(--color-border)] ml-2">
-                      {adminLinks.map((link) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          onClick={() => setIsOpen(false)}
-                          className="block py-2 text-base text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
+            <div
+              className="flex-shrink-0 border-t px-4 pt-3.5"
+              style={{
+                borderColor: "var(--color-border)",
+                background: "rgba(11, 28, 18, 0.98)",
+                paddingBottom: "calc(0.875rem + env(safe-area-inset-bottom))",
+              }}
+            >
+              {estimateCta}
+              {userEmail && (
+                <div className="mt-2.5 break-all text-center text-[11px] text-text-muted">
+                  {userEmail}
                 </div>
               )}
             </div>
-
-            <div className="pt-6 space-y-4">
-              {isAdmin ? (
-                <Link href="/estimate/new" onClick={() => setIsOpen(false)}>
-                  <Button className="w-full flex items-center justify-center gap-2" size="lg">
-                    <PlusCircle size={18} /> Buat Estimasi
-                  </Button>
-                </Link>
-              ) : (
-                <Button
-                  className="w-full flex items-center justify-center gap-2 opacity-50 cursor-not-allowed text-[var(--color-text-muted)] bg-[var(--color-surface)] border border-[var(--color-border)]"
-                  size="lg"
-                  disabled
-                  style={{ cursor: 'not-allowed' }}
-                >
-                  <PlusCircle size={18} /> Buat Estimasi (Coming Soon)
-                </Button>
-              )}
-
-              {isLoggedIn ? (
-                <div className="flex flex-col gap-3 pt-4 border-t border-[var(--color-border)]">
-                  {userEmail && (
-                    <span className="text-sm text-[var(--color-text-muted)] text-center break-all">
-                      {userEmail}
-                    </span>
-                  )}
-                  <form
-                    action={async () => {
-                      setIsOpen(false)
-                      await signOutAction()
-                    }}
-                    className="w-full"
-                  >
-                    <Button type="submit" variant="ghost" className="w-full flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-[var(--color-surface)]" size="lg">
-                      <LogOut size={18} /> Keluar
-                    </Button>
-                  </form>
-                </div>
-              ) : (
-                <Link href="/login" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" className="w-full" size="lg">
-                    Masuk
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-    </div>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }
