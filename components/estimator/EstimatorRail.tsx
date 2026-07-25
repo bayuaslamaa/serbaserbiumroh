@@ -1,28 +1,20 @@
 "use client"
 
 import { useState } from "react"
-import type { BreakdownDisplay, BreakdownDisplayRow, CustomRow, EstimateParams } from "@/types"
+import type { BreakdownDisplay, BreakdownDisplayRow, EstimateParams } from "@/types"
 import { HOTEL_MADINAH_ROW_KEY, HOTEL_MAKKAH_ROW_KEY, FLIGHT_ROW_KEY } from "@/types"
-import { BudgetBreakdown } from "./BudgetBreakdown"
 import { Button } from "@/components/ui/button"
 import { rp } from "@/lib/export/summary"
 import { buildWhatsAppMessage } from "@/lib/export/whatsapp"
 
+// The rail is the narrow sticky column (352px per the Hi-Fi handoff): total, category bars,
+// save + WhatsApp preview. It deliberately does NOT render the Rincian Biaya table — that lives
+// in the wide main column, because the table's fixed 148px + 176px tracks cannot fit 352px and
+// would collapse its label column (wrapping the hotel formula one word per line).
 interface EstimatorRailProps {
   display: BreakdownDisplay
-  customRows: CustomRow[]
   pax: number
   params: EstimateParams
-  editable?: boolean
-  onSetAmount: (key: string, idr: number | null) => void
-  onSetUnitPrice: (key: string, unitPrice: number | null) => void
-  onSetLabel: (key: string, label: string | null) => void
-  onToggleHidden: (key: string) => void
-  onResetRow: (key: string) => void
-  onAddCustom: () => void
-  onSetCustomLabel: (id: string, label: string) => void
-  onSetCustomAmount: (id: string, idr: number | null) => void
-  onRemoveCustom: (id: string) => void
   // Mirrors EstimatorClient's existing "Simpan Estimasi" / "Perbarui Estimasi" button: the rail
   // just renders it and reports the click — the save dialog / persistence flow stays owned by
   // whichever parent wires this in.
@@ -97,19 +89,8 @@ function CategoryBreakdownBar({ display }: { display: BreakdownDisplay }) {
 
 export function EstimatorRail({
   display,
-  customRows,
   pax,
   params,
-  editable = true,
-  onSetAmount,
-  onSetUnitPrice,
-  onSetLabel,
-  onToggleHidden,
-  onResetRow,
-  onAddCustom,
-  onSetCustomLabel,
-  onSetCustomAmount,
-  onRemoveCustom,
   onSave,
   saveLabel,
   saveDisabled,
@@ -156,22 +137,6 @@ export function EstimatorRail({
       >
         <CategoryBreakdownBar display={display} />
       </div>
-
-      <BudgetBreakdown
-        display={display}
-        customRows={customRows}
-        pax={pax}
-        editable={editable}
-        onSetAmount={onSetAmount}
-        onSetUnitPrice={onSetUnitPrice}
-        onSetLabel={onSetLabel}
-        onToggleHidden={onToggleHidden}
-        onResetRow={onResetRow}
-        onAddCustom={onAddCustom}
-        onSetCustomLabel={onSetCustomLabel}
-        onSetCustomAmount={onSetCustomAmount}
-        onRemoveCustom={onRemoveCustom}
-      />
 
       <Button onClick={onSave} className="w-full" size="lg" disabled={saveDisabled}>
         {saveLabel}

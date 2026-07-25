@@ -434,16 +434,24 @@ export function EstimatorClient({
               storySource={storySource}
             />
           )}
+          {/* Rincian Biaya belongs in the wide main column, not the 352px rail (Hi-Fi handoff,
+              "Komponen kolom utama" #4): its 1fr/148px/176px row grid needs the full width, and
+              inside the rail the 1fr label column collapses. Rendered once here for both
+              breakpoints — the rail/mobile block below only carries the total and CTAs. */}
+          <BudgetBreakdown
+            display={display}
+            customRows={state.manualOverrides.customRows}
+            pax={state.params.pax}
+            editable={canEditOverrides}
+            {...rowHandlers}
+          />
         </div>
 
         {isDesktop ? (
           <EstimatorRail
             display={display}
-            customRows={state.manualOverrides.customRows}
             pax={state.params.pax}
             params={state.params}
-            editable={canEditOverrides}
-            {...rowHandlers}
             onSave={() => { setSaveTitle(existingTitle ?? ""); dispatch({ type: "OPEN_SAVE" }) }}
             saveLabel={estimateId ? "Perbarui Estimasi" : "Simpan Estimasi"}
             saveDisabled={paramsUnchanged && overridesUnchanged}
@@ -452,13 +460,6 @@ export function EstimatorClient({
           />
         ) : (
           <div className="flex flex-col gap-4 pb-24">
-            <BudgetBreakdown
-              display={display}
-              customRows={state.manualOverrides.customRows}
-              pax={state.params.pax}
-              editable={canEditOverrides}
-              {...rowHandlers}
-            />
             <Button
               onClick={() => { setSaveTitle(existingTitle ?? ""); dispatch({ type: "OPEN_SAVE" }) }}
               className="w-full"

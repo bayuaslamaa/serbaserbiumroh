@@ -62,28 +62,14 @@ const SERVICES_BUCKET = 2_854_500 + 200_000 + 1_527_500 // 4,582,000
 
 const display: BreakdownDisplay = applyOverrides(breakdown, null, params.pax)
 
-const noopHandlers = {
-  onSetAmount: vi.fn(),
-  onSetUnitPrice: vi.fn(),
-  onSetLabel: vi.fn(),
-  onToggleHidden: vi.fn(),
-  onResetRow: vi.fn(),
-  onAddCustom: vi.fn(),
-  onSetCustomLabel: vi.fn(),
-  onSetCustomAmount: vi.fn(),
-  onRemoveCustom: vi.fn(),
-}
-
 function renderRail(opts: { waOpen?: boolean; onWaOpenChange?: (open: boolean) => void; display?: BreakdownDisplay } = {}) {
   const onWaOpenChange = opts.onWaOpenChange ?? vi.fn()
   const onSave = vi.fn()
   render(
     <EstimatorRail
       display={opts.display ?? display}
-      customRows={[]}
       pax={params.pax}
       params={params}
-      {...noopHandlers}
       onSave={onSave}
       saveLabel="Simpan Estimasi"
       waOpen={opts.waOpen ?? false}
@@ -110,8 +96,10 @@ describe("EstimatorRail", () => {
   it("renders the total, the three category breakdown amounts, and both CTA buttons", () => {
     renderRail()
 
-    // Total per orang appears in the rail's own total card (and again inside BudgetBreakdown).
-    expect(screen.getAllByText(rp(display.totalIdrPax)).length).toBeGreaterThanOrEqual(1)
+    // Exactly once — the rail renders only its own total card. Rincian Biaya lives in the wide main
+    // column, so a second occurrence here means BudgetBreakdown was re-nested into the 352px rail,
+    // the layout bug that collapsed the table's label column (formula wrapped one word per line).
+    expect(screen.getAllByText(rp(display.totalIdrPax))).toHaveLength(1)
 
     // Category breakdown bucket amounts.
     expect(screen.getByText("Hotel Madinah & Makkah")).toBeDefined()
@@ -131,10 +119,8 @@ describe("EstimatorRail", () => {
     const { rerender } = render(
       <EstimatorRail
         display={display}
-        customRows={[]}
         pax={params.pax}
         params={params}
-        {...noopHandlers}
         onSave={vi.fn()}
         saveLabel="Simpan Estimasi"
         waOpen={false}
@@ -147,10 +133,8 @@ describe("EstimatorRail", () => {
     rerender(
       <EstimatorRail
         display={display}
-        customRows={[]}
         pax={params.pax}
         params={params}
-        {...noopHandlers}
         onSave={vi.fn()}
         saveLabel="Simpan Estimasi"
         waOpen={true}
@@ -184,7 +168,7 @@ describe("EstimatorRail", () => {
     expect(writeText).toHaveBeenCalledWith(buildWhatsAppMessage(display, params, params.pax))
     expect(screen.getByText("Tersalin")).toBeDefined()
 
-    // Reverts after exactly the 1800ms BudgetBreakdown's copyEstimate uses.
+    // Reverts after exactly 1800ms, matching the copy-feedback window BudgetBreakdown uses.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1799)
     })
@@ -230,19 +214,16 @@ describe("MobileTotalBar", () => {
     render(
       <EstimatorRail
         display={display}
-        customRows={[]}
         pax={params.pax}
         params={params}
-        {...noopHandlers}
         onSave={vi.fn()}
         saveLabel="Simpan Estimasi"
         waOpen={false}
         onWaOpenChange={vi.fn()}
       />,
     )
-    // The rail shows the full-precision figure straight from display.totalIdrPax (once in its
-    // own total card, once again inside the nested BudgetBreakdown).
-    expect(screen.getAllByText(rp(display.totalIdrPax)).length).toBeGreaterThanOrEqual(1)
+    // The rail shows the full-precision figure straight from display.totalIdrPax, exactly once.
+    expect(screen.getAllByText(rp(display.totalIdrPax))).toHaveLength(1)
     cleanup()
 
     render(<MobileTotalBar display={display} waOpen={false} onWaOpenChange={vi.fn()} />)
