@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/lib/auth"
+import { VISITOR_BASELINE_OFFSET } from "@/lib/stats/community"
 import { db } from "@/lib/db"
 import { visitorLogs } from "@/lib/db/schema"
 import { desc, count, countDistinct } from "drizzle-orm"
@@ -34,11 +35,10 @@ export default async function VisitorStatsPage() {
     .orderBy(desc(visitorLogs.createdAt))
     .limit(50)
 
-  // Admin-side promotional offset. Deliberately NOT the same number as the
-  // public pill in components/layanan/StatBadges.tsx (100) — this view reports
-  // the figure the admin dashboard has always shown.
-  const BASELINE_OFFSET = 1420
-  const promoCount = (stats?.uniqueVisitors || 0) + BASELINE_OFFSET
+  // The same offset the public badge applies, so this figure is the one a
+  // visitor is shown. The query above stays uncached — this is an analytics
+  // view, where a stale number is the wrong trade.
+  const promoCount = (stats?.uniqueVisitors || 0) + VISITOR_BASELINE_OFFSET
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -90,7 +90,7 @@ export default async function VisitorStatsPage() {
           <CardContent>
             <div className="text-2xl font-bold text-[var(--color-gold)]">{promoCount.toLocaleString("id-ID")}+</div>
             <p className="text-xs text-[var(--color-text-muted)]">
-              Pengunjung unik + offset promo ({BASELINE_OFFSET})
+              Pengunjung unik + offset promo ({VISITOR_BASELINE_OFFSET})
             </p>
           </CardContent>
         </Card>
