@@ -150,11 +150,19 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
         aria-expanded={isOpen}
         aria-controls={`field-editor-${fieldKey}`}
         className={cn(
-          "inline-flex items-center rounded px-1.5 py-0.5 border-b-2 font-semibold transition-colors",
+          // The chip must read as an editable control at rest, not just on hover: a always-visible
+          // 1px gold border with a 2px bottom edge is the "bergaris" affordance from the Hi-Fi
+          // handoff. Gold lives in the border/background — the label itself stays body-colored, so
+          // chips don't compete with the gold headings around them.
+          "inline-flex items-center rounded-lg border border-b-2 font-semibold transition-colors",
+          "text-[var(--color-text)]",
+          // Mobile keeps a 44px touch target; desktop uses the tighter inline sizing.
+          "min-h-[44px] px-[13px] text-[13px] lg:min-h-0 lg:px-[11px] lg:py-[4px] lg:text-[13.5px]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-gold)]",
-          isOpen ? "border-[var(--color-gold)]" : "border-transparent hover:border-[var(--color-gold-muted)]"
+          isOpen
+            ? "bg-[rgba(201,168,76,0.2)] border-[var(--color-gold)]"
+            : "bg-[rgba(201,168,76,0.09)] border-[rgba(201,168,76,0.4)] hover:bg-[rgba(201,168,76,0.2)] hover:border-[var(--color-gold)]"
         )}
-        style={{ color: "var(--color-gold)" }}
       >
         {label}
       </button>
@@ -255,6 +263,20 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
       className="rounded-xl border p-5 flex flex-col gap-4"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
+      {/* Eyebrow + hint from the Hi-Fi handoff. The chip outline is the primary affordance; this
+          line states it outright so the sentence doesn't read as decorative emphasis. */}
+      <div className="flex items-baseline gap-2 flex-wrap">
+        <span
+          className="text-[9.5px] font-bold uppercase tracking-[0.11em]"
+          style={{ color: "var(--color-gold)" }}
+        >
+          Rencana Kakak
+        </span>
+        <span className="text-[11.5px]" style={{ color: "rgba(232,239,230,0.4)" }}>
+          <span className="lg:hidden">Tap</span>
+          <span className="hidden lg:inline">Klik</span> bagian bergaris untuk betulkan
+        </span>
+      </div>
       {storySource && (
         <Badge
           variant="outline"
