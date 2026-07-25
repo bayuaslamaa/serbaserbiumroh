@@ -65,7 +65,10 @@ export function MenuPanel({
   return (
     <div
       role="menu"
-      className={`absolute top-[calc(100%+6px)] z-50 animate-fade-down rounded-[10px] border p-1.5 ${
+      // Bounded height: the account menu with the admin group expanded is
+      // taller than a short landscape viewport, and an absolutely-positioned
+      // panel inside a sticky nav cannot be scrolled into view by the page.
+      className={`absolute top-[calc(100%+6px)] z-50 max-h-[calc(100dvh-5rem)] animate-fade-down overflow-y-auto rounded-[10px] border p-1.5 ${
         align === "right" ? "right-0" : "left-0"
       }`}
       style={{ ...panelSurface, width }}

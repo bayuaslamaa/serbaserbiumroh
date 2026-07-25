@@ -20,10 +20,12 @@ describe("middleware public route matching", () => {
     expect(isPublicPath("/webinar-umroh-mandiri/")).toBe(true)
   })
 
-  it("allows every internal destination the nav advertises", async () => {
+  it("allows every internal destination listed in the nav link arrays", async () => {
+    // Sources the shared arrays only. A destination hardcoded inside a nav
+    // component (rather than added to these arrays) is not covered here.
     const { isPublicPath } = await import("./middleware")
-    const { moreLinks, exploreLinks } = await import("./components/nav/links")
-    const { services } = await import("./lib/services/catalog")
+    const { moreLinks, exploreLinks } = await import("@/components/nav/links")
+    const { services } = await import("@/lib/services/catalog")
 
     const navHrefs = [
       ...moreLinks.map((l) => l.href),

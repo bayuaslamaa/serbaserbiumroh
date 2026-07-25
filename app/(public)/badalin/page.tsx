@@ -16,6 +16,10 @@ const readyVideoCount = badalVideos.filter(
   (video) => !isPlaceholderVideo(video.youtubeId)
 ).length
 
+// "Tonton sendiri" promises every card is watchable, so it may only run when
+// none are pending. With a mixed list the page says so plainly instead.
+const allVideosReady = readyVideoCount === badalVideos.length
+
 export const metadata = {
   title: "Badalin — Badal Umroh Terdokumentasi | Serba Serbi Umroh",
   description:
@@ -122,9 +126,11 @@ export default function BadalinPage() {
           </span>
         </div>
         <p className="mb-5 max-w-[560px] text-sm leading-relaxed text-text-muted">
-          {readyVideoCount > 0
+          {allVideosReady
             ? "Bukan sekadar janji — tonton sendiri bagaimana setiap amanah badal kami jalankan di Tanah Suci."
-            : "Rekaman pelaksanaan sedang kami siapkan. Daftar di bawah adalah dokumentasi yang akan tayang."}
+            : readyVideoCount > 0
+              ? "Sebagian rekaman sudah bisa ditonton; sisanya sedang kami siapkan."
+              : "Rekaman pelaksanaan sedang kami siapkan. Daftar di bawah adalah dokumentasi yang akan tayang."}
         </p>
 
         <VideoDocGrid />
