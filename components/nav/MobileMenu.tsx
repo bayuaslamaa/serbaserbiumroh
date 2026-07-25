@@ -8,10 +8,10 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  PlusCircle,
   Settings,
   X,
 } from "lucide-react"
+import { EstimateCta } from "./EstimateCta"
 import { adminLinks, exploreLinks } from "./links"
 import { isExternalHref, services } from "@/lib/services/catalog"
 
@@ -73,56 +73,13 @@ export function MobileMenu({
 
   const close = () => setIsOpen(false)
 
-  const estimateCta = isAdmin ? (
-    <Link
-      href="/estimate/new"
-      onClick={close}
-      className="flex items-center justify-center gap-2 rounded-[10px] bg-gold py-3.5 text-[15px] font-bold text-bg"
-    >
-      <PlusCircle size={17} />
-      Buat Estimasi
-    </Link>
-  ) : (
-    <button
-      type="button"
-      disabled
-      className="flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-[10px] border py-3.5 text-[15px] font-semibold text-text-muted opacity-60"
-      style={{
-        background: "var(--color-surface)",
-        borderColor: "var(--color-border)",
-      }}
-    >
-      <PlusCircle size={17} />
-      Buat Estimasi (Coming Soon)
-    </button>
-  )
-
   const bar = (
     <div className="flex h-14 items-center justify-between gap-2.5 px-4 nav:hidden" data-testid="mobile-nav">
       <Link href={isLoggedIn ? "/dashboard" : "/"}>
         <Wordmark />
       </Link>
       <div className="flex items-center gap-2">
-        {isAdmin ? (
-          <Link
-            href="/estimate/new"
-            className="whitespace-nowrap rounded-lg bg-gold px-3 py-2 text-xs font-bold text-bg"
-          >
-            Buat Estimasi
-          </Link>
-        ) : (
-          <button
-            type="button"
-            disabled
-            className="cursor-not-allowed whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-semibold text-text-muted opacity-60"
-            style={{
-              background: "var(--color-surface)",
-              borderColor: "var(--color-border)",
-            }}
-          >
-            Buat Estimasi
-          </button>
-        )}
+        <EstimateCta variant="mobileBar" isAdmin={isAdmin} />
         <button
           type="button"
           onClick={() => setIsOpen(true)}
@@ -344,7 +301,7 @@ export function MobileMenu({
                 paddingBottom: "calc(0.875rem + env(safe-area-inset-bottom))",
               }}
             >
-              {estimateCta}
+              <EstimateCta variant="mobileFooter" isAdmin={isAdmin} onNavigate={close} />
               {userEmail && (
                 <div className="mt-2.5 break-all text-center text-[11px] text-text-muted">
                   {userEmail}

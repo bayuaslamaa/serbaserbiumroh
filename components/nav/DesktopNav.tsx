@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { PlusCircle } from "lucide-react"
 import { AccountMenu } from "./AccountMenu"
+import { EstimateCta } from "./EstimateCta"
 import { LayananPanel, LayananTrigger } from "./LayananMegaMenu"
 import { MoreMenu } from "./MoreMenu"
 import { useSingleOpenMenu } from "./NavDropdown"
@@ -68,28 +68,7 @@ export function DesktopNav({
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-3">
-          {isAdmin ? (
-            <Link
-              href="/estimate/new"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-gold px-4 py-2 text-[13px] font-bold text-bg transition-colors hover:bg-gold-hover"
-            >
-              <PlusCircle size={15} />
-              Buat Estimasi
-            </Link>
-          ) : (
-            <button
-              type="button"
-              disabled
-              className="flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-lg border px-4 py-2 text-[13px] font-semibold text-text-muted opacity-60"
-              style={{
-                background: "var(--color-surface)",
-                borderColor: "var(--color-border)",
-              }}
-            >
-              <PlusCircle size={15} />
-              Buat Estimasi (Coming Soon)
-            </button>
-          )}
+          <EstimateCta variant="desktop" isAdmin={isAdmin} />
 
           {isLoggedIn ? (
             <AccountMenu
