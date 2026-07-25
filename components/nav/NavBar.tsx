@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { AdminDropdown } from "./AdminDropdown"
 import { LayananDropdown } from "./LayananDropdown"
 import { MobileMenu } from "./MobileMenu"
-import { VisitorCounter } from "./VisitorCounter"
 
 export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
   const session = await auth()
@@ -94,7 +93,6 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
 
         {/* Desktop navigation right aligned items */}
         <div className="hidden md:flex items-center gap-3">
-          <VisitorCounter />
           {user?.role === "ADMIN" ? (
             <Link href="/estimate/new">
               <Button size="sm">Buat Estimasi</Button>
@@ -133,11 +131,8 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
           </div>
         </div>
 
-        {/* Mobile: scrollable stats badges + pinned hamburger button */}
+        {/* Mobile: hamburger button */}
         <div className="flex items-center gap-2 md:hidden min-w-0">
-          <div className="overflow-x-auto flex-1 min-w-0 scrollbar-none" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-            <VisitorCounter />
-          </div>
           <div className="flex-shrink-0">
             <MobileMenu
               userEmail={user?.email}

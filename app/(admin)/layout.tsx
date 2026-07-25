@@ -1,4 +1,5 @@
 import { NavBar } from "@/components/nav/NavBar"
+import { VisitorTracker } from "@/components/nav/VisitorTracker"
 import { requireAdmin } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 
@@ -11,6 +12,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen">
+      <VisitorTracker />
       <NavBar isAdmin />
       <div className="border-b" style={{ borderColor: "var(--color-border)", background: "rgba(201,168,76,0.05)" }}>
         <div className="container mx-auto px-4 py-2 flex items-center gap-2">

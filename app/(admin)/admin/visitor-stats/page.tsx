@@ -34,7 +34,7 @@ export default async function VisitorStatsPage() {
     .orderBy(desc(visitorLogs.createdAt))
     .limit(50)
 
-  // Same promotional baseline offset used in VisitorCounter
+  // Same promotional baseline offset used in components/layanan/StatBadges.tsx
   const BASELINE_OFFSET = 1420
   const promoCount = (stats?.uniqueVisitors || 0) + BASELINE_OFFSET
 
