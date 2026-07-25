@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk"
 import type { City, EstimateParams, HotelOptionConfig, HotelPriceConfig, HotelTier, PricingConfig } from "@/types"
 import { buildSystemPrompt } from "./prompt"
+import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDaysToNights } from "@/lib/estimate/nights"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
 const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"] as const
@@ -246,7 +247,7 @@ function extractTotalTripDays(input: string): number | undefined {
   if (!match) return undefined
 
   const days = Number(match[1])
-  return Number.isInteger(days) && days >= 5 && days <= 30 ? days : undefined
+  return Number.isInteger(days) && days >= MIN_TRIP_DAYS && days <= MAX_TRIP_DAYS ? days : undefined
 }
 
 function applyDeterministicCorrections(
@@ -263,8 +264,9 @@ function applyDeterministicCorrections(
 
   const totalDays = extractTotalTripDays(input)
   if (totalDays != null && corrected.nightsMadinah + corrected.nightsMakkah !== totalDays) {
-    corrected.nightsMadinah = Math.min(4, totalDays - 1)
-    corrected.nightsMakkah = totalDays - corrected.nightsMadinah
+    const { nightsMadinah, nightsMakkah } = totalTripDaysToNights(totalDays)
+    corrected.nightsMadinah = nightsMadinah
+    corrected.nightsMakkah = nightsMakkah
     notes.push(`Durasi ${totalDays} hari diterapkan sebagai ${corrected.nightsMadinah} malam Madinah + ${corrected.nightsMakkah} malam Makkah.`)
   }
 

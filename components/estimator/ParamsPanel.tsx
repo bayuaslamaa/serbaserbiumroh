@@ -1,10 +1,11 @@
 "use client"
 
-import type { City, EstimateParams, HotelOptionConfig, HotelTier, PricingConfig } from "@/types"
+import type { City, EstimateParams, HotelOptionConfig, PricingConfig } from "@/types"
 import { RadioCardGrid } from "./RadioCardGrid"
 import { Stepper } from "./Stepper"
 import { ServiceCheckboxGrid } from "./ServiceCheckboxGrid"
 import { Badge } from "@/components/ui/badge"
+import { resolveCityHotelOptions, resolveHotelSelection } from "@/lib/estimate/hotel-selection"
 
 interface ParamsPanelProps {
   params: EstimateParams
@@ -27,30 +28,14 @@ function resolveMonthlyHotelSar(
   return config.sarPerNight
 }
 
-function fallbackHotelOptions(pricing: PricingConfig, city: City): HotelOptionConfig[] {
-  return (["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const).map((tier) => ({
-    id: `${city}:${tier}`,
-    city,
-    tier,
-    sarPerNight: pricing.hotels[city][tier].sarPerNight,
-    label: pricing.hotels[city][tier].label,
-    sublabel: pricing.hotels[city][tier].sublabel,
-    monthlyPrices: pricing.hotels[city][tier].monthlyPrices,
-  }))
-}
-
 function cityLabel(city: City): string {
   return city === "MAKKAH" ? "Makkah" : "Madinah"
 }
 
 export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPanelProps) {
   const cityHotelOptions: Record<City, HotelOptionConfig[]> = {
-    MADINAH: pricing.hotelOptions?.MADINAH?.length
-      ? pricing.hotelOptions.MADINAH
-      : fallbackHotelOptions(pricing, "MADINAH"),
-    MAKKAH: pricing.hotelOptions?.MAKKAH?.length
-      ? pricing.hotelOptions.MAKKAH
-      : fallbackHotelOptions(pricing, "MAKKAH"),
+    MADINAH: resolveCityHotelOptions(pricing, "MADINAH"),
+    MAKKAH: resolveCityHotelOptions(pricing, "MAKKAH"),
   }
 
   function selectedHotelValue(city: City): string {
@@ -66,17 +51,8 @@ export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPa
   }
 
   function handleHotelChange(city: City, hotelId: string) {
-    const hotel = cityHotelOptions[city].find((option) => option.id === hotelId)
-    if (!hotel) return
-
-    const patch: Partial<EstimateParams> = { hotelTier: hotel.tier as HotelTier }
-    const isConcreteHotel = pricing.hotelOptions?.[city]?.some((option) => option.id === hotel.id) ?? false
-    if (city === "MAKKAH") {
-      patch.makkahHotelId = isConcreteHotel ? hotel.id : undefined
-    } else {
-      patch.madinahHotelId = isConcreteHotel ? hotel.id : undefined
-    }
-    onChange(patch)
+    const patch = resolveHotelSelection(city, hotelId, pricing)
+    if (patch) onChange(patch)
   }
 
   function hotelRadioOptions(city: City) {
