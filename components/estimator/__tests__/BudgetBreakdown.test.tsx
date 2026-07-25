@@ -254,6 +254,28 @@ describe("BudgetBreakdown editor", () => {
     expect(screen.getByText("manual")).toBeDefined()
   })
 
+  it("stops the amount column being full-width once rows go side-by-side (tablet / Z Fold band)", () => {
+    // Between sm: and lg: (640-1023px — tablet and an unfolded Z Fold) the row is a flex-row. An
+    // amounts column that stays w-full there, with shrink-0, claims the whole row and starves the
+    // min-w-0 label column: the label input collapses to a sliver and the hotel formula wraps one
+    // word per line. jsdom cannot evaluate media queries, so assert the class contract instead —
+    // every full-width ancestor of an amount field must release that width at sm:.
+    renderPanel()
+    const unitInput = screen.getAllByLabelText("Harga satuan")[0]
+
+    let el: HTMLElement | null = unitInput.parentElement
+    let fullWidthAncestors = 0
+    while (el && !el.className.includes("rounded-[14px]")) {
+      if (el.className.includes("w-full")) {
+        expect(el.className).toMatch(/sm:w-auto/)
+        fullWidthAncestors++
+      }
+      el = el.parentElement
+    }
+    // Guard the guard: if the markup stops using w-full entirely the loop would pass vacuously.
+    expect(fullWidthAncestors).toBeGreaterThan(0)
+  })
+
   it("renders override controls read-only for non-admin viewers", () => {
     const customRows: CustomRow[] = [{ id: "c1", label: "Manasik", idr: 300_000 }]
     renderPanel({ overrides: { overrides: {}, customRows }, customRows, editable: false })
