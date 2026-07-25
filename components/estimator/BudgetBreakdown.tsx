@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { RotateCcw, X } from "lucide-react"
 import type { BreakdownDisplay, BreakdownDisplayRow, CustomRow, HotelCostDetail } from "@/types"
 import { MAX_LABEL_LEN, MAX_ROWS } from "@/lib/estimate/overrides"
 import { rp, rowCalc, exportLabel, basisNote, kursLine, EXPORT_NOTES } from "@/lib/export/summary"
@@ -78,37 +79,56 @@ function buildCopyText(display: BreakdownDisplay, pax: number): string {
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim()
 }
 
+// Shared visual base for row-level text/amount inputs — colors via CSS vars (project convention),
+// sizing/spacing via the Tailwind classes each input applies alongside this.
 const inputBase: React.CSSProperties = {
   background: "rgba(0,0,0,0.25)",
   border: "1px solid var(--color-border)",
-  borderRadius: 4,
   color: "var(--color-text)",
-  padding: "2px 6px",
-  fontSize: 13,
 }
 
+// Grid-column template for the desktop (lg:+) "Rincian Biaya" table: component / unit price /
+// total / actions. The actions column is `auto` (not a fixed px width) so it never clips when a
+// row renders two icon buttons (reset + hide) side by side.
+const ROW_GRID_COLS = "lg:grid-cols-[1fr_148px_176px_auto]"
+
 function Badge({ children, tone = "gold" }: { children: React.ReactNode; tone?: "gold" | "muted" | "warn" }) {
-  const colors =
+  const toneClass =
     tone === "warn"
-      ? { bg: "rgba(239,68,68,0.15)", fg: "#f87171" }
+      ? "bg-red-500/15 text-red-400"
       : tone === "muted"
-        ? { bg: "rgba(255,255,255,0.08)", fg: "var(--color-text-muted)" }
-        : { bg: "rgba(201,168,76,0.15)", fg: "var(--color-gold)" }
+        ? "bg-white/[0.08] text-[var(--color-text-muted)]"
+        : "text-[#0b1c12]"
   return (
-    <span className="text-xs px-1 rounded" style={{ background: colors.bg, color: colors.fg }}>
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${toneClass}`}
+      style={tone === "gold" ? { background: "var(--color-gold)" } : undefined}
+    >
       {children}
     </span>
   )
 }
 
-function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+function IconButton({
+  label,
+  onClick,
+  danger,
+  children,
+}: {
+  label: string
+  onClick: () => void
+  danger?: boolean
+  children: React.ReactNode
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="text-xs leading-none px-1.5 py-1 rounded border hover:opacity-70"
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition-colors lg:h-8 lg:w-8 ${
+        danger ? "hover:border-[#c9683c] hover:text-[#e8a082]" : "hover:opacity-70"
+      }`}
       style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}
     >
       {children}
@@ -147,7 +167,7 @@ export function BudgetBreakdown({
 
   return (
     <div
-      className="rounded-xl border p-5 flex flex-col gap-4"
+      className="rounded-[14px] border p-5 flex flex-col gap-4"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
       <div className="flex items-center justify-between gap-3">
@@ -160,7 +180,7 @@ export function BudgetBreakdown({
         <button
           type="button"
           onClick={copyEstimate}
-          className="text-xs px-3 py-1.5 rounded border transition-colors"
+          className="h-8 rounded-lg border px-3 text-xs font-semibold transition-colors"
           style={{
             borderColor: copyStatus === "copied" ? "var(--color-gold)" : "var(--color-border)",
             color: copyStatus === "error" ? "#ef4444" : copyStatus === "copied" ? "var(--color-gold)" : "var(--color-text-muted)",
@@ -171,7 +191,17 @@ export function BudgetBreakdown({
         </button>
       </div>
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
+        <div
+          className={`hidden text-[9px] font-bold uppercase tracking-wide lg:grid lg:gap-3 lg:pb-1 ${ROW_GRID_COLS}`}
+          style={{ color: "var(--color-text-muted)" }}
+        >
+          <span>Komponen</span>
+          <span className="text-right">Harga Satuan</span>
+          <span className="text-right">Total / Orang</span>
+          <span />
+        </div>
+
         {computedRows.map((row) => (
           <ComputedRow
             key={row.key}
@@ -203,7 +233,7 @@ export function BudgetBreakdown({
             onClick={onAddCustom}
             aria-label="Tambah baris"
             disabled={customRows.length >= MAX_ROWS}
-            className="text-xs self-start px-2 py-1 rounded border border-dashed hover:opacity-80"
+            className="mt-1 flex h-11 w-full items-center justify-center rounded-[10px] border border-dashed text-xs font-medium transition-colors hover:opacity-80 lg:h-10"
             style={{ borderColor: "var(--color-gold-muted)", color: "var(--color-gold)" }}
           >
             + Tambah baris
@@ -228,7 +258,7 @@ export function BudgetBreakdown({
 
       {pax > 1 && (
         <div
-          className="rounded-lg border p-3 flex items-center justify-between"
+          className="rounded-[10px] border p-3 flex items-center justify-between"
           style={{ borderColor: "var(--color-gold-muted)", background: "rgba(201,168,76,0.08)" }}
         >
           <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
@@ -248,7 +278,7 @@ export function BudgetBreakdown({
       </div>
 
       <p
-        className="rounded-lg border px-3 py-2 text-xs leading-relaxed"
+        className="rounded-[10px] border px-3 py-2 text-xs leading-relaxed"
         style={{
           borderColor: "rgba(201,168,76,0.28)",
           background: "rgba(201,168,76,0.08)",
@@ -263,6 +293,8 @@ export function BudgetBreakdown({
 
 // One right-aligned, captioned amount input (a "Harga satuan" or "Total /orang" cell).
 // Shared by computed and custom rows so width, formatting, prefix, and a11y stay in one place.
+// `width` is the desktop (lg:+) pixel width from the design spec; on mobile the field grows to
+// the full row width instead (via a CSS var so both breakpoints share the same inline style).
 function AmountField({
   label,
   value,
@@ -285,13 +317,16 @@ function AmountField({
   readOnly?: boolean
 }) {
   return (
-    <div className="flex flex-col items-end gap-0.5">
+    <div className="flex w-full flex-col items-end gap-0.5 lg:w-auto">
       <span className="text-[10px] uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>
         {label}
       </span>
-      <div className="flex items-center gap-1">
+      <div
+        className="flex w-full items-center gap-1 lg:w-auto"
+        style={{ "--field-w": `${width}px` } as React.CSSProperties}
+      >
         {prefix && (
-          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+          <span className="shrink-0 text-xs" style={{ color: "var(--color-text-muted)" }}>
             {prefix}
           </span>
         )}
@@ -304,7 +339,8 @@ function AmountField({
           disabled={disabled}
           readOnly={readOnly}
           aria-label={ariaLabel}
-          style={{ ...inputBase, width, textAlign: "right" }}
+          className="min-h-11 w-full rounded-lg px-2.5 text-right text-sm transition-colors lg:min-h-9 lg:w-[var(--field-w)] lg:text-[13px]"
+          style={inputBase}
         />
       </div>
     </div>
@@ -332,8 +368,15 @@ function ComputedRow({
 }) {
   const edited = row.source === "overridden" || row.hidden
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3" style={{ opacity: row.hidden ? 0.5 : 1 }}>
-      <div className="flex flex-col gap-1 min-w-0 flex-1">
+    <div
+      className={`flex flex-col gap-2 rounded-[10px] border p-3 transition-colors sm:flex-row sm:items-start sm:justify-between sm:gap-3 lg:grid lg:items-start lg:gap-3 lg:rounded-none lg:border-0 lg:border-t lg:p-0 lg:py-3 ${ROW_GRID_COLS}`}
+      style={{
+        opacity: row.hidden ? 0.5 : 1,
+        borderColor: edited ? "var(--color-gold)" : "var(--color-border)",
+        background: edited ? "rgba(201,168,76,0.05)" : "transparent",
+      }}
+    >
+      <div className="flex flex-col gap-1 min-w-0 flex-1 lg:flex-none">
         <input
           type="text"
           value={row.label}
@@ -341,7 +384,8 @@ function ComputedRow({
           aria-label="Nama baris"
           maxLength={MAX_LABEL_LEN}
           readOnly={!editable}
-          style={{ ...inputBase, width: "100%", textDecoration: row.hidden ? "line-through" : "none" }}
+          className="min-h-11 w-full rounded-lg px-2.5 text-sm font-semibold transition-colors lg:min-h-9 lg:text-[13.5px]"
+          style={{ ...inputBase, textDecoration: row.hidden ? "line-through" : "none" }}
         />
         {row.hotelDetail && (
           <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
@@ -351,11 +395,16 @@ function ComputedRow({
         <div className="flex items-center gap-1.5 flex-wrap">
           {row.hidden && <Badge tone="muted">disembunyikan</Badge>}
           {row.source === "overridden" && <Badge>manual</Badge>}
+          {/* Source badge only while the row is still layer-priced. A unit-price override keeps
+              hotelDetail (to show the formula at the edited rate) but the number is now manual, so
+              gate on source too — otherwise a hand-typed SAR rate would falsely read as "harga real". */}
+          {row.source !== "overridden" && row.hotelDetail?.priceSource === "real" && <Badge>harga real</Badge>}
+          {row.source !== "overridden" && row.hotelDetail?.priceSource === "estimate" && <Badge tone="muted">estimasi</Badge>}
           {row.stale && <Badge tone="warn">⚠ nilai mungkin usang</Badge>}
           {row.shared && pax > 1 && <Badge>÷{pax} org</Badge>}
         </div>
       </div>
-      <div className="flex flex-col items-end gap-1.5 shrink-0">
+      <div className="flex w-full flex-col items-end gap-1.5 shrink-0 lg:contents">
         <AmountField
           label="Harga satuan"
           prefix={unitPrefix(row.unitCurrency)}
@@ -376,15 +425,15 @@ function ComputedRow({
           onChange={(v) => onSetAmount(row.key, v)}
         />
         {editable && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 lg:justify-self-end">
             {edited && (
               <IconButton label="Kembalikan ke nilai otomatis" onClick={() => onResetRow(row.key)}>
-                ↺
+                <RotateCcw className="h-4 w-4" />
               </IconButton>
             )}
             {!row.hidden && (
               <IconButton label="Sembunyikan baris" onClick={() => onToggleHidden(row.key)}>
-                ×
+                <X className="h-4 w-4" />
               </IconButton>
             )}
           </div>
@@ -408,8 +457,11 @@ function CustomRowEditor({
   editable: boolean
 }) {
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-      <div className="flex flex-col gap-1 min-w-0 flex-1">
+    <div
+      className={`flex flex-col gap-2 rounded-[10px] border p-3 transition-colors sm:flex-row sm:items-start sm:justify-between sm:gap-3 lg:grid lg:items-start lg:gap-3 lg:rounded-none lg:border-0 lg:border-t lg:p-0 lg:py-3 ${ROW_GRID_COLS}`}
+      style={{ borderColor: "var(--color-gold)", background: "rgba(201,168,76,0.05)" }}
+    >
+      <div className="flex flex-col gap-1 min-w-0 flex-1 lg:flex-none">
         <input
           type="text"
           value={row.label}
@@ -418,11 +470,12 @@ function CustomRowEditor({
           aria-label="Nama biaya"
           maxLength={MAX_LABEL_LEN}
           readOnly={!editable}
-          style={{ ...inputBase, width: "100%" }}
+          className="min-h-11 w-full rounded-lg px-2.5 text-sm font-semibold transition-colors lg:min-h-9 lg:text-[13.5px]"
+          style={inputBase}
         />
         <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>per orang</span>
       </div>
-      <div className="flex flex-col items-end gap-1.5 shrink-0">
+      <div className="flex w-full flex-col items-end gap-1.5 shrink-0 lg:contents">
         {/* Custom rows are plain IDR at quantity 1, so unit price always equals the total.
             Show it as a read-only mirror and keep the total as the single editable amount. */}
         <AmountField
@@ -445,9 +498,11 @@ function CustomRowEditor({
           onChange={(v) => onSetAmount(row.id, v)}
         />
         {editable && (
-          <IconButton label="Hapus baris" onClick={() => onRemove(row.id)}>
-            ×
-          </IconButton>
+          <div className="flex items-center lg:justify-self-end">
+            <IconButton label="Hapus baris" onClick={() => onRemove(row.id)} danger>
+              <X className="h-4 w-4" />
+            </IconButton>
+          </div>
         )}
       </div>
     </div>

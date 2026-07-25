@@ -214,6 +214,46 @@ describe("BudgetBreakdown editor", () => {
     expect(copied).not.toContain("Reguler ($165)")
   })
 
+  it("shows a 'harga real' badge on a hotel row priced from the real catalog", () => {
+    const withReal: Breakdown = {
+      ...breakdown,
+      hotelMakkahDetail: { ...breakdown.hotelMakkahDetail, priceSource: "real" },
+      hotelMadinahDetail: { ...breakdown.hotelMadinahDetail, priceSource: "estimate" },
+    }
+    render(
+      <BudgetBreakdown display={applyOverrides(withReal, null, 1)} customRows={[]} pax={1} {...noopHandlers} />,
+    )
+    expect(screen.getByText("harga real")).toBeDefined()
+    expect(screen.getByText("estimasi")).toBeDefined()
+  })
+
+  it("drops the source badge once the hotel amount is overridden (no longer layer-priced)", () => {
+    const withReal: Breakdown = {
+      ...breakdown,
+      hotelMakkahDetail: { ...breakdown.hotelMakkahDetail, priceSource: "real" },
+    }
+    const overrides: ManualOverrides = { overrides: { hotelMakkah: { idr: 20_000_000 } }, customRows: [] }
+    render(
+      <BudgetBreakdown display={applyOverrides(withReal, overrides, 1)} customRows={[]} pax={1} {...noopHandlers} />,
+    )
+    expect(screen.queryByText("harga real")).toBeNull()
+  })
+
+  it("drops the source badge on a unit-price override (hand-typed rate is not 'harga real')", () => {
+    // A unit-price override keeps hotelDetail (formula shown at the edited rate), but the SAR/night
+    // is now manual — the catalog attribution must not survive.
+    const withReal: Breakdown = {
+      ...breakdown,
+      hotelMakkahDetail: { ...breakdown.hotelMakkahDetail, priceSource: "real" },
+    }
+    const overrides: ManualOverrides = { overrides: { hotelMakkah: { unitPrice: 1600 } }, customRows: [] }
+    render(
+      <BudgetBreakdown display={applyOverrides(withReal, overrides, 1)} customRows={[]} pax={1} {...noopHandlers} />,
+    )
+    expect(screen.queryByText("harga real")).toBeNull()
+    expect(screen.getByText("manual")).toBeDefined()
+  })
+
   it("renders override controls read-only for non-admin viewers", () => {
     const customRows: CustomRow[] = [{ id: "c1", label: "Manasik", idr: 300_000 }]
     renderPanel({ overrides: { overrides: {}, customRows }, customRows, editable: false })

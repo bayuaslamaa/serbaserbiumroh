@@ -277,4 +277,52 @@ describe("calculateBudget", () => {
       expect(result.usdRate).toBe(17300)
     })
   })
+
+  describe("real price layer (U3)", () => {
+    function withReal(city: "MADINAH" | "MAKKAH", real: Record<number, number>): PricingConfig {
+      return {
+        ...mockPricing,
+        hotels: {
+          ...mockPricing.hotels,
+          [city]: {
+            ...mockPricing.hotels[city],
+            STANDARD: { ...mockPricing.hotels[city].STANDARD, realMonthlyPrices: real },
+          },
+        },
+      }
+    }
+
+    it("prefers the real price for the requested month", () => {
+      const r = calculateBudget({ ...baseParams, travelMonth: 2 }, withReal("MADINAH", { 2: 900 }))
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(900)
+      expect(r.hotelMadinahDetail.priceSource).toBe("real")
+      // 900 SAR × 4 nights ÷ 4 pax × 4700 = 4,230,000
+      expect(r.hotelMadinahIdr).toBe(4_230_000)
+    })
+
+    it("falls back to the estimate when no real price covers that month", () => {
+      const r = calculateBudget({ ...baseParams, travelMonth: 5 }, withReal("MADINAH", { 2: 900 }))
+      expect(r.hotelMadinahIdr).toBe(3_055_000) // base 650 estimate
+      expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+    })
+
+    it("ignores real prices when travelMonth is unset (real is seasonal)", () => {
+      const r = calculateBudget(baseParams, withReal("MADINAH", { 2: 900 }))
+      expect(r.hotelMadinahIdr).toBe(3_055_000)
+      expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+    })
+
+    it("resolves each city's price source independently", () => {
+      const r = calculateBudget({ ...baseParams, travelMonth: 6 }, withReal("MAKKAH", { 6: 1500 }))
+      expect(r.hotelMakkahDetail.priceSource).toBe("real")
+      // 1500 SAR × 9 nights ÷ 4 pax × 4700 = 15,862,500
+      expect(r.hotelMakkahIdr).toBe(15_862_500)
+      expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+    })
+
+    it("labels a monthly estimate override as estimate, not real", () => {
+      const r = calculateBudget({ ...baseParams, travelMonth: 3 }, mockPricing)
+      expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+    })
+  })
 })

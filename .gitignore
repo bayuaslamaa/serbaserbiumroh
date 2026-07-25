@@ -36,3 +36,6 @@ next-env.d.ts
 
 # drizzle
 drizzle/migrations/meta/
+
+# local scratch / source catalogs (PDFs, images) — working files, not for the repo
+tmp/

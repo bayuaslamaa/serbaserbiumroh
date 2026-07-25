@@ -25,6 +25,7 @@ Extraction rules:
 - If the user requests a specific Makkah hotel and it appears in Current pricing reference, set makkahHotelId to that option id.
 - If the user requests a specific Madinah hotel and it appears in Current pricing reference, set madinahHotelId to that option id.
 - If a requested hotel is not listed, choose a same-city comparable hotel by same tier/level from Current pricing reference and explain the substitution in notes.
+- When choosing a comparable hotel (requested hotel not listed, or only proximity/tier given without a specific name), prefer options marked "real=catalog" — these have authoritative real prices — over estimate-only options of similar tier/distance.
 - "Garuda"/"direct"/"langsung" → airline: "GARUDA"
 - "lion air"/"air asia"/"budget" → airline: "BUDGET"
 - "tanpa penerbangan"/"tanpa tiket"/"no flight"/"tiket sendiri" → airline: "NONE"
@@ -60,12 +61,14 @@ function buildDynamicPricingBlock(pricing: PricingConfig): string {
     lines.push("Madinah hotel options:")
     for (const h of pricing.hotelOptions.MADINAH ?? []) {
       const distance = h.distance ? `, distance=${h.distance}` : ""
-      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}${distance}, note=${h.sublabel}`)
+      const real = h.realMonthlyPrices && Object.keys(h.realMonthlyPrices).length > 0 ? ", real=catalog" : ""
+      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}${distance}${real}, note=${h.sublabel}`)
     }
     lines.push("Makkah hotel options:")
     for (const h of pricing.hotelOptions.MAKKAH ?? []) {
       const distance = h.distance ? `, distance=${h.distance}` : ""
-      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}${distance}, note=${h.sublabel}`)
+      const real = h.realMonthlyPrices && Object.keys(h.realMonthlyPrices).length > 0 ? ", real=catalog" : ""
+      lines.push(`  id=${h.id}, label=${h.label}, tier=${h.tier}, SAR=${h.sarPerNight}${distance}${real}, note=${h.sublabel}`)
     }
   }
   lines.push("Airlines (IDR/pax):")

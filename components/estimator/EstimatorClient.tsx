@@ -14,12 +14,17 @@ import { applyOverrides, breakdownToBaseRows, isEmptyOverrides } from "@/lib/bud
 import { arePersistableEstimateTotals, MAX_IDR, MAX_LABEL_LEN, MAX_ROWS } from "@/lib/estimate/overrides"
 import { InputPanel } from "./InputPanel"
 import { ParamsPanel } from "./ParamsPanel"
+import { SentenceCard } from "./SentenceCard"
 import { BudgetBreakdown } from "./BudgetBreakdown"
+import { EstimatorRail } from "./EstimatorRail"
+import { MobileTotalBar } from "./MobileTotalBar"
+import { MobileWaPanel } from "./MobileWaPanel"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
+import { useIsDesktop } from "@/hooks/use-is-desktop"
 
 type ParseStatus = "idle" | "loading" | "error"
 type SaveStatus = "idle" | "loading" | "error"
@@ -146,6 +151,17 @@ export function EstimatorClient({
   const [state, dispatch] = useReducer(reducer, startState)
   const [saveTitle, setSaveTitle] = useState(existingTitle ?? "")
   const router = useRouter()
+
+  // UI-only state for the narrative revamp — never touches the reducer above.
+  const [showStory, setShowStory] = useState(!startState.hasParsed)
+  const [showFullForm, setShowFullForm] = useState(false)
+  const [waOpen, setWaOpen] = useState(false)
+  const isDesktop = useIsDesktop()
+
+  function startOver() {
+    setShowStory(true)
+    setWaOpen(false)
+  }
 
   const breakdown: Breakdown = calculateBudget(state.params, pricingConfig)
   const display = applyOverrides(breakdown, state.manualOverrides, state.params.pax)
@@ -279,6 +295,7 @@ export function EstimatorClient({
       }
       const { params, notes } = await res.json()
       dispatch({ type: "PARSE_SUCCESS", payload: { params, notes } })
+      setShowStory(false)
     } catch {
       toast({ title: "Gagal menganalisis", description: "Periksa koneksi internet Anda.", variant: "destructive" })
       dispatch({ type: "PARSE_ERROR" })
@@ -378,23 +395,49 @@ export function EstimatorClient({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end gap-2 flex-wrap">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setShowFullForm((v) => !v)}
+        >
+          {showFullForm ? "Tutup form lengkap" : "Buka form lengkap"}
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={startOver}>
+          Tulis ulang dari nol
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_352px] gap-6">
+        <div className="flex flex-col gap-4 min-w-0">
           <InputPanel
             value={state.rawInput}
             onChange={(v) => dispatch({ type: "SET_INPUT", payload: v })}
             onParse={handleParse}
             loading={state.parseStatus === "loading"}
+            visible={showStory}
+            onCancel={() => setShowStory(false)}
           />
-          <ParamsPanel
+          <SentenceCard
             params={state.params}
             pricing={pricingConfig}
             onChange={(patch) => dispatch({ type: "UPDATE_PARAMS", payload: patch })}
             storySource={storySource}
+            onStartOver={startOver}
           />
-        </div>
-
-        <div className="lg:sticky lg:top-20 flex flex-col gap-4 self-start">
+          {showFullForm && (
+            <ParamsPanel
+              params={state.params}
+              pricing={pricingConfig}
+              onChange={(patch) => dispatch({ type: "UPDATE_PARAMS", payload: patch })}
+              storySource={storySource}
+            />
+          )}
+          {/* Rincian Biaya belongs in the wide main column, not the 352px rail (Hi-Fi handoff,
+              "Komponen kolom utama" #4): its 1fr/148px/176px row grid needs the full width, and
+              inside the rail the 1fr label column collapses. Rendered once here for both
+              breakpoints — the rail/mobile block below only carries the total and CTAs. */}
           <BudgetBreakdown
             display={display}
             customRows={state.manualOverrides.customRows}
@@ -402,16 +445,35 @@ export function EstimatorClient({
             editable={canEditOverrides}
             {...rowHandlers}
           />
-          <Button
-            onClick={() => { setSaveTitle(existingTitle ?? ""); dispatch({ type: "OPEN_SAVE" }) }}
-            className="w-full"
-            size="lg"
-            disabled={paramsUnchanged && overridesUnchanged}
-          >
-            {estimateId ? "Perbarui Estimasi" : "Simpan Estimasi"}
-          </Button>
         </div>
+
+        {isDesktop ? (
+          <EstimatorRail
+            display={display}
+            pax={state.params.pax}
+            params={state.params}
+            onSave={() => { setSaveTitle(existingTitle ?? ""); dispatch({ type: "OPEN_SAVE" }) }}
+            saveLabel={estimateId ? "Perbarui Estimasi" : "Simpan Estimasi"}
+            saveDisabled={paramsUnchanged && overridesUnchanged}
+            waOpen={waOpen}
+            onWaOpenChange={setWaOpen}
+          />
+        ) : (
+          <div className="flex flex-col gap-4 pb-24">
+            <Button
+              onClick={() => { setSaveTitle(existingTitle ?? ""); dispatch({ type: "OPEN_SAVE" }) }}
+              className="w-full"
+              size="lg"
+              disabled={paramsUnchanged && overridesUnchanged}
+            >
+              {estimateId ? "Perbarui Estimasi" : "Simpan Estimasi"}
+            </Button>
+            {waOpen && <MobileWaPanel display={display} params={state.params} pax={state.params.pax} />}
+          </div>
+        )}
       </div>
+
+      {!isDesktop && <MobileTotalBar display={display} waOpen={waOpen} onWaOpenChange={setWaOpen} />}
 
       <Dialog open={state.showSaveDialog} onOpenChange={(open) => !open && dispatch({ type: "CLOSE_SAVE" })}>
         <DialogContent style={{ background: "#0f2318", borderColor: "var(--color-border)" }}>

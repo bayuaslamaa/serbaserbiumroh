@@ -1,4 +1,5 @@
 import type { BreakdownDisplay, BudgetBreakdown, EstimateParams } from "@/types"
+import { HOTEL_MADINAH_ROW_KEY, HOTEL_MAKKAH_ROW_KEY } from "@/types"
 import { rp, rowCalc, exportLabel, basisNote, kursLine, EXPORT_NOTES } from "./summary"
 
 const AIRLINE_LABELS: Record<string, string> = {
@@ -45,6 +46,54 @@ export function generateWhatsAppText(
   lines.push("")
   lines.push(kursLine(display))
   lines.push(`⚠️ ${EXPORT_NOTES.exclusions}`)
+  lines.push(EXPORT_NOTES.priceChange)
+  lines.push(EXPORT_NOTES.contact)
+
+  return lines.join("\n")
+}
+
+const MONTH_NAMES = [
+  "",
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+]
+
+// A friendlier, greeting-style WhatsApp message for the always-visible estimator rail's "Kirim
+// WA" flow. Distinct from generateWhatsAppText above (the itemized admin/export-route copy) —
+// this is a compact, forwardable summary: greeting, trip summary, nights/hotel lines, the total,
+// and the same shared export notes/disclaimer every export surface uses.
+export function buildWhatsAppMessage(display: BreakdownDisplay, params: EstimateParams, pax: number): string {
+  const lines: string[] = []
+  const totalDays = params.nightsMadinah + params.nightsMakkah
+  const monthLabel = params.travelMonth ? ` di bulan ${MONTH_NAMES[params.travelMonth]}` : ""
+
+  lines.push("Assalamu'alaikum, berikut estimasi biaya Umroh yang Kakak minta:")
+  lines.push("")
+  lines.push(`🕋 Umroh ${totalDays} hari untuk ${pax} orang${monthLabel}`)
+
+  const madinahRow = display.rows.find((r) => r.key === HOTEL_MADINAH_ROW_KEY)
+  const makkahRow = display.rows.find((r) => r.key === HOTEL_MAKKAH_ROW_KEY)
+  const madinahHotel = madinahRow?.hotelDetail ? ` di ${madinahRow.hotelDetail.label}` : ""
+  const makkahHotel = makkahRow?.hotelDetail ? ` di ${makkahRow.hotelDetail.label}` : ""
+  lines.push(`🏨 Madinah: ${params.nightsMadinah} malam${madinahHotel}`)
+  lines.push(`🏨 Makkah: ${params.nightsMakkah} malam${makkahHotel}`)
+
+  lines.push("")
+  lines.push(`*Total per orang: ${rp(display.totalIdrPax)}*`)
+  if (pax > 1) lines.push(`*Total ${pax} orang: ${rp(display.totalIdrGrp)}*`)
+
+  lines.push("")
+  lines.push(EXPORT_NOTES.exclusions)
   lines.push(EXPORT_NOTES.priceChange)
   lines.push(EXPORT_NOTES.contact)
 

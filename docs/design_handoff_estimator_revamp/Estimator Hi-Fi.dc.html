@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#071309;font-family:'DM Sans',system-ui,sans-serif;color:#e8efe6}
+a{color:#c9a84c;text-decoration:none}a:hover{color:#e0c374}
+input,button,textarea{font-family:inherit;color:inherit}
+input:focus,textarea:focus{outline:1px solid rgba(201,168,76,.55);outline-offset:0}
+::placeholder{color:rgba(232,239,230,.32)}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(201,168,76,.24);border-radius:8px}
+@keyframes trayIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes sheetIn{from{transform:translateY(100%)}to{transform:none}}
+</style></helmet>
+
+<section style="padding:36px 40px 60px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;align-items:baseline;gap:10px">
+  <span style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#c9a84c;color:#0b1c12;border-radius:4px">2a</span>
+  <span style="font:500 12px 'DM Sans',sans-serif;color:rgba(232,239,230,.5)">Hi-fi dari 1d — rencana sebagai kalimat hidup. Desktop 1440 + mobile 390, keduanya live.</span>
+</div>
+
+<div style="display:flex;gap:26px;align-items:flex-start;width:max-content">
+
+<div style="width:1440px;flex:none;background:#0b1c12;border:1px solid rgba(201,168,76,.18);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.45)">
+  <div style="height:54px;border-bottom:1px solid rgba(201,168,76,.18);display:flex;align-items:center;gap:22px;padding:0 26px;background:rgba(255,255,255,.02)">
+    <span style="font:700 15px 'Amiri',serif;color:#c9a84c;letter-spacing:.01em">Umroh<span style="color:#e8efe6">Kita</span></span>
+    <span style="font:500 12.5px 'DM Sans';color:rgba(232,239,230,.55)">Panduan</span>
+    <span style="font:500 12.5px 'DM Sans';color:rgba(232,239,230,.55)">Hotel Nusuk</span>
+    <span style="font:500 12.5px 'DM Sans';color:rgba(232,239,230,.55)">Komunitas</span>
+    <span style="font:500 12.5px 'DM Sans';color:#e8efe6">Estimasi</span>
+    <span style="flex:1"></span>
+    <span style="font:500 11.5px 'DM Sans';color:rgba(232,239,230,.4)">bayuaslamaa@gmail.com</span>
+  </div>
+
+  <div style="padding:30px 40px 44px;display:flex;flex-direction:column;gap:22px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <h1 style="margin:0;font:700 29px/1.15 'Amiri',serif;color:#c9a84c">Estimasi Biaya Umroh</h1>
+        <p style="margin:0;font:400 13.5px/1.5 'DM Sans';color:rgba(232,239,230,.55);max-width:560px;text-wrap:pretty">Ceritakan rencana Kakak sekali saja — kami rapikan jadi kalimat yang bisa Kakak betulkan sendiri.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <button onClick="{{ toggleFullForm }}" style="height:34px;padding:0 13px;background:transparent;border:1px solid rgba(201,168,76,.3);border-radius:8px;font:500 12px 'DM Sans';cursor:pointer;color:rgba(232,239,230,.8)" style-hover="background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.55)">{{ fullFormLabel }}</button>
+        <button onClick="{{ startStory }}" style="height:34px;padding:0 13px;background:transparent;border:1px solid rgba(201,168,76,.3);border-radius:8px;font:500 12px 'DM Sans';cursor:pointer;color:rgba(232,239,230,.8)" style-hover="background:rgba(201,168,76,.1);border-color:rgba(201,168,76,.55)">Tulis ulang dari nol</button>
+      </div>
+    </div>
+
+    <sc-if value="{{ showStory }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid rgba(201,168,76,.4);border-radius:14px;background:rgba(201,168,76,.05);padding:24px 26px;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="width:22px;height:22px;border-radius:50%;background:#c9a84c;color:#0b1c12;display:flex;align-items:center;justify-content:center;font:700 12px 'DM Sans'">1</span>
+          <span style="font:700 16px 'Amiri',serif;color:#c9a84c">Ceritakan rencana Kakak</span>
+          <span style="font:400 12px 'DM Sans';color:rgba(232,239,230,.45)">bebas, seperti chat biasa</span>
+        </div>
+        <textarea value="{{ storyText }}" onChange="{{ setStory }}" rows="4" placeholder="Contoh: Umroh 12 hari untuk 2 orang bulan November. Madinah 4 malam, Makkah 9 malam, kamar quad, fullboard, Saudia, tambah visa+siskopatuh+transport." style="width:100%;box-sizing:border-box;resize:vertical;background:rgba(0,0,0,.28);border:1px solid rgba(201,168,76,.22);border-radius:10px;padding:13px 15px;font:400 13.5px/1.65 'DM Sans';color:#e8efe6"></textarea>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ examples }}" as="ex" hint-placeholder-count="3">
+            <button onClick="{{ ex.pick }}" style="background:transparent;border:1px solid rgba(201,168,76,.25);border-radius:20px;padding:6px 13px;font:400 12px 'DM Sans';color:rgba(232,239,230,.7);cursor:pointer" style-hover="border-color:#c9a84c;color:#e8efe6">{{ ex.text }}</button>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button onClick="{{ parseStory }}" style="height:44px;padding:0 26px;background:#c9a84c;border:none;border-radius:9px;font:700 13.5px 'DM Sans';color:#0b1c12;cursor:pointer" style-hover="background:#dcbc66">{{ parseLabel }}</button>
+          <button onClick="{{ cancelStory }}" style="height:44px;padding:0 16px;background:transparent;border:none;font:500 13px 'DM Sans';color:rgba(232,239,230,.5);cursor:pointer" style-hover="color:#e8efe6">Batal</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;gap:26px;align-items:flex-start">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:20px">
+
+        <div style="border:1px solid rgba(201,168,76,.34);border-radius:14px;background:rgba(201,168,76,.045);overflow:hidden">
+          <div style="padding:18px 24px 4px;display:flex;align-items:center;gap:9px">
+            <span style="font:700 9.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:#c9a84c">Rencana Kakak</span>
+            <span style="font:400 11.5px 'DM Sans';color:rgba(232,239,230,.4)">klik bagian bergaris untuk betulkan</span>
+          </div>
+          <p style="margin:0;padding:8px 24px 20px;font:400 21px/2.15 'Amiri',serif;color:#e8efe6;text-wrap:pretty">
+            Umroh <button onClick="{{ openDays }}" style="{{ chipDays }}" style-hover="border-color:#c9a84c">{{ daysLabel }}</button>
+            untuk <button onClick="{{ openPax }}" style="{{ chipPax }}" style-hover="border-color:#c9a84c">{{ paxLabel }}</button>
+            bulan <button onClick="{{ openMonth }}" style="{{ chipMonth }}" style-hover="border-color:#c9a84c">{{ monthLabel }}</button>.
+            Madinah <button onClick="{{ openMdNights }}" style="{{ chipMdNights }}" style-hover="border-color:#c9a84c">{{ mdNightsLabel }}</button>
+            di <button onClick="{{ openMdHotel }}" style="{{ chipMdHotel }}" style-hover="border-color:#c9a84c">{{ mdHotelLabel }}</button>,
+            Makkah <button onClick="{{ openMkNights }}" style="{{ chipMkNights }}" style-hover="border-color:#c9a84c">{{ mkNightsLabel }}</button>
+            di <button onClick="{{ openMkHotel }}" style="{{ chipMkHotel }}" style-hover="border-color:#c9a84c">{{ mkHotelLabel }}</button>,
+            kamar <button onClick="{{ openRoom }}" style="{{ chipRoom }}" style-hover="border-color:#c9a84c">{{ roomLabel }}</button>
+            <button onClick="{{ openBoard }}" style="{{ chipBoard }}" style-hover="border-color:#c9a84c">{{ boardLabel }}</button>,
+            naik <button onClick="{{ openAirline }}" style="{{ chipAirline }}" style-hover="border-color:#c9a84c">{{ airlineLabel }}</button>,
+            plus <button onClick="{{ openServices }}" style="{{ chipServices }}" style-hover="border-color:#c9a84c">{{ servicesLabel }}</button>.
+          </p>
+          <div style="padding:0 24px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font:400 12px 'DM Sans';color:rgba(232,239,230,.4)">Kalau rencananya berubah banyak,</span>
+            <button onClick="{{ startStory }}" style="display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.45);border-radius:20px;font:600 12px 'DM Sans';color:#c9a84c;cursor:pointer" style-hover="background:rgba(201,168,76,.2)">✎ ceritakan ulang dari nol</button>
+            <span style="font:400 12px 'DM Sans';color:rgba(232,239,230,.4)">— kami susun kalimatnya lagi.</span>
+          </div>
+
+          <sc-if value="{{ trayOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="border-top:1px solid rgba(201,168,76,.28);background:rgba(0,0,0,.3);padding:18px 24px 20px;display:flex;flex-direction:column;gap:13px;animation:trayIn .16s ease-out">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font:700 9.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:#c9a84c">{{ trayTitle }}</span>
+                <span style="flex:1"></span>
+                <button onClick="{{ closeTray }}" style="width:26px;height:26px;border-radius:7px;background:transparent;border:1px solid rgba(201,168,76,.25);color:rgba(232,239,230,.6);cursor:pointer;font-size:13px;line-height:1" style-hover="color:#e8efe6;border-color:#c9a84c">×</button>
+              </div>
+
+              <sc-if value="{{ trayNumber }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <button onClick="{{ numDown }}" style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.3);color:#e8efe6;font-size:19px;cursor:pointer" style-hover="background:rgba(201,168,76,.14);border-color:#c9a84c">−</button>
+                  <span style="min-width:64px;text-align:center;font:700 26px 'Amiri',serif;color:#c9a84c">{{ numValue }}</span>
+                  <button onClick="{{ numUp }}" style="width:44px;height:44px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.3);color:#e8efe6;font-size:19px;cursor:pointer" style-hover="background:rgba(201,168,76,.14);border-color:#c9a84c">+</button>
+                  <span style="font:400 12.5px/1.5 'DM Sans';color:rgba(232,239,230,.45);max-width:340px">{{ numHint }}</span>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ trayMonth }}" hint-placeholder-val="{{ false }}">
+                <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;max-width:560px">
+                  <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+                    <button onClick="{{ m.pick }}" style="{{ m.css }}" style-hover="border-color:#c9a84c">
+                      <span style="font:600 13px 'DM Sans'">{{ m.name }}</span>
+                      <span style="font:400 9.5px 'DM Sans';opacity:.6">{{ m.season }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ trayHotel }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:11px">
+                  <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+                    <input value="{{ hotelQuery }}" onChange="{{ setHotelQuery }}" placeholder="Cari nama hotel…" style="width:280px;height:38px;box-sizing:border-box;background:rgba(0,0,0,.35);border:1px solid rgba(201,168,76,.24);border-radius:9px;padding:0 13px;font:400 13px 'DM Sans';color:#e8efe6">
+                    <sc-for list="{{ hotelFilters }}" as="f" hint-placeholder-count="4">
+                      <button onClick="{{ f.pick }}" style="{{ f.css }}" style-hover="border-color:#c9a84c">{{ f.label }}</button>
+                    </sc-for>
+                    <span style="flex:1"></span>
+                    <span style="font:400 11.5px 'DM Sans';color:rgba(232,239,230,.4)">{{ hotelCount }}</span>
+                  </div>
+                  <div style="max-height:264px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-right:4px">
+                    <sc-for list="{{ hotelList }}" as="h" hint-placeholder-count="6">
+                      <button onClick="{{ h.pick }}" style="{{ h.css }}" style-hover="border-color:#c9a84c">
+                        <span style="display:flex;flex-direction:column;gap:3px;text-align:left;min-width:0">
+                          <span style="font:600 13px 'DM Sans';color:#e8efe6">{{ h.name }}</span>
+                          <span style="font:400 11px 'DM Sans';color:rgba(232,239,230,.45)">{{ h.meta }}</span>
+                        </span>
+                        <span style="font:700 12.5px 'DM Sans';color:#c9a84c;white-space:nowrap">{{ h.rate }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ trayOptions }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <sc-for list="{{ optionList }}" as="o" hint-placeholder-count="4">
+                    <button onClick="{{ o.pick }}" style="{{ o.css }}" style-hover="border-color:#c9a84c">
+                      <span style="font:600 13px 'DM Sans'">{{ o.label }}</span>
+                      <span style="font:400 10.5px 'DM Sans';opacity:.6">{{ o.note }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ showFullForm }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1px solid rgba(201,168,76,.18);border-radius:14px;background:rgba(255,255,255,.03);padding:20px 24px;display:flex;flex-direction:column;gap:14px">
+            <span style="font:700 9.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:rgba(232,239,230,.5)">Form lengkap — semua parameter</span>
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
+              <sc-for list="{{ formFields }}" as="f" hint-placeholder-count="8">
+                <button onClick="{{ f.open }}" style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;text-align:left;background:rgba(0,0,0,.25);border:1px solid rgba(201,168,76,.16);border-radius:10px;padding:11px 13px;cursor:pointer" style-hover="border-color:#c9a84c">
+                  <span style="font:700 9px 'DM Sans';letter-spacing:.1em;text-transform:uppercase;color:rgba(232,239,230,.45)">{{ f.label }}</span>
+                  <span style="font:600 13.5px 'DM Sans';color:#e8efe6">{{ f.value }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="border:1px solid rgba(201,168,76,.18);border-radius:14px;background:rgba(255,255,255,.03);overflow:hidden">
+          <div style="padding:18px 24px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(201,168,76,.14)">
+            <span style="font:700 16px 'Amiri',serif;color:#c9a84c">Rincian Biaya</span>
+            <span style="font:400 11.5px 'DM Sans';color:rgba(232,239,230,.4)">harga satuan &amp; total bisa ditimpa manual</span>
+            <span style="flex:1"></span>
+            <sc-if value="{{ hasManual }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ resetAll }}" style="height:30px;padding:0 12px;background:transparent;border:1px solid rgba(201,168,76,.28);border-radius:8px;font:500 11.5px 'DM Sans';color:rgba(232,239,230,.7);cursor:pointer" style-hover="border-color:#c9a84c;color:#e8efe6">Reset semua override</button>
+            </sc-if>
+            <button onClick="{{ copyAll }}" style="height:30px;padding:0 12px;background:transparent;border:1px solid rgba(201,168,76,.28);border-radius:8px;font:500 11.5px 'DM Sans';color:rgba(232,239,230,.7);cursor:pointer" style-hover="border-color:#c9a84c;color:#e8efe6">{{ copyLabel }}</button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 148px 176px 40px;gap:10px;padding:12px 24px 8px;align-items:end">
+            <span style="font:700 9px 'DM Sans';letter-spacing:.1em;text-transform:uppercase;color:rgba(232,239,230,.4)">Komponen</span>
+            <span style="font:700 9px 'DM Sans';letter-spacing:.1em;text-transform:uppercase;color:rgba(232,239,230,.4);text-align:right">Harga satuan</span>
+            <span style="font:700 9px 'DM Sans';letter-spacing:.1em;text-transform:uppercase;color:rgba(232,239,230,.4);text-align:right">Total / orang</span>
+            <span></span>
+          </div>
+
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+            <div style="{{ r.rowCss }}">
+              <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <input value="{{ r.label }}" onChange="{{ r.setLabel }}" style="flex:1;min-width:0;background:transparent;border:1px solid transparent;border-radius:7px;padding:5px 7px;margin-left:-7px;font:600 13.5px 'DM Sans';color:#e8efe6" style-hover="border-color:rgba(201,168,76,.28)">
+                  <sc-if value="{{ r.manual }}" hint-placeholder-val="{{ false }}">
+                    <span style="font:700 8.5px 'DM Sans';letter-spacing:.09em;text-transform:uppercase;color:#0b1c12;background:#c9a84c;border-radius:20px;padding:3px 8px;white-space:nowrap">manual</span>
+                  </sc-if>
+                </div>
+                <span style="font:400 11.5px 'DM Sans';color:rgba(232,239,230,.42)">{{ r.note }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;justify-content:flex-end">
+                <span style="font:500 11px 'DM Sans';color:rgba(232,239,230,.45)">{{ r.cur }}</span>
+                <input value="{{ r.unitStr }}" onChange="{{ r.setUnit }}" style="{{ r.unitCss }}">
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;justify-content:flex-end">
+                <span style="font:500 11px 'DM Sans';color:rgba(232,239,230,.45)">Rp</span>
+                <input value="{{ r.totalStr }}" onChange="{{ r.setTotal }}" style="{{ r.totalCss }}">
+              </div>
+              <div style="display:flex;justify-content:flex-end">
+                <button onClick="{{ r.remove }}" title="Hapus baris" style="width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid rgba(201,168,76,.2);color:rgba(232,239,230,.5);cursor:pointer;font-size:14px;line-height:1" style-hover="border-color:#c9683c;color:#e8a082">×</button>
+              </div>
+            </div>
+          </sc-for>
+
+          <div style="padding:14px 24px 20px">
+            <button onClick="{{ addRow }}" style="height:40px;width:100%;background:transparent;border:1px dashed rgba(201,168,76,.34);border-radius:10px;font:500 12.5px 'DM Sans';color:rgba(232,239,230,.6);cursor:pointer" style-hover="border-color:#c9a84c;color:#e8efe6">+ Tambah baris biaya</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="width:352px;flex:none;display:flex;flex-direction:column;gap:14px;position:sticky;top:20px">
+        <div style="border:1px solid rgba(201,168,76,.4);border-radius:14px;background:linear-gradient(180deg,rgba(201,168,76,.1),rgba(201,168,76,.03));padding:22px;display:flex;flex-direction:column;gap:14px">
+          <span style="font:700 9.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:#c9a84c">Total per orang</span>
+          <span style="font:700 34px/1 'Amiri',serif;color:#c9a84c;transition:color .25s ease">{{ totalStr }}</span>
+          <span style="font:400 11.5px/1.55 'DM Sans';color:rgba(232,239,230,.45)">{{ paxLine }}</span>
+          <div style="height:1px;background:rgba(201,168,76,.22)"></div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <span style="font:500 12.5px 'DM Sans';color:rgba(232,239,230,.72)">{{ g.label }}</span>
+                  <span style="font:600 12.5px 'DM Sans';color:#e8efe6">{{ g.amount }}</span>
+                </div>
+                <div style="height:3px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden">
+                  <div style="{{ g.barCss }}"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="height:1px;background:rgba(201,168,76,.22)"></div>
+          <span style="font:400 10.5px/1.5 'DM Sans';color:rgba(232,239,230,.38)">Kurs: SAR 1 ≈ Rp 4.900 · USD 1 ≈ Rp 18.150. Estimasi belum termasuk biaya tak terduga; harga sewaktu-waktu dapat berubah.</span>
+          <button onClick="{{ save }}" style="height:46px;background:#c9a84c;border:none;border-radius:10px;font:700 14px 'DM Sans';color:#0b1c12;cursor:pointer" style-hover="background:#dcbc66">{{ saveLabel }}</button>
+          <button onClick="{{ toggleWa }}" style="height:42px;background:transparent;border:1px solid rgba(201,168,76,.4);border-radius:10px;font:600 13px 'DM Sans';color:#c9a84c;cursor:pointer" style-hover="background:rgba(201,168,76,.12)">Kirim ke jamaah via WhatsApp</button>
+        </div>
+
+        <sc-if value="{{ waOpen }}" hint-placeholder-val="{{ true }}">
+          <div style="border:1px solid rgba(201,168,76,.18);border-radius:14px;background:rgba(255,255,255,.03);padding:18px;display:flex;flex-direction:column;gap:10px">
+            <span style="font:700 9.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:rgba(232,239,230,.5)">Pesan yang akan dikirim</span>
+            <div style="background:rgba(0,0,0,.32);border:1px solid rgba(201,168,76,.14);border-radius:10px;padding:13px;font:400 12.5px/1.7 'DM Sans';color:rgba(232,239,230,.78);white-space:pre-line">{{ waText }}</div>
+            <button onClick="{{ copyWa }}" style="height:36px;background:transparent;border:1px solid rgba(201,168,76,.28);border-radius:9px;font:500 12px 'DM Sans';color:rgba(232,239,230,.75);cursor:pointer" style-hover="border-color:#c9a84c;color:#e8efe6">{{ copyWaLabel }}</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="flex:none;display:flex;flex-direction:column;gap:10px">
+  <span style="font:500 11.5px 'DM Sans';color:rgba(232,239,230,.4)">Mobile 390 — state yang sama</span>
+  <div style="width:390px;height:800px;background:#0b1c12;border:1px solid rgba(201,168,76,.2);border-radius:26px;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.45)">
+    <div style="height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font:600 11px 'DM Sans';color:rgba(232,239,230,.5)">
+      <span>09:41</span><span>Estimasi</span><span>▮▮▮</span>
+    </div>
+    <div style="position:absolute;top:38px;left:0;right:0;bottom:96px;overflow-y:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:16px">
+      <h2 style="margin:0;font:700 21px/1.2 'Amiri',serif;color:#c9a84c">Estimasi Biaya Umroh</h2>
+      <div style="border:1px solid rgba(201,168,76,.34);border-radius:12px;background:rgba(201,168,76,.05);padding:14px 15px;display:flex;flex-direction:column;gap:10px">
+        <span style="font:700 9px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:#c9a84c">Rencana Kakak</span>
+        <p style="margin:0;font:400 16px/56px 'Amiri',serif;color:#e8efe6">
+          Umroh <button onClick="{{ openDays }}" style="{{ mChipDays }}">{{ daysLabel }}</button>
+          untuk <button onClick="{{ openPax }}" style="{{ mChipPax }}">{{ paxLabel }}</button>
+          bulan <button onClick="{{ openMonth }}" style="{{ mChipMonth }}">{{ monthLabel }}</button>.
+          Madinah <button onClick="{{ openMdNights }}" style="{{ mChipMdNights }}">{{ mdNightsLabel }}</button>
+          di <button onClick="{{ openMdHotel }}" style="{{ mChipMdHotel }}">{{ mdHotelLabel }}</button>,
+          Makkah <button onClick="{{ openMkNights }}" style="{{ mChipMkNights }}">{{ mkNightsLabel }}</button>
+          di <button onClick="{{ openMkHotel }}" style="{{ mChipMkHotel }}">{{ mkHotelLabel }}</button>,
+          kamar <button onClick="{{ openRoom }}" style="{{ mChipRoom }}">{{ roomLabel }}</button>.
+        </p>
+        <span style="font:400 11px 'DM Sans';color:rgba(232,239,230,.4)">Tap bagian bergaris untuk betulkan</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <span style="font:700 9px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:rgba(232,239,230,.45)">Rincian biaya</span>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+          <div style="{{ r.mRowCss }}">
+            <div style="display:flex;align-items:flex-start;gap:8px">
+              <span style="flex:1;font:600 13px/1.35 'DM Sans';color:#e8efe6">{{ r.label }}</span>
+              <span style="font:600 13px 'DM Sans';color:#c9a84c;white-space:nowrap">{{ r.totalShort }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="flex:1;font:400 11px 'DM Sans';color:rgba(232,239,230,.42)">{{ r.note }}</span>
+              <sc-if value="{{ r.manual }}" hint-placeholder-val="{{ false }}">
+                <span style="font:700 8px 'DM Sans';letter-spacing:.08em;text-transform:uppercase;color:#0b1c12;background:#c9a84c;border-radius:20px;padding:2px 7px">manual</span>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+        <button onClick="{{ addRow }}" style="height:44px;background:transparent;border:1px dashed rgba(201,168,76,.34);border-radius:10px;font:500 12.5px 'DM Sans';color:rgba(232,239,230,.6);cursor:pointer">+ Tambah baris biaya</button>
+      </div>
+    </div>
+
+    <sc-if value="{{ trayOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:0;right:0;bottom:0;top:0;z-index:5;background:rgba(0,0,0,.5);display:flex;align-items:flex-end">
+        <div style="width:100%;max-height:74%;overflow-y:auto;background:#12251a;border-top:1px solid rgba(201,168,76,.4);border-radius:18px 18px 0 0;padding:16px 16px 22px;display:flex;flex-direction:column;gap:14px;animation:sheetIn .2s ease-out">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font:700 9.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:#c9a84c">{{ trayTitle }}</span>
+            <span style="flex:1"></span>
+            <button onClick="{{ closeTray }}" style="width:44px;height:44px;border-radius:11px;background:transparent;border:1px solid rgba(201,168,76,.25);color:rgba(232,239,230,.6);cursor:pointer;font-size:17px;line-height:1">×</button>
+          </div>
+          <sc-if value="{{ trayNumber }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div style="display:flex;align-items:center;justify-content:center;gap:18px">
+                <button onClick="{{ numDown }}" style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.3);color:#e8efe6;font-size:22px;cursor:pointer">−</button>
+                <span style="min-width:70px;text-align:center;font:700 30px 'Amiri',serif;color:#c9a84c">{{ numValue }}</span>
+                <button onClick="{{ numUp }}" style="width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(201,168,76,.3);color:#e8efe6;font-size:22px;cursor:pointer">+</button>
+              </div>
+              <span style="text-align:center;font:400 12px 'DM Sans';color:rgba(232,239,230,.45)">{{ numHint }}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ trayMonth }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+              <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+                <button onClick="{{ m.pick }}" style="{{ m.mCss }}">
+                  <span style="font:600 14px 'DM Sans'">{{ m.name }}</span>
+                  <span style="font:400 10px 'DM Sans';opacity:.6">{{ m.season }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ trayHotel }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <input value="{{ hotelQuery }}" onChange="{{ setHotelQuery }}" placeholder="Cari nama hotel…" style="height:44px;box-sizing:border-box;background:rgba(0,0,0,.35);border:1px solid rgba(201,168,76,.24);border-radius:10px;padding:0 13px;font:400 13.5px 'DM Sans';color:#e8efe6">
+              <div style="display:flex;gap:7px;flex-wrap:wrap">
+                <sc-for list="{{ hotelFilters }}" as="f" hint-placeholder-count="4">
+                  <button onClick="{{ f.pick }}" style="{{ f.mCss }}">{{ f.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{ hotelList }}" as="h" hint-placeholder-count="6">
+                  <button onClick="{{ h.pick }}" style="{{ h.mCss }}">
+                    <span style="display:flex;flex-direction:column;gap:3px;text-align:left;min-width:0">
+                      <span style="font:600 13.5px 'DM Sans';color:#e8efe6">{{ h.name }}</span>
+                      <span style="font:400 11px 'DM Sans';color:rgba(232,239,230,.45)">{{ h.meta }}</span>
+                    </span>
+                    <span style="font:700 13px 'DM Sans';color:#c9a84c;white-space:nowrap">{{ h.rate }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ trayOptions }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ optionList }}" as="o" hint-placeholder-count="4">
+                <button onClick="{{ o.pick }}" style="{{ o.mCss }}">
+                  <span style="font:600 14px 'DM Sans'">{{ o.label }}</span>
+                  <span style="font:400 10.5px 'DM Sans';opacity:.6">{{ o.note }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;border-top:1px solid rgba(201,168,76,.34);background:#0e2013;padding:12px 16px 16px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0">
+        <span style="font:700 8.5px 'DM Sans';letter-spacing:.11em;text-transform:uppercase;color:rgba(232,239,230,.45)">Total / orang</span>
+        <span style="font:700 22px/1 'Amiri',serif;color:#c9a84c">{{ totalShortStr }}</span>
+      </div>
+      <button onClick="{{ save }}" style="height:48px;padding:0 18px;background:#c9a84c;border:none;border-radius:11px;font:700 13.5px 'DM Sans';color:#0b1c12;cursor:pointer;white-space:nowrap">Kirim WA</button>
+    </div>
+  </div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1100}}">
+const KURS_SAR = 4900, KURS_USD = 18150;
+const MONTHS = [["Jan","low"],["Feb","low"],["Mar","ramadhan"],["Apr","high"],["Mei","normal"],["Jun","normal"],["Jul","liburan"],["Agu","normal"],["Sep","low"],["Okt","normal"],["Nov","normal"],["Des","liburan"]];
+const HOTELS = {
+  madinah: [
+    ["Emaar Taibah","standard","Emaar, ± 250 m Nabawi",235],
+    ["Emaar Royal Hotel Al Madina","premium","Emaar premium, ± 200 m",300],
+    ["Emaar Elite Al Madina","pelataran","Pelataran Nabawi",340],
+    ["Emaar Mektan Hotel","pelataran","Pelataran, view Nabawi",330],
+    ["Peninsula Worth","standard","± 400 m Nabawi",470],
+    ["Pullman Zam Zam","premium","Pelataran, bintang 5",350],
+    ["New Madinah","standard","± 300 m Nabawi",300],
+    ["Sky View Hotel","standard","± 350 m Nabawi",225],
+    ["Grand Plaza Badr Maqam","standard","± 500 m, shuttle",210],
+    ["Al Eiman Royal","premium","Pelataran barat",395],
+    ["Frontel Al Harithia","premium","± 300 m Nabawi",370],
+    ["Rua Al Hijrah","standard","± 450 m, shuttle",195]
+  ],
+  makkah: [
+    ["Al Fouad Tower","standard","Jabal Omar, shuttle",300],
+    ["Olayan Ajyad","standard","Ajyad, ± 700 m Haram",280],
+    ["Snood Ajyad","standard","Ajyad, ± 650 m Haram",265],
+    ["Grand Al Massah","premium","Misfalah, shuttle 24 jam",340],
+    ["Rayyana Ajyad","standard","Ajyad, ± 800 m",250],
+    ["Swissotel Al Maqam","pelataran","Abraj Al Bait, pelataran",690],
+    ["Pullman ZamZam Makkah","pelataran","Abraj Al Bait, pelataran",720],
+    ["Emaar Grand Hotel","premium","± 400 m Haram",480],
+    ["Le Meridien Towers","premium","Jabal Omar, ± 300 m",520],
+    ["Anjum Hotel","standard","Kudai, shuttle",240],
+    ["Rehab Al Deafah","standard","Misfalah, shuttle",215],
+    ["Voco Makkah","premium","Jabal Omar, ± 350 m",470]
+  ]
+};
+const ROOMS = [["quad","4 orang / kamar",1],["triple","3 orang / kamar",1.3],["double","2 orang / kamar",1.85]];
+const BOARDS = [["fullboard","3× makan / hari"],["halfboard","2× makan / hari"],["tanpa makan","room only"]];
+const AIRLINES = [["Saudia","transit / langsung",14500000],["Garuda Indonesia","langsung",17200000],["Etihad","transit Abu Dhabi",13400000],["Qatar Airways","transit Doha",13900000],["Oman Air","transit Muscat",12600000]];
+const SERVICES = [
+  ["visa","Visa Umroh Reguler","USD",165],
+  ["siskopatuh","Siskopatuh","Rp",200000],
+  ["transport","Transportasi Full Rute (Staria)","SAR",2500],
+  ["muthawif","Muthawif / pembimbing","Rp",1200000],
+  ["asuransi","Asuransi perjalanan","Rp",350000],
+  ["tour","City tour Thaif","SAR",180]
+];
+const FILTERS = [["all","Semua"],["pelataran","Pelataran"],["premium","Premium"],["standard","Standard"],["cheap","≤ SAR 300"]];
+
+const fmt = n => Math.round(n).toLocaleString("id-ID");
+const short = n => {
+  if (n >= 1e9) return "Rp " + (n / 1e9).toFixed(2).replace(".", ",") + " M";
+  if (n >= 1e6) return "Rp " + (n / 1e6).toFixed(2).replace(".", ",") + " jt";
+  return "Rp " + fmt(n);
+};
+const digits = s => Number(String(s).replace(/[^\d]/g, "") || 0);
+
+class Component extends DCLogic {
+  state = {
+    days: 12, pax: 2, month: 10, mdNights: 4, mkNights: 9,
+    mdHotel: "Emaar Taibah", mkHotel: "Al Fouad Tower",
+    room: "quad", board: "fullboard", airline: "Saudia",
+    services: ["visa", "siskopatuh", "transport"],
+    tray: null, hotelQuery: "", hotelFilter: "all",
+    overrides: {}, custom: [], removed: [],
+    showStory: false, storyText: "", parsing: false, showFullForm: false,
+    waOpen: true, saved: false, copied: false, copiedWa: false
+  };
+
+  chipStyle(active, mobile) {
+    const pad = mobile ? "0 13px" : "4px 11px";
+    const fs = mobile ? "13px" : "13.5px";
+    return "display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:" + (mobile ? "44px" : "0") + ";padding:" + pad + ";margin:0 1px;background:" +
+      (active ? "rgba(201,168,76,.2)" : "rgba(201,168,76,.09)") +
+      ";border:1px solid " + (active ? "#c9a84c" : "rgba(201,168,76,.4)") +
+      ";border-bottom-width:2px;border-radius:8px;font:600 " + fs + " 'DM Sans',sans-serif;color:#e8efe6;cursor:pointer;transition:border-color .15s,background .15s;white-space:nowrap;vertical-align:baseline";
+  }
+  pickStyle(active, mobile) {
+    return "display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;padding:" +
+      (mobile ? "11px 8px" : "9px 6px") + ";min-height:" + (mobile ? "54px" : "46px") + ";background:" +
+      (active ? "rgba(201,168,76,.18)" : "rgba(0,0,0,.25)") + ";border:1px solid " +
+      (active ? "#c9a84c" : "rgba(201,168,76,.18)") + ";border-radius:9px;color:" +
+      (active ? "#c9a84c" : "#e8efe6") + ";cursor:pointer;transition:border-color .15s,background .15s";
+  }
+  hotelStyle(active, mobile) {
+    return "display:flex;align-items:center;justify-content:space-between;gap:10px;padding:" +
+      (mobile ? "12px 13px" : "10px 12px") + ";min-height:" + (mobile ? "56px" : "48px") + ";background:" +
+      (active ? "rgba(201,168,76,.15)" : "rgba(0,0,0,.25)") + ";border:1px solid " +
+      (active ? "#c9a84c" : "rgba(201,168,76,.16)") + ";border-radius:10px;cursor:pointer;text-align:left;transition:border-color .15s,background .15s";
+  }
+  filterStyle(active, mobile) {
+    return "display:inline-flex;align-items:center;justify-content:center;min-height:" + (mobile ? "44px" : "36px") + ";padding:" + (mobile ? "0 16px" : "7px 12px") + ";background:" +
+      (active ? "rgba(201,168,76,.2)" : "transparent") + ";border:1px solid " +
+      (active ? "#c9a84c" : "rgba(201,168,76,.22)") + ";border-radius:20px;font:500 12px 'DM Sans',sans-serif;color:" +
+      (active ? "#c9a84c" : "rgba(232,239,230,.7)") + ";cursor:pointer;white-space:nowrap";
+  }
+  amountStyle(manual) {
+    return "width:100%;box-sizing:border-box;text-align:right;background:" + (manual ? "rgba(201,168,76,.1)" : "rgba(0,0,0,.3)") +
+      ";border:1px solid " + (manual ? "#c9a84c" : "rgba(201,168,76,.16)") +
+      ";border-radius:8px;padding:8px 10px;font:600 13px 'DM Sans',sans-serif;color:#e8efe6;min-height:36px";
+  }
+
+  hotel(city, name) {
+    const list = HOTELS[city];
+    return list.find(h => h[0] === name) || list[0];
+  }
+  roomMul() { return (ROOMS.find(r => r[0] === this.state.room) || ROOMS[0])[2]; }
+
+  baseRows() {
+    const s = this.state, mul = this.roomMul();
+    const md = this.hotel("madinah", s.mdHotel), mk = this.hotel("makkah", s.mkHotel);
+    const out = [
+      { id: "hotel-md", group: "hotel", label: "Hotel Madinah — " + md[0], cur: "SAR", unit: md[3],
+        note: "SAR " + md[3] + " × " + s.mdNights + " malam · kamar " + s.room + " · " + s.board,
+        total: md[3] * s.mdNights * KURS_SAR * mul },
+      { id: "hotel-mk", group: "hotel", label: "Hotel Makkah — " + mk[0], cur: "SAR", unit: mk[3],
+        note: "SAR " + mk[3] + " × " + s.mkNights + " malam · kamar " + s.room + " · " + s.board,
+        total: mk[3] * s.mkNights * KURS_SAR * mul }
+    ];
+    const air = AIRLINES.find(a => a[0] === s.airline) || AIRLINES[0];
+    out.push({ id: "air", group: "flight", label: "Penerbangan — " + air[0], cur: "Rp", unit: air[2],
+      note: air[1] + " · " + s.days + " hari", total: air[2] });
+    SERVICES.forEach(sv => {
+      if (!s.services.includes(sv[0])) return;
+      const rate = sv[3];
+      const total = sv[2] === "SAR" ? rate * KURS_SAR : sv[2] === "USD" ? rate * KURS_USD : rate;
+      out.push({ id: "svc-" + sv[0], group: "service", label: sv[1], cur: sv[2], unit: rate,
+        note: sv[2] === "Rp" ? "biaya tetap per orang" : sv[2] + " " + fmt(rate) + " × kurs", total });
+    });
+    return out.filter(r => !s.removed.includes(r.id));
+  }
+
+  resolved() {
+    const ov = this.state.overrides;
+    const rows = this.baseRows().map(r => {
+      const o = ov[r.id] || {};
+      return Object.assign({}, r, {
+        label: o.label != null ? o.label : r.label,
+        unit: o.unit != null ? o.unit : r.unit,
+        total: o.total != null ? o.total : r.total,
+        manual: o.unit != null || o.total != null || o.label != null
+      });
+    });
+    this.state.custom.forEach(c => rows.push(Object.assign({ group: "service", manual: true, note: "baris tambahan" }, c)));
+    return rows;
+  }
+
+  patch(id, key, val) {
+    this.setState(s => {
+      if (id.indexOf("custom-") === 0) {
+        return { custom: s.custom.map(c => c.id === id ? Object.assign({}, c, { [key]: val }) : c) };
+      }
+      const cur = Object.assign({}, s.overrides[id] || {});
+      cur[key] = val;
+      return { overrides: Object.assign({}, s.overrides, { [id]: cur }) };
+    });
+  }
+
+  open(kind) { this.setState({ tray: kind, hotelQuery: "", hotelFilter: "all" }); }
+
+  numTray(kind) {
+    const s = this.state;
+    const map = {
+      days: { title: "Lama perjalanan", value: s.days, hint: "Total hari termasuk penerbangan.", min: 3, max: 30, key: "days" },
+      pax: { title: "Jumlah peserta", value: s.pax, hint: "Harga di rincian ditampilkan per orang.", min: 1, max: 40, key: "pax" },
+      mdNights: { title: "Malam di Madinah", value: s.mdNights, hint: "Mempengaruhi baris Hotel Madinah.", min: 0, max: 20, key: "mdNights" },
+      mkNights: { title: "Malam di Makkah", value: s.mkNights, hint: "Mempengaruhi baris Hotel Makkah.", min: 0, max: 20, key: "mkNights" }
+    };
+    return map[kind];
+  }
+
+  renderVals() {
+    const s = this.state, self = this;
+    const rows = this.resolved();
+    const total = rows.reduce((a, r) => a + r.total, 0);
+    const md = this.hotel("madinah", s.mdHotel), mk = this.hotel("makkah", s.mkHotel);
+    const monthName = MONTHS[s.month][0], monthFull = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"][s.month];
+    const svcLabel = s.services.length ? s.services.map(id => (SERVICES.find(x => x[0] === id) || [,""])[1].split(" (")[0].split(" —")[0]).join(" + ") : "tanpa layanan tambahan";
+
+    const groupTotals = { hotel: 0, flight: 0, service: 0 };
+    rows.forEach(r => { groupTotals[r.group] = (groupTotals[r.group] || 0) + r.total; });
+    const gmax = Math.max(1, groupTotals.hotel, groupTotals.flight, groupTotals.service);
+    const groups = [["hotel", "Hotel Madinah & Makkah"], ["flight", "Penerbangan"], ["service", "Visa & layanan"]].map(g => ({
+      label: g[1], amount: short(groupTotals[g[0]] || 0),
+      barCss: "height:100%;width:" + Math.round((groupTotals[g[0]] || 0) / gmax * 100) + "%;background:#c9a84c;border-radius:3px;transition:width .3s ease"
+    }));
+
+    const nt = this.numTray(s.tray);
+    const hotelCity = s.tray === "mdHotel" ? "madinah" : "makkah";
+    let hotelList = HOTELS[hotelCity].filter(h => {
+      const q = s.hotelQuery.trim().toLowerCase();
+      if (q && h[0].toLowerCase().indexOf(q) < 0 && h[2].toLowerCase().indexOf(q) < 0) return false;
+      if (s.hotelFilter === "cheap") return h[3] <= 300;
+      if (s.hotelFilter !== "all") return h[1] === s.hotelFilter;
+      return true;
+    });
+    const activeHotel = hotelCity === "madinah" ? s.mdHotel : s.mkHotel;
+
+    let optionList = [];
+    if (s.tray === "room") optionList = ROOMS.map(r => ({ label: r[0], note: r[1], key: r[0], on: s.room === r[0], apply: () => self.setState({ room: r[0], tray: null }) }));
+    if (s.tray === "board") optionList = BOARDS.map(b => ({ label: b[0], note: b[1], key: b[0], on: s.board === b[0], apply: () => self.setState({ board: b[0], tray: null }) }));
+    if (s.tray === "airline") optionList = AIRLINES.map(a => ({ label: a[0], note: a[1] + " · " + short(a[2]), key: a[0], on: s.airline === a[0], apply: () => self.setState({ airline: a[0], tray: null }) }));
+    if (s.tray === "services") optionList = SERVICES.map(sv => ({
+      label: sv[1], note: sv[2] === "Rp" ? short(sv[3]) : sv[2] + " " + fmt(sv[3]), key: sv[0], on: s.services.includes(sv[0]),
+      apply: () => self.setState(st => ({ services: st.services.includes(sv[0]) ? st.services.filter(x => x !== sv[0]) : st.services.concat([sv[0]]) }))
+    }));
+
+    const trayTitles = { days: "Lama perjalanan", pax: "Jumlah peserta", month: "Bulan keberangkatan", mdNights: "Malam di Madinah", mkNights: "Malam di Makkah", mdHotel: "Pilih hotel Madinah", mkHotel: "Pilih hotel Makkah", room: "Tipe kamar", board: "Konsumsi", airline: "Maskapai", services: "Layanan tambahan (tap untuk aktif/nonaktif)" };
+
+    const waText = "Assalamualaikum Kak 🌙\nIni estimasi umroh " + s.days + " hari untuk " + s.pax + " orang, keberangkatan " + monthFull + ".\n\nMadinah " + s.mdNights + " malam di " + md[0] + "\nMakkah " + s.mkNights + " malam di " + mk[0] + "\nKamar " + s.room + ", " + s.board + ", " + s.airline + "\n\nTotal estimasi: Rp " + fmt(total) + " / orang\n\nHarga sewaktu-waktu bisa berubah. Kalau Kakak serius, kami bantu hitung yang lebih detail ya.";
+
+    const vals = {
+      daysLabel: s.days + " hari", paxLabel: s.pax + " orang", monthLabel: monthFull,
+      mdNightsLabel: s.mdNights + " malam", mkNightsLabel: s.mkNights + " malam",
+      mdHotelLabel: md[0], mkHotelLabel: mk[0], roomLabel: s.room, boardLabel: s.board,
+      airlineLabel: s.airline, servicesLabel: svcLabel,
+      totalStr: "Rp " + fmt(total), totalShortStr: short(total),
+      paxLine: s.pax + " orang · " + s.mdNights + " malam Madinah + " + s.mkNights + " malam Makkah · " + monthFull + " (" + MONTHS[s.month][1] + " season)",
+      groups, rows: rows.map(r => ({
+        label: r.label, note: r.note, cur: r.cur, manual: !!r.manual,
+        unitStr: fmt(r.unit), totalStr: fmt(r.total), totalShort: short(r.total),
+        unitCss: this.amountStyle(r.manual), totalCss: this.amountStyle(r.manual),
+        rowCss: "display:grid;grid-template-columns:1fr 148px 176px 40px;gap:10px;align-items:center;padding:11px 24px;border-top:1px solid rgba(201,168,76,.09);background:" + (r.manual ? "rgba(201,168,76,.05)" : "transparent") + ";transition:background .2s",
+        mRowCss: "display:flex;flex-direction:column;gap:5px;padding:11px 12px;border:1px solid " + (r.manual ? "rgba(201,168,76,.4)" : "rgba(201,168,76,.14)") + ";border-radius:10px;background:" + (r.manual ? "rgba(201,168,76,.06)" : "rgba(255,255,255,.03)"),
+        setLabel: e => self.patch(r.id, "label", e.target.value),
+        setUnit: e => self.patch(r.id, "unit", digits(e.target.value)),
+        setTotal: e => self.patch(r.id, "total", digits(e.target.value)),
+        remove: () => self.setState(st => r.id.indexOf("custom-") === 0 ? { custom: st.custom.filter(c => c.id !== r.id) } : { removed: st.removed.concat([r.id]) })
+      })),
+      months: MONTHS.map((m, i) => ({ name: m[0], season: m[1], css: this.pickStyle(i === s.month, false), mCss: this.pickStyle(i === s.month, true), pick: () => self.setState({ month: i, tray: null }) })),
+      hotelList: hotelList.map(h => ({
+        name: h[0], meta: h[1] + " · " + h[2], rate: "SAR " + h[3],
+        css: this.hotelStyle(h[0] === activeHotel, false), mCss: this.hotelStyle(h[0] === activeHotel, true),
+        pick: () => self.setState(hotelCity === "madinah" ? { mdHotel: h[0], tray: null } : { mkHotel: h[0], tray: null })
+      })),
+      hotelFilters: FILTERS.map(f => ({ label: f[1], css: this.filterStyle(f[0] === s.hotelFilter, false), mCss: this.filterStyle(f[0] === s.hotelFilter, true), pick: () => self.setState({ hotelFilter: f[0] }) })),
+      hotelCount: hotelList.length + " dari " + HOTELS[hotelCity].length + " hotel",
+      hotelQuery: s.hotelQuery, setHotelQuery: e => self.setState({ hotelQuery: e.target.value }),
+      optionList: optionList.map(o => ({ label: o.label, note: o.note, css: this.pickStyle(o.on, false), mCss: this.pickStyle(o.on, true), pick: o.apply })),
+      trayOpen: !!s.tray, trayTitle: trayTitles[s.tray] || "",
+      trayNumber: !!nt, trayMonth: s.tray === "month", trayHotel: s.tray === "mdHotel" || s.tray === "mkHotel",
+      trayOptions: optionList.length > 0,
+      numValue: nt ? nt.value : "", numHint: nt ? nt.hint : "",
+      numUp: () => { const t = self.numTray(self.state.tray); if (t) self.setState({ [t.key]: Math.min(t.max, t.value + 1) }); },
+      numDown: () => { const t = self.numTray(self.state.tray); if (t) self.setState({ [t.key]: Math.max(t.min, t.value - 1) }); },
+      closeTray: () => self.setState({ tray: null }),
+      openDays: () => self.open("days"), openPax: () => self.open("pax"), openMonth: () => self.open("month"),
+      openMdNights: () => self.open("mdNights"), openMkNights: () => self.open("mkNights"),
+      openMdHotel: () => self.open("mdHotel"), openMkHotel: () => self.open("mkHotel"),
+      openRoom: () => self.open("room"), openBoard: () => self.open("board"),
+      openAirline: () => self.open("airline"), openServices: () => self.open("services"),
+      addRow: () => self.setState(st => ({ custom: st.custom.concat([{ id: "custom-" + Date.now(), label: "Biaya tambahan", cur: "Rp", unit: 0, total: 0, note: "baris tambahan" }]) })),
+      hasManual: Object.keys(s.overrides).length > 0 || s.removed.length > 0,
+      resetAll: () => self.setState({ overrides: {}, removed: [] }),
+      copyLabel: s.copied ? "Tersalin ✓" : "Salin rincian",
+      copyAll: () => { self.setState({ copied: true }); setTimeout(() => self.setState({ copied: false }), 1600); },
+      saveLabel: s.saved ? "Estimasi tersimpan ✓" : "Simpan Estimasi",
+      save: () => { self.setState({ saved: true }); setTimeout(() => self.setState({ saved: false }), 2000); },
+      waOpen: s.waOpen, toggleWa: () => self.setState(st => ({ waOpen: !st.waOpen })), waText,
+      copyWaLabel: s.copiedWa ? "Tersalin ✓" : "Salin pesan",
+      copyWa: () => { self.setState({ copiedWa: true }); setTimeout(() => self.setState({ copiedWa: false }), 1600); },
+      showStory: s.showStory, storyText: s.storyText,
+      setStory: e => self.setState({ storyText: e.target.value }),
+      startStory: () => self.setState({ showStory: true, tray: null }),
+      cancelStory: () => self.setState({ showStory: false }),
+      parseLabel: s.parsing ? "Mengurai cerita Kakak…" : "Hitung Estimasi",
+      parseStory: () => {
+        self.setState({ parsing: true });
+        setTimeout(() => self.setState({ parsing: false, showStory: false }), 900);
+      },
+      examples: [
+        { text: "12 hari, 2 pax, Nov, Madinah 4 malam…", pick: () => self.setState({ storyText: "Umroh 12 hari untuk 2 orang bulan November. Madinah 4 malam di Emaar Taibah, Makkah 9 malam di Al Fouad Tower, kamar quad, fullboard, Saudia, tambah visa+siskopatuh+transport." }) },
+        { text: "9 hari, 4 pax, Mar, hotel standard", pick: () => self.setState({ storyText: "Umroh 9 hari untuk 4 orang bulan Maret. Madinah 3 malam, Makkah 5 malam, hotel standard, kamar quad, Etihad." }) },
+        { text: "14 hari, 2 pax, Ramadhan, pelataran", pick: () => self.setState({ storyText: "Umroh 14 hari Ramadhan untuk 2 orang. Madinah 5 malam pelataran, Makkah 8 malam pelataran, kamar double, fullboard." }) }
+      ],
+      showFullForm: s.showFullForm,
+      fullFormLabel: s.showFullForm ? "Sembunyikan form lengkap" : "Buka form lengkap",
+      toggleFullForm: () => self.setState(st => ({ showFullForm: !st.showFullForm })),
+      formFields: [
+        { label: "Lama", value: s.days + " hari", open: () => self.open("days") },
+        { label: "Peserta", value: s.pax + " orang", open: () => self.open("pax") },
+        { label: "Bulan", value: monthFull, open: () => self.open("month") },
+        { label: "Malam Madinah", value: s.mdNights, open: () => self.open("mdNights") },
+        { label: "Malam Makkah", value: s.mkNights, open: () => self.open("mkNights") },
+        { label: "Hotel Madinah", value: md[0], open: () => self.open("mdHotel") },
+        { label: "Hotel Makkah", value: mk[0], open: () => self.open("mkHotel") },
+        { label: "Kamar", value: s.room + " · " + s.board, open: () => self.open("room") },
+        { label: "Maskapai", value: s.airline, open: () => self.open("airline") },
+        { label: "Layanan", value: s.services.length + " dipilih", open: () => self.open("services") }
+      ]
+    };
+    const chips = [["Days", "days"], ["Pax", "pax"], ["Month", "month"], ["MdNights", "mdNights"], ["MkNights", "mkNights"], ["MdHotel", "mdHotel"], ["MkHotel", "mkHotel"], ["Room", "room"], ["Board", "board"], ["Airline", "airline"], ["Services", "services"]];
+    chips.forEach(c => {
+      vals["chip" + c[0]] = this.chipStyle(s.tray === c[1], false);
+      vals["mChip" + c[0]] = this.chipStyle(s.tray === c[1], true);
+    });
+    return vals;
+  }
+}
+</script>
+</body>
+</html>

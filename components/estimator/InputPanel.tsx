@@ -17,24 +17,51 @@ interface InputPanelProps {
   onChange: (v: string) => void
   onParse: () => void
   loading: boolean
+  /** Whether the Story panel is shown. Defaults to true so existing callers are unaffected. */
+  visible?: boolean
+  /** When provided, renders a "Batal" link that calls this to dismiss the Story panel. */
+  onCancel?: () => void
 }
 
-export function InputPanel({ value, onChange, onParse, loading }: InputPanelProps) {
+export function InputPanel({ value, onChange, onParse, loading, visible = true, onCancel }: InputPanelProps) {
+  if (!visible) return null
+
   return (
     <div
       className="rounded-xl border p-5 flex flex-col gap-4"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
-      <div>
-        <h2
-          className="text-lg font-bold mb-1"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
-        >
-          Deskripsi Perjalanan
-        </h2>
-        <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-          Ceritakan rencana umroh Anda, biarkan sistem kami mengisi detailnya.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+            style={{ background: "var(--color-gold)", color: "var(--color-bg)" }}
+            aria-hidden="true"
+          >
+            1
+          </span>
+          <div>
+            <h2
+              className="text-lg font-bold mb-1"
+              style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}
+            >
+              Deskripsi Perjalanan
+            </h2>
+            <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+              Ceritakan rencana umroh Anda, biarkan sistem kami mengisi detailnya.
+            </p>
+          </div>
+        </div>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="text-xs underline underline-offset-2 shrink-0"
+            style={{ color: "var(--color-text-muted)" }}
+          >
+            Batal
+          </button>
+        )}
       </div>
 
       <Textarea

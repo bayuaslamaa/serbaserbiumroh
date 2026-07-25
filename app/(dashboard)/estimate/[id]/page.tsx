@@ -28,7 +28,7 @@ export default async function EstimateDetailPage({ params }: Props) {
   const pricingConfig = await fetchPricingConfig(db)
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-[1400px] mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 text-sm mb-2" style={{ color: "var(--color-text-muted)" }}>
           <Link href="/dashboard" className="hover:text-[var(--color-text)] transition-colors">
