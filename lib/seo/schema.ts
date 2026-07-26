@@ -85,6 +85,34 @@ export function buildFaqPageSchema(entries: FaqEntry[]): JsonLdObject | null {
   }
 }
 
+export interface ArticleInput {
+  headline: string
+  description: string
+  path: string
+  authorName: string
+  datePublished: Date
+  dateModified: Date
+}
+
+export function buildArticleSchema(input: ArticleInput): JsonLdObject {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.headline,
+    description: input.description,
+    mainEntityOfPage: absoluteUrl(input.path),
+    author: { "@type": "Person", name: input.authorName },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: { "@type": "ImageObject", url: absoluteUrl("/logo.png") },
+    },
+    datePublished: input.datePublished.toISOString(),
+    dateModified: input.dateModified.toISOString(),
+    inLanguage: "id-ID",
+  }
+}
+
 export interface BreadcrumbItem {
   name: string
   /** Site-relative path, e.g. "/hotel-nusuk". */

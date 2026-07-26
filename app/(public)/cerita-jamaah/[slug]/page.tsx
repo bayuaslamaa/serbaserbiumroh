@@ -3,7 +3,11 @@ import { db } from '@/lib/db'
 import { pilgrimStories, storyItineraryDays, storyPackingItems } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { StoryDetail } from '@/components/cerita-jamaah/StoryDetail'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { auth } from '@/auth'
+import { buildStoryMeta } from '@/lib/stories/metadata'
+import { pageMetadata } from '@/lib/seo/metadata'
+import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/seo/schema'
 
 // Allow slugs not pre-generated at build time to be rendered dynamically
 export const dynamicParams = true
@@ -35,10 +39,9 @@ export async function generateMetadata({ params }: Props) {
 
   if (!story || !story.isPublished) return {}
 
-  return {
-    title: `Cerita ${story.authorName} — Umroh Mandiri`,
-    description: `Pengalaman umroh mandiri dari ${story.departureCity}, ${story.pax} orang, hotel ${story.hotelTier}`,
-  }
+  const { title, description } = buildStoryMeta(story)
+
+  return pageMetadata({ title, description, path: `/cerita-jamaah/${slug}` })
 }
 
 export default async function StoryDetailPage({ params }: Props) {
@@ -69,12 +72,34 @@ export default async function StoryDetailPage({ params }: Props) {
   const session = await auth()
   const isAdmin = session?.user?.role === 'ADMIN'
 
+  const { title, description } = buildStoryMeta(story)
+  const path = `/cerita-jamaah/${slug}`
+
   return (
-    <StoryDetail
-      story={story}
-      itineraryDays={itinerary}
-      packingItems={packing}
-      isAdmin={isAdmin}
-    />
+    <>
+      <JsonLd
+        data={buildArticleSchema({
+          headline: title,
+          description,
+          path,
+          authorName: story.authorName,
+          datePublished: story.createdAt,
+          dateModified: story.updatedAt,
+        })}
+      />
+      <JsonLd
+        data={buildBreadcrumbSchema([
+          { name: 'Beranda', path: '/' },
+          { name: 'Cerita Jamaah', path: '/cerita-jamaah' },
+          { name: story.authorName, path },
+        ])}
+      />
+      <StoryDetail
+        story={story}
+        itineraryDays={itinerary}
+        packingItems={packing}
+        isAdmin={isAdmin}
+      />
+    </>
   )
 }
