@@ -1,6 +1,8 @@
 import { FaqList } from "@/components/faq/FaqList"
+import { JsonLd } from "@/components/seo/JsonLd"
 import { getPublishedFaqGroups } from "@/lib/faq"
 import { pageMetadata } from "@/lib/seo/metadata"
+import { buildFaqPageSchema } from "@/lib/seo/schema"
 
 export const metadata = pageMetadata({
   title: "FAQ Umroh Mandiri",
@@ -12,8 +14,15 @@ export const metadata = pageMetadata({
 export default async function FaqPage() {
   const groups = await getPublishedFaqGroups()
 
+  // Null whenever nothing is published, so the schema can never claim FAQ
+  // content the page does not actually show.
+  const faqSchema = buildFaqPageSchema(
+    groups.flatMap((group) => group.items.map(({ question, answer }) => ({ question, answer }))),
+  )
+
   return (
     <main className="container mx-auto px-4 py-12">
+      {faqSchema && <JsonLd data={faqSchema} />}
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
           <h1

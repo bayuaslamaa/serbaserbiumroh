@@ -55,6 +55,36 @@ export function buildWebSiteSchema(): JsonLdObject {
   }
 }
 
+export interface FaqEntry {
+  question: string
+  answer: string
+}
+
+/**
+ * FAQPage markup for the /faq page.
+ *
+ * Returns null when there is nothing published. Rendering an empty FAQPage
+ * while the page itself says "FAQ belum tersedia" is exactly the
+ * markup/content mismatch that earns a manual action.
+ */
+export function buildFaqPageSchema(entries: FaqEntry[]): JsonLdObject | null {
+  const usable = entries.filter((entry) => entry.question.trim() && entry.answer.trim())
+  if (usable.length === 0) return null
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: usable.map((entry) => ({
+      "@type": "Question",
+      name: entry.question.trim(),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: entry.answer.trim(),
+      },
+    })),
+  }
+}
+
 export interface BreadcrumbItem {
   name: string
   /** Site-relative path, e.g. "/hotel-nusuk". */
