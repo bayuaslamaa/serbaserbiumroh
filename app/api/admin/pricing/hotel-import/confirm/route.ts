@@ -52,8 +52,16 @@ export async function POST(req: NextRequest) {
 
   if (writableRows.length > 0) {
     await db.transaction(async (tx) => {
+      // Read the taken slugs once, then track newly created ones in memory.
+      // Re-querying per row turned a 500-row import into 500 full-table scans.
+      const takenSlugs = new Set(
+        (await tx.select({ slug: hotelPrices.slug }).from(hotelPrices))
+          .map((row) => row.slug)
+          .filter((slug): slug is string => Boolean(slug)),
+      )
+
       for (const row of writableRows) {
-        appliedRows.push(await applyImportRow(tx, row))
+        appliedRows.push(await applyImportRow(tx, row, takenSlugs))
       }
     })
   }
@@ -63,7 +71,9 @@ export async function POST(req: NextRequest) {
 
 async function applyImportRow(
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  row: HotelPricingImportRowResult
+  row: HotelPricingImportRowResult,
+  /** Slugs already in use, including ones created earlier in this same import. */
+  takenSlugs: Set<string>
 ) {
   if (!row.data) throw new Error("Cannot apply import row without parsed data")
 
@@ -95,15 +105,10 @@ async function applyImportRow(
       })
       .where(eq(hotelPrices.id, hotelId))
   } else {
-    // Read the taken slugs inside the transaction so rows created earlier in
-    // this same import are visible and cannot be handed a duplicate slug.
     // The update branch above deliberately leaves slug alone: a re-import that
     // renames a hotel must not move its indexed URL.
-    const existingSlugs = await tx.select({ slug: hotelPrices.slug }).from(hotelPrices)
-    const slug = nextAvailableSlug(
-      row.data.label,
-      existingSlugs.map((existing) => existing.slug).filter((s): s is string => Boolean(s)),
-    )
+    const slug = nextAvailableSlug(row.data.label, takenSlugs)
+    takenSlugs.add(slug)
 
     const [created] = await tx
       .insert(hotelPrices)

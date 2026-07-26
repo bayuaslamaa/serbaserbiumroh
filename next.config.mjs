@@ -1,4 +1,5 @@
 import createMDX from '@next/mdx'
+import remarkFrontmatter from 'remark-frontmatter'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -21,6 +22,10 @@ const nextConfig = {
   },
 }
 
-const withMDX = createMDX({ options: { remarkPlugins: [], rehypePlugins: [] } })
+// remarkFrontmatter makes the MDX parser treat the leading `---` block as
+// frontmatter rather than content. Without it the YAML renders as visible body
+// text -- lib/panduan.ts reads that same frontmatter via gray-matter to build
+// the guide index, so it has to stay in the file and be skipped at render.
+const withMDX = createMDX({ options: { remarkPlugins: [remarkFrontmatter], rehypePlugins: [] } })
 
 export default withMDX(nextConfig)

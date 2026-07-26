@@ -16,10 +16,21 @@ function mdx(): Plugin {
     async transform(code, id) {
       if (!id.endsWith(".mdx")) return null
 
-      // Imported dynamically: @mdx-js/mdx is ESM-only and this config is
-      // loaded as CJS, so a static import fails to build.
+      // Imported dynamically: both packages are ESM-only and this config is
+      // loaded as CJS, so static imports fail to build.
       const { compile } = await import("@mdx-js/mdx")
-      const compiled = await compile(code, { jsx: false, development: false })
+      const { default: remarkFrontmatter } = await import("remark-frontmatter")
+      // Must match next.config.mjs. Without the same plugin here, the tests
+      // compile MDX differently from the build -- which is how the leaked
+      // frontmatter slipped past a passing word-count assertion.
+      // Keep these options in step with next.config.mjs -- the point of
+      // compiling MDX here at all is that tests see what the build produces.
+      const compiled = await compile(code, {
+        jsx: false,
+        development: false,
+        remarkPlugins: [remarkFrontmatter],
+        providerImportSource: "@/mdx-components",
+      })
       return { code: String(compiled), map: null }
     },
   }

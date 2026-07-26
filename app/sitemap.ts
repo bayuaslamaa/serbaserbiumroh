@@ -4,6 +4,10 @@ import { absoluteUrl } from "@/lib/seo/config"
 import { guideRoutes, hotelRoutes, storyRoutes } from "@/lib/seo/dynamic-routes"
 import { STATIC_ROUTES } from "@/lib/seo/routes"
 
+// Matches the hotel pages' revalidate window, so a hotel or story added
+// through the admin CMS reaches the sitemap without waiting for a redeploy.
+export const revalidate = 3600
+
 /**
  * Served at /sitemap.xml.
  *

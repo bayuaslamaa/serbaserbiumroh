@@ -65,9 +65,14 @@ async function main() {
     return
   }
 
-  for (const change of changes) {
-    await db.update(hotelPrices).set({ slug: change.slug }).where(eq(hotelPrices.id, change.id))
-  }
+  // All-or-nothing: a mid-loop unique violation (a concurrent admin create
+  // taking a slug this run planned to use) would otherwise leave the table
+  // half-populated, with no record of where it stopped.
+  await db.transaction(async (tx) => {
+    for (const change of changes) {
+      await tx.update(hotelPrices).set({ slug: change.slug }).where(eq(hotelPrices.id, change.id))
+    }
+  })
 
   console.log(`\nUpdated ${changes.length} rows.`)
 }

@@ -72,6 +72,14 @@ export function composeHotelDetail(
   }
 }
 
+/**
+ * Note: the detail page calls this from both generateMetadata and the
+ * component body, so all four queries run twice per uncached request.
+ * React's cache() is the right fix, but React 18.3 only exposes it through
+ * Next's server build -- wrapping it here makes this module unimportable in
+ * unit tests. Left as-is because revalidate = 3600 amortizes the cost to once
+ * per hotel per hour; revisit on the React 19 upgrade.
+ */
 export async function getHotelDetailBySlug(slug: string): Promise<HotelDetail | null> {
   const [hotel] = await db.select().from(hotelPrices).where(eq(hotelPrices.slug, slug)).limit(1)
   if (!hotel) return null

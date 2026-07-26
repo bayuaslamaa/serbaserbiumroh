@@ -49,16 +49,26 @@ describe("pageMetadata", () => {
     expect(pageMetadata(input).title).toBe("FAQ Umroh Mandiri")
   })
 
-  it("rejects a title that already carries a brand suffix", () => {
-    expect(() =>
-      pageMetadata({ ...input, title: "Layanan Umroh Mandiri | Serba Serbi Umroh" }),
-    ).toThrow(/brand suffix/i)
-
-    expect(() => pageMetadata({ ...input, title: "Visa Umroh | SSU" })).toThrow(/brand suffix/i)
+  it("strips a brand suffix instead of throwing, so a bad title cannot 500 the page", () => {
+    // Titles are not all literals: buildStoryMeta composes them from
+    // story.authorName. A throw inside generateMetadata has no caller to
+    // catch it, so one unlucky author name would take the page down.
+    expect(pageMetadata({ ...input, title: "Layanan Umroh Mandiri | Serba Serbi Umroh" }).title).toBe(
+      "Layanan Umroh Mandiri",
+    )
+    expect(pageMetadata({ ...input, title: "Visa Umroh | SSU" }).title).toBe("Visa Umroh")
   })
 
-  it("accepts a title containing a pipe that is not a brand suffix", () => {
-    expect(() => pageMetadata({ ...input, title: "Hotel A | Hotel B" })).not.toThrow()
+  it("strips the suffix from the OpenGraph and Twitter titles too", () => {
+    const meta = pageMetadata({ ...input, title: "Visa Umroh | SSU" })
+
+    expect(meta.openGraph?.title).toBe("Visa Umroh")
+    expect(meta.twitter?.title).toBe("Visa Umroh")
+  })
+
+  it("leaves a pipe that is not a trailing brand suffix alone", () => {
+    expect(pageMetadata({ ...input, title: "Hotel A | Hotel B" }).title).toBe("Hotel A | Hotel B")
+    expect(pageMetadata({ ...input, title: "SSU | Panduan" }).title).toBe("SSU | Panduan")
   })
 })
 

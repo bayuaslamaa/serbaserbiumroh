@@ -74,9 +74,12 @@ export function assignHotelSlugs(rows: HotelSlugInput[]): HotelSlugAssignment[] 
     }
   }
 
+  // Plain codepoint ordering, not localeCompare: ICU defaults differ between
+  // hosts, and two from-scratch backfills must award the bare slug to the
+  // same hotel on a developer machine and on the deploy host alike.
   const pending = rows
     .filter((row) => !row.slug)
-    .sort((a, b) => a.importKey.localeCompare(b.importKey))
+    .sort((a, b) => (a.importKey < b.importKey ? -1 : a.importKey > b.importKey ? 1 : 0))
 
   for (const row of pending) {
     const base = toHotelSlug(row.label)

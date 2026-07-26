@@ -1,4 +1,5 @@
 import { MONTH_NAMES_FULL, formatFullIdr } from "@/lib/hotels/pricing"
+import { TIER_LABEL } from "@/lib/hotels/presentation"
 
 export interface StoryMetaSource {
   authorName: string
@@ -11,13 +12,6 @@ export interface StoryMetaSource {
   madinahNights: number
   /** Total for the whole group, not per person -- see StoryDetail.tsx:40. */
   totalBudgetIdr: number
-}
-
-const TIER_LABEL: Record<StoryMetaSource["hotelTier"], string> = {
-  ECONOMY: "ekonomi",
-  STANDARD: "standar",
-  PELATARAN: "pelataran",
-  PREMIUM: "premium",
 }
 
 export function travelPeriod(story: StoryMetaSource): string | null {
@@ -52,7 +46,7 @@ export function buildStoryMeta(story: StoryMetaSource) {
     period ? ` pada ${period}` : "",
     `: ${story.pax} jamaah`,
     nights > 0 ? `, ${story.makkahNights} malam Makkah dan ${story.madinahNights} malam Madinah` : "",
-    `, hotel ${TIER_LABEL[story.hotelTier]}`,
+    `, hotel ${TIER_LABEL[story.hotelTier].toLowerCase()}`,
     perPerson ? `, sekitar ${formatFullIdr(perPerson)} per orang` : "",
     ". Lengkap dengan itinerary harian dan daftar bawaan.",
   ]

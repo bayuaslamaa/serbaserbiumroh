@@ -22,8 +22,6 @@ import {
 } from '@/lib/hotels/pricing'
 import { bookingLinks } from '@/lib/hotels/presentation'
 
-export type { MonthlyPriceDetail }
-
 export interface HotelWithMonthlyPrices {
   id: string
   /** Null only for rows the backfill has not reached; those render unlinked. */

@@ -48,21 +48,31 @@ interface PageMetadataInput {
   path: string
 }
 
-const BRAND_SUFFIX = /\|\s*(SSU|Serba Serbi Umroh)/i
+const BRAND_SUFFIX = /\s*\|\s*(SSU|Serba Serbi Umroh)\s*$/i
+
+/**
+ * Strips a trailing brand suffix, because title.template already appends one.
+ *
+ * This normalizes rather than throws. Titles reaching here are not all
+ * literals: buildStoryMeta composes them from `story.authorName`, and a hotel
+ * title from `hotel.label` -- both admin-authored. A throw inside
+ * generateMetadata has no caller to catch it, so one unlucky author name would
+ * turn a live page into a 500. A duplicated suffix is a cosmetic bug; a 500 is
+ * an outage.
+ */
+export function stripBrandSuffix(title: string): string {
+  return title.replace(BRAND_SUFFIX, "").trim()
+}
 
 /**
  * Builds metadata for one public page: canonical plus OpenGraph, both derived
  * from the same path so they can never disagree.
  */
 export function pageMetadata({ title, description, path }: PageMetadataInput): Metadata {
-  if (BRAND_SUFFIX.test(title)) {
-    throw new Error(
-      `Page title "${title}" carries a manual brand suffix. title.template in rootMetadata already appends "| ${SITE_NAME}", so this would render twice.`,
-    )
-  }
+  const cleanTitle = stripBrandSuffix(title)
 
   return {
-    title,
+    title: cleanTitle,
     description,
     alternates: { canonical: path },
     openGraph: {
@@ -70,12 +80,12 @@ export function pageMetadata({ title, description, path }: PageMetadataInput): M
       locale: "id_ID",
       siteName: SITE_NAME,
       url: path,
-      title,
+      title: cleanTitle,
       description,
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: cleanTitle,
       description,
     },
   }

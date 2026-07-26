@@ -19,6 +19,20 @@ describe("panduan-umroh-mandiri (published as HTML)", () => {
     expect(textOf(container)).not.toContain("Memuat dokumen PDF")
   })
 
+  it("does not leak the MDX frontmatter into the rendered page", async () => {
+    // The frontmatter must stay in the file -- lib/panduan.ts reads it to
+    // build the guide index -- so the render path has to skip it. Without
+    // remark-frontmatter it rendered as visible body text at the top of the
+    // article, and inflated the word count below rather than failing it.
+    const { container } = render(await GuideDetailPage(params("panduan-umroh-mandiri")))
+    const text = textOf(container)
+
+    expect(text).not.toContain("group: persiapan")
+    expect(text).not.toContain("order: 1")
+    expect(text).not.toMatch(/title:\s*Panduan Umroh Mandiri/)
+    expect(container.querySelector("article > hr")).toBeNull()
+  })
+
   it("carries enough text for a crawler to treat it as a real page", async () => {
     // This page rendered 64 words in production because the PDF viewer
     // replaced the content. The guard is deliberately blunt: a regression to
