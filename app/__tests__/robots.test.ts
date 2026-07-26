@@ -18,7 +18,19 @@ describe("robots.txt", () => {
     const disallow = Array.isArray(rule.disallow) ? rule.disallow : [rule.disallow]
 
     for (const prefix of PROTECTED_PREFIXES) {
-      expect(disallow, `${prefix} must be disallowed`).toContain(`${prefix}/`)
+      expect(disallow, `${prefix} must be disallowed`).toContain(prefix)
+    }
+  })
+
+  it("blocks the bare protected paths, not only what sits under them", () => {
+    // "Disallow: /login/" matches /login/anything but not /login, and /login
+    // is the actual page. The trailing slash would have left it crawlable.
+    const rules = robots().rules
+    const rule = Array.isArray(rules) ? rules[0] : rules
+    const disallow = Array.isArray(rule.disallow) ? rule.disallow : [rule.disallow]
+
+    for (const entry of disallow) {
+      expect(entry!.endsWith("/"), `${entry} should not end in a slash`).toBe(false)
     }
   })
 

@@ -14,7 +14,10 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: PROTECTED_PREFIXES.map((prefix) => `${prefix}/`),
+      // No trailing slash. "Disallow: /login/" matches /login/anything but
+      // NOT /login itself, which is the actual page -- the prefix form covers
+      // both.
+      disallow: PROTECTED_PREFIXES.map((prefix) => prefix),
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
     host: SITE_URL,
