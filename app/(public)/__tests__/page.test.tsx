@@ -13,13 +13,13 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
-vi.mock("@/lib/stats/community", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/stats/community")>()
+vi.mock("@/lib/stats/visitor-count", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/stats/visitor-count")>()
   return { ...actual, getPublicVisitorCount: vi.fn() }
 })
 
 import { auth } from "@/auth"
-import { getPublicVisitorCount } from "@/lib/stats/community"
+import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import HomePage from "../page"
 
 const mockAuth = auth as ReturnType<typeof vi.fn>

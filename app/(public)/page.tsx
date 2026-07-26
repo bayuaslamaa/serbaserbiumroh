@@ -5,7 +5,7 @@ import { HeroSection } from '@/components/home/HeroSection'
 import { PromoWebinar } from '@/components/home/PromoWebinar'
 import { SectionCards } from '@/components/home/SectionCards'
 import { FeaturedStories } from '@/components/home/FeaturedStories'
-import { getPublicVisitorCount } from '@/lib/stats/community'
+import { getPublicVisitorCount } from '@/lib/stats/visitor-count'
 import { auth } from '@/auth'
 
 export default async function HomePage() {

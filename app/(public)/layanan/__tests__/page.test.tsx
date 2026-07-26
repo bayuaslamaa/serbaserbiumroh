@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-vi.mock("@/lib/stats/community", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/stats/community")>()
+vi.mock("@/lib/stats/visitor-count", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/stats/visitor-count")>()
   return { ...actual, getPublicVisitorCount: vi.fn() }
 })
 
-import { getPublicVisitorCount } from "@/lib/stats/community"
+import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import LayananPage from "../page"
 
 const mockCount = getPublicVisitorCount as ReturnType<typeof vi.fn>

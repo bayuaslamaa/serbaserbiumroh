@@ -2,7 +2,7 @@ import Link from "next/link"
 import { MessageCircle } from "lucide-react"
 import { ServiceCard } from "@/components/layanan/ServiceCard"
 import { CommunityStats } from "@/components/stats/CommunityStats"
-import { getPublicVisitorCount } from "@/lib/stats/community"
+import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import { layananConsultHref, services } from "@/lib/services/catalog"
 
 export const metadata = {
