@@ -12,6 +12,7 @@ import {
 import { eq, and } from "drizzle-orm"
 import { normalizeHotelPricingImportKey } from "@/lib/admin/hotel-pricing-import"
 import { normalizeAirlinePricingImportKey } from "@/lib/admin/airline-pricing-import"
+import { nextAvailableSlug } from "@/lib/hotels/slug"
 
 async function requireAdmin() {
   const session = await auth()
@@ -100,11 +101,20 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ error: "sarPerNight must be a positive number" }, { status: 400 })
     }
 
+    // Slug is assigned once, at creation, and never rewritten on update --
+    // editing a hotel's label must not move a URL Google has indexed.
+    const existingSlugs = await db.select({ slug: hotelPrices.slug }).from(hotelPrices)
+    const slug = nextAvailableSlug(
+      label.trim(),
+      existingSlugs.map((row) => row.slug).filter((s): s is string => Boolean(s)),
+    )
+
     const [hotel] = await db
       .insert(hotelPrices)
       .values({
         city: city as "MAKKAH" | "MADINAH",
         tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
+        slug,
         label: label.trim(),
         sublabel: sublabel.trim(),
         distance: typeof distance === "string" && distance.trim() ? distance.trim() : null,

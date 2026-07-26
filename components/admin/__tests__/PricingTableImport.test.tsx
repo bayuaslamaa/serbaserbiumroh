@@ -15,6 +15,7 @@ const hotel = {
   city: "MAKKAH" as const,
   tier: "STANDARD" as const,
   importKey: "MAKKAH:STANDARD:safwa tower 3",
+  slug: "safwa-tower-3",
   sarPerNight: 1300,
   label: "Safwa Tower 3",
   sublabel: "Near Haram",

@@ -9,6 +9,7 @@ import {
   type HotelPricingImportRowResult,
 } from "@/lib/admin/hotel-pricing-import"
 import { eq } from "drizzle-orm"
+import { nextAvailableSlug } from "@/lib/hotels/slug"
 
 async function requireAdmin() {
   const session = await auth()
@@ -94,11 +95,22 @@ async function applyImportRow(
       })
       .where(eq(hotelPrices.id, hotelId))
   } else {
+    // Read the taken slugs inside the transaction so rows created earlier in
+    // this same import are visible and cannot be handed a duplicate slug.
+    // The update branch above deliberately leaves slug alone: a re-import that
+    // renames a hotel must not move its indexed URL.
+    const existingSlugs = await tx.select({ slug: hotelPrices.slug }).from(hotelPrices)
+    const slug = nextAvailableSlug(
+      row.data.label,
+      existingSlugs.map((existing) => existing.slug).filter((s): s is string => Boolean(s)),
+    )
+
     const [created] = await tx
       .insert(hotelPrices)
       .values({
         city: row.data.city,
         tier: row.data.tier,
+        slug,
         label: row.data.label,
         sublabel: row.data.sublabel,
         distance: row.data.distance,
