@@ -4,12 +4,14 @@ import { ServiceCard } from "@/components/layanan/ServiceCard"
 import { CommunityStats } from "@/components/stats/CommunityStats"
 import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import { layananConsultHref, services } from "@/lib/services/catalog"
+import { pageMetadata } from "@/lib/seo/metadata"
 
-export const metadata = {
-  title: "Layanan Umroh Mandiri | Serba Serbi Umroh",
+export const metadata = pageMetadata({
+  title: "Layanan Umroh Mandiri",
   description:
     "Semua kebutuhan umroh mandiri dalam satu tempat — visa, badal umroh, transportasi, hotel, kereta cepat Haramain, dan muthowwif.",
-}
+  path: "/layanan",
+})
 
 export default async function LayananPage() {
   const visitorCount = await getPublicVisitorCount()

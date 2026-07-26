@@ -62,6 +62,10 @@ export const hotelPrices = pgTable("hotel_prices", {
   city: cityEnum("city").notNull(),
   tier: hotelTierEnum("tier").notNull(),
   importKey: text("import_key").notNull().unique(),
+  // URL identity for /hotel-nusuk/[slug]. Nullable so the migration can land
+  // ahead of the backfill; tighten to notNull once production is confirmed
+  // fully populated. Never rewritten on update -- see lib/hotels/slug.ts.
+  slug: text("slug").unique(),
   sarPerNight: integer("sar_per_night").notNull(),
   label: text("label").notNull(), // e.g. "Safwa Tower 3"
   sublabel: text("sublabel").notNull(), // e.g. "3★, dekat Haram"

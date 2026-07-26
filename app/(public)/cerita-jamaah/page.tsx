@@ -2,11 +2,14 @@ import { db } from '@/lib/db'
 import { pilgrimStories } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { StoryFilters } from '@/components/cerita-jamaah/StoryFilters'
+import { pageMetadata } from '@/lib/seo/metadata'
 
-export const metadata = {
-  title: 'Cerita Jamaah — Umroh Mandiri',
-  description: 'Pengalaman nyata jamaah umroh mandiri lengkap dengan itinerary dan anggaran',
-}
+export const metadata = pageMetadata({
+  title: 'Cerita Jamaah Umroh Mandiri: Pengalaman, Itinerary, dan Biaya Nyata',
+  description:
+    'Pengalaman nyata jamaah yang berangkat umroh mandiri — lengkap dengan itinerary harian, pilihan hotel, daftar bawaan, dan rincian biaya yang benar-benar mereka keluarkan.',
+  path: '/cerita-jamaah',
+})
 
 export default async function CeritaJamaahPage() {
   const stories = await db

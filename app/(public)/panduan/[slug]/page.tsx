@@ -3,6 +3,7 @@ import { getAllGuides, getGuideBySlug } from '@/lib/panduan'
 import { GuideSidebar } from '@/components/panduan/GuideSidebar'
 import { ArabicText, Callout } from '@/components/mdx/MDXComponents'
 import { PdfViewer } from '@/components/panduan/PdfViewer'
+import { pageMetadata } from '@/lib/seo/metadata'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -17,7 +18,11 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const guide = getGuideBySlug(slug)
   if (!guide) return {}
-  return { title: guide.title, description: guide.description }
+  return pageMetadata({
+    title: guide.title,
+    description: guide.description,
+    path: `/panduan/${slug}`,
+  })
 }
 
 const PDF_MAPPING: Record<string, string> = {
@@ -25,6 +30,21 @@ const PDF_MAPPING: Record<string, string> = {
   'manasik-umroh': '/pdf/manasik-umroh.pdf',
   'doa-dzikir-umroh': '/pdf/doa-dzikir-umroh.pdf',
 }
+
+/**
+ * Guides whose MDX is complete enough to replace the PDF viewer.
+ *
+ * Everything here renders as indexable HTML, with the PDF demoted to a
+ * download link. Everything not here keeps the PDF viewer, which reads as a
+ * 64-word page to a crawler -- bad for search, but better than publishing a
+ * skeleton that is worse for readers than the PDF they have today.
+ *
+ * Release one guide at a time: add a slug only once its MDX genuinely carries
+ * the guide. manasik-umroh and doa-dzikir-umroh are deliberately absent --
+ * their authority is the community-authored PDF, and their HTML versions need
+ * to be written by someone who can vouch for the religious content.
+ */
+const HTML_PUBLISHED_SLUGS = new Set(['panduan-umroh-mandiri'])
 
 // Static map of all MDX content modules so the bundler can statically resolve them.
 // Each entry is an explicit import; dynamic variable-path imports are not bundler-safe.
@@ -45,7 +65,7 @@ export default async function GuideDetailPage({ params }: Props) {
   const allGuides = getAllGuides()
   const pdfUrl = PDF_MAPPING[slug]
 
-  if (pdfUrl) {
+  if (pdfUrl && !HTML_PUBLISHED_SLUGS.has(slug)) {
     return (
       <div className="max-w-5xl mx-auto flex gap-8">
         <GuideSidebar guides={allGuides} />
@@ -75,6 +95,24 @@ export default async function GuideDetailPage({ params }: Props) {
         style={{ color: 'var(--color-text)' }}
       >
         <Content components={{ ArabicText, Callout }} />
+
+        {pdfUrl && (
+          <p className="not-prose mt-10 border-t pt-6 text-sm" style={{ borderColor: 'var(--color-border)' }}>
+            <a
+              href={pdfUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded border px-3 py-2 font-medium"
+              style={{
+                borderColor: 'var(--color-gold)',
+                color: 'var(--color-gold)',
+                backgroundColor: 'rgba(201, 168, 76, 0.05)',
+              }}
+            >
+              Unduh versi PDF
+            </a>
+          </p>
+        )}
       </article>
     </div>
   )

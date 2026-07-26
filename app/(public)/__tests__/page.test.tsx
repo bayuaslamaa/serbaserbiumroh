@@ -37,7 +37,7 @@ describe("HomePage", () => {
 
     render(await HomePage())
 
-    expect(screen.getByRole("heading", { name: "Serba Serbi Umroh" })).toBeDefined()
+    expect(screen.getByRole("heading", { name: /Panduan Umroh Mandiri/ })).toBeDefined()
     expect(screen.getByText(/3\.500\+ Komunitas/)).toBeDefined()
     expect(screen.getByText(/8\.878\+ Pengunjung/)).toBeDefined()
   })
@@ -50,7 +50,7 @@ describe("HomePage", () => {
 
     render(await HomePage())
 
-    expect(screen.getByRole("heading", { name: "Serba Serbi Umroh" })).toBeDefined()
+    expect(screen.getByRole("heading", { name: /Panduan Umroh Mandiri/ })).toBeDefined()
     expect(screen.getByText(/3\.500\+ Komunitas/)).toBeDefined()
     expect(screen.queryByText(/Pengunjung/)).toBeNull()
   })

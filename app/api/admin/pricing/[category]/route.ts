@@ -12,6 +12,7 @@ import {
 import { eq, and } from "drizzle-orm"
 import { normalizeHotelPricingImportKey } from "@/lib/admin/hotel-pricing-import"
 import { normalizeAirlinePricingImportKey } from "@/lib/admin/airline-pricing-import"
+import { nextAvailableSlug } from "@/lib/hotels/slug"
 
 async function requireAdmin() {
   const session = await auth()
@@ -100,11 +101,25 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
       return NextResponse.json({ error: "sarPerNight must be a positive number" }, { status: 400 })
     }
 
-    const [hotel] = await db
+    // Slug is assigned once, at creation, and never rewritten on update --
+    // editing a hotel's label must not move a URL Google has indexed.
+    // Read and insert share one transaction, matching the CSV import path:
+    // two concurrent creates of the same label would otherwise both compute
+    // the same free slug and the loser would hit the unique constraint as an
+    // unhandled 500.
+    const { hotel, monthlyPrices } = await db.transaction(async (tx) => {
+      const existingSlugs = await tx.select({ slug: hotelPrices.slug }).from(hotelPrices)
+      const slug = nextAvailableSlug(
+        label.trim(),
+        existingSlugs.map((row) => row.slug).filter((s): s is string => Boolean(s)),
+      )
+
+      const [created] = await tx
       .insert(hotelPrices)
       .values({
         city: city as "MAKKAH" | "MADINAH",
         tier: tier as "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM",
+        slug,
         label: label.trim(),
         sublabel: sublabel.trim(),
         distance: typeof distance === "string" && distance.trim() ? distance.trim() : null,
@@ -122,13 +137,16 @@ export async function POST(req: NextRequest, ctx: RouteCtx) {
       })
       .returning()
 
-    const monthlyRows = Array.from({ length: 12 }, (_, i) => ({
-      hotelPriceId: hotel.id,
-      month: i + 1,
-      sarPerNight,
-      updatedAt: now,
-    }))
-    const monthlyPrices = await db.insert(hotelMonthlyPrices).values(monthlyRows).returning()
+      const monthlyRows = Array.from({ length: 12 }, (_, i) => ({
+        hotelPriceId: created.id,
+        month: i + 1,
+        sarPerNight,
+        updatedAt: now,
+      }))
+      const created_monthly = await tx.insert(hotelMonthlyPrices).values(monthlyRows).returning()
+
+      return { hotel: created, monthlyPrices: created_monthly }
+    })
 
     return NextResponse.json({ hotel, monthlyPrices }, { status: 201 })
   }

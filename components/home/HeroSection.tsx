@@ -15,14 +15,20 @@ interface HeroSectionProps {
 export function HeroSection({ isAdmin = false, visitorCount }: HeroSectionProps) {
   return (
     <section className="py-16 text-center">
+      {/*
+        The H1 carries the search intent, not the brand. The brand name is
+        already in the navbar, the logo, and every page title via
+        title.template, so spending the strongest on-page signal on it was
+        pure waste.
+      */}
       <h1
         className="text-4xl font-bold mb-4"
         style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-gold)' }}
       >
-        Serba Serbi Umroh
+        Panduan Umroh Mandiri: Biaya, Hotel, Visa, dan Komunitas
       </h1>
       <p className="text-lg mb-2" style={{ color: 'var(--color-text-muted)' }}>
-        Panduan Lengkap Ibadah Umroh Secara Mandiri
+        Serba Serbi Umroh — partner setia umroh mandirimu
       </p>
       <p className="text-sm mb-8 max-w-xl mx-auto" style={{ color: 'var(--color-text-muted)' }}>
         Rencanakan perjalanan umroh mandiri Anda dengan panduan lengkap, cerita nyata dari para jamaah,

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Amiri, DM_Sans } from "next/font/google"
 import { Toaster } from "@/components/ui/toaster"
+import { rootMetadata } from "@/lib/seo/metadata"
 import "./globals.css"
 
 const amiri = Amiri({
@@ -16,10 +17,7 @@ const dmSans = DM_Sans({
   display: "swap",
 })
 
-export const metadata: Metadata = {
-  title: "Serba Serbi Umroh",
-  description: "Partner Setia Umroh Mandirimu",
-}
+export const metadata: Metadata = rootMetadata
 
 export default function RootLayout({
   children,

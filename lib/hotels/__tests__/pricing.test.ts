@@ -1,0 +1,86 @@
+import { describe, expect, it } from "vitest"
+
+import { buildMonthlyPrices, formatCompactIdr, formatFullIdr, priceRange } from "../pricing"
+
+describe("buildMonthlyPrices", () => {
+  it("returns twelve months, numbered 1 to 12", () => {
+    const prices = buildMonthlyPrices(1000, {}, 4700)
+
+    expect(prices).toHaveLength(12)
+    expect(prices.map((p) => p.month)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+  })
+
+  it("falls back to the base rate for months with no override", () => {
+    const prices = buildMonthlyPrices(1000, {}, 4700)
+
+    expect(prices.every((p) => p.sar === 1000)).toBe(true)
+    expect(prices.every((p) => p.isOverride === false)).toBe(true)
+  })
+
+  it("applies a seasonal override and flags it", () => {
+    const prices = buildMonthlyPrices(1000, { 3: 2500 }, 4700)
+
+    expect(prices[2]).toEqual({ month: 3, sar: 2500, idr: 2500 * 4700, isOverride: true })
+    expect(prices[1].isOverride).toBe(false)
+  })
+
+  it("converts to IDR with the given rate", () => {
+    expect(buildMonthlyPrices(1000, {}, 5000)[0].idr).toBe(5_000_000)
+  })
+
+  it("treats a null override as absent rather than as a zero price", () => {
+    const prices = buildMonthlyPrices(1000, { 5: null as unknown as undefined }, 4700)
+
+    expect(prices[4].sar).toBe(1000)
+    expect(prices[4].isOverride).toBe(false)
+  })
+
+  it("keeps an override of zero distinguishable from no override", () => {
+    // A genuine 0 SAR override is nonsense data, but it must not silently
+    // read as "no override" and quote the base rate instead.
+    const prices = buildMonthlyPrices(1000, { 6: 0 }, 4700)
+
+    expect(prices[5].isOverride).toBe(true)
+    expect(prices[5].sar).toBe(0)
+  })
+})
+
+describe("formatFullIdr", () => {
+  it("formats as Indonesian rupiah with no decimals", () => {
+    expect(formatFullIdr(4700000).replace(/ /g, " ")).toContain("4.700.000")
+  })
+})
+
+describe("formatCompactIdr", () => {
+  it("abbreviates millions", () => {
+    expect(formatCompactIdr(4_700_000)).toBe("Rp 4.7jt")
+  })
+
+  it("drops the decimal on a whole number of millions", () => {
+    expect(formatCompactIdr(5_000_000)).toBe("Rp 5jt")
+  })
+
+  it("abbreviates thousands", () => {
+    expect(formatCompactIdr(470_000)).toBe("Rp 470rb")
+  })
+
+  it("leaves small amounts alone", () => {
+    expect(formatCompactIdr(500)).toBe("Rp 500")
+  })
+})
+
+describe("priceRange", () => {
+  it("reports the cheapest and most expensive month", () => {
+    const prices = buildMonthlyPrices(1000, { 3: 2500, 8: 500 }, 1)
+
+    expect(priceRange(prices)).toEqual({ min: 500, max: 2500 })
+  })
+
+  it("returns equal bounds when every month costs the same", () => {
+    expect(priceRange(buildMonthlyPrices(1000, {}, 1))).toEqual({ min: 1000, max: 1000 })
+  })
+
+  it("returns null for an empty list rather than Infinity", () => {
+    expect(priceRange([])).toBeNull()
+  })
+})

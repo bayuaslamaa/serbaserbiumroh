@@ -9,6 +9,7 @@ import {
   isPlaceholderVideo,
 } from "@/lib/badalin/content"
 import { badalConsultHref } from "@/lib/services/catalog"
+import { pageMetadata } from "@/lib/seo/metadata"
 
 // Only videos with a real YouTube id are watchable; the rest render as
 // "segera tayang" posters, so the page must not advertise them as available.
@@ -20,11 +21,12 @@ const readyVideoCount = badalVideos.filter(
 // none are pending. With a mixed list the page says so plainly instead.
 const allVideosReady = readyVideoCount === badalVideos.length
 
-export const metadata = {
-  title: "Badalin — Badal Umroh Terdokumentasi | Serba Serbi Umroh",
+export const metadata = pageMetadata({
+  title: "Badalin — Badal Umroh Terdokumentasi",
   description:
     "Badal umroh oleh muthowwif tersertifikasi, didokumentasikan penuh dari niat di miqat hingga tahallul, lengkap dengan video dan sertifikat pelaksanaan.",
-}
+  path: "/badalin",
+})
 
 export default function BadalinPage() {
   return (

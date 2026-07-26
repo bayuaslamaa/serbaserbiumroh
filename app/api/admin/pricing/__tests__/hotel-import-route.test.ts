@@ -53,6 +53,7 @@ vi.mock("drizzle-orm", () => ({
 vi.mock("@/lib/db/schema", () => ({
   hotelPrices: {
     id: "hotel_prices.id",
+    slug: "hotel_prices.slug",
   },
   hotelMonthlyPrices: {
     hotelPriceId: "hotel_monthly_prices.hotel_price_id",
@@ -97,7 +98,12 @@ function selectExisting(rows: unknown[]) {
   })
 }
 
-function makeTx() {
+function makeTx(existingSlugs: Array<{ slug: string | null }> = []) {
+  // The confirm route reads taken slugs inside the transaction before each
+  // insert, so rows created earlier in the same import cannot collide.
+  const selectFrom = vi.fn().mockResolvedValue(existingSlugs)
+  const select = vi.fn().mockReturnValue({ from: selectFrom })
+
   const updateWhere = vi.fn().mockResolvedValue(undefined)
   const updateSet = vi.fn().mockReturnValue({ where: updateWhere })
   const update = vi.fn().mockReturnValue({ set: updateSet })
@@ -116,11 +122,13 @@ function makeTx() {
 
   return {
     tx: {
+      select,
       update,
       insert,
       delete: deleteFn,
     },
     spies: {
+      select,
       update,
       updateSet,
       updateWhere,
@@ -256,9 +264,41 @@ describe("POST /api/admin/pricing/hotel-import/confirm", () => {
         label: "Hotel Royal",
         distance: "ring 1 dekat Nabawi",
         importKey: "MADINAH:PREMIUM:hotel royal",
+        slug: "hotel-royal",
       })
     )
     expect(spies.monthlyValues.mock.calls[0][0]).toHaveLength(12)
+  })
+
+  it("gives an imported hotel a slug that dodges the ones already taken", async () => {
+    selectExisting([])
+    const { tx, spies } = makeTx([{ slug: "hotel-royal" }, { slug: "hotel-royal-2" }])
+    mockDb.transaction.mockImplementation(async (callback) => callback(tx))
+    const { POST } = await import("../hotel-import/confirm/route")
+
+    await POST(
+      request("city,tier,label,sublabel,distance,base_sar_per_night\nMADINAH,PREMIUM,Hotel Royal,Near Nabawi,ring 1,3500\n")
+    )
+
+    expect(spies.hotelValues).toHaveBeenCalledWith(
+      expect.objectContaining({ slug: "hotel-royal-3" }),
+    )
+  })
+
+  it("leaves the slug alone when re-importing an existing hotel", async () => {
+    // Renaming a hotel through a re-import must not move its indexed URL.
+    selectExisting([existingHotel])
+    const { tx, spies } = makeTx()
+    mockDb.transaction.mockImplementation(async (callback) => callback(tx))
+    const { POST } = await import("../hotel-import/confirm/route")
+
+    await POST(
+      request("city,tier,label,sublabel,base_sar_per_night\nMAKKAH,STANDARD,Safwa Tower 3,Renamed Wing,1400\n")
+    )
+
+    expect(spies.updateSet).toHaveBeenCalled()
+    expect(spies.updateSet.mock.calls[0][0]).not.toHaveProperty("slug")
+    expect(spies.hotelValues).not.toHaveBeenCalled()
   })
 
   it("writes only valid rows from a mixed CSV", async () => {
