@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   Select,
   SelectContent,
@@ -13,16 +14,20 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { CalendarDays, Search, MapPin, Building, Ruler, ExternalLink } from 'lucide-react'
 import { HotelNusukDisclaimerPopup } from '@/components/hotel-nusuk/HotelNusukDisclaimerPopup'
+import {
+  MONTH_NAMES,
+  formatCompactIdr,
+  formatFullIdr,
+  type MonthlyPriceDetail,
+} from '@/lib/hotels/pricing'
+import { bookingLinks } from '@/lib/hotels/presentation'
 
-export interface MonthlyPriceDetail {
-  month: number
-  sar: number
-  idr: number
-  isOverride: boolean
-}
+export type { MonthlyPriceDetail }
 
 export interface HotelWithMonthlyPrices {
   id: string
+  /** Null only for rows the backfill has not reached; those render unlinked. */
+  slug: string | null
   city: 'MAKKAH' | 'MADINAH'
   tier: 'ECONOMY' | 'STANDARD' | 'PELATARAN' | 'PREMIUM'
   label: string
@@ -45,38 +50,8 @@ interface HotelPriceListProps {
 const CITIES = ['MAKKAH', 'MADINAH'] as const
 const TIERS = ['ECONOMY', 'STANDARD', 'PELATARAN', 'PREMIUM'] as const
 
-const MONTH_NAMES = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-  'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'
-]
-
-function formatCompactIdr(amount: number): string {
-  if (amount >= 1_000_000) {
-    const val = amount / 1_000_000
-    // Keep 1 decimal place if it has a decimal part, otherwise round
-    const formatted = val % 1 === 0 ? val.toFixed(0) : val.toFixed(1)
-    return `Rp ${formatted}jt`
-  }
-  if (amount >= 1_000) {
-    return `Rp ${(amount / 1_000).toFixed(0)}rb`
-  }
-  return `Rp ${amount}`
-}
-
-function formatFullIdr(amount: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
 function getPreferredBookingLink(hotel: HotelWithMonthlyPrices): { href: string; label: string } | null {
-  if (hotel.bookingUrl) return { href: hotel.bookingUrl, label: 'Booking' }
-  if (hotel.agodaUrl) return { href: hotel.agodaUrl, label: 'Agoda' }
-  if (hotel.bookingcomUrl) return { href: hotel.bookingcomUrl, label: 'Booking.com' }
-  if (hotel.tripcomUrl) return { href: hotel.tripcomUrl, label: 'Trip.com' }
-  return null
+  return bookingLinks(hotel)[0] ?? null
 }
 
 export function HotelPriceList({
@@ -195,7 +170,13 @@ export function HotelPriceList({
                   {/* Card Header */}
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base font-bold text-[var(--color-gold)]">
-                      {hotel.label}
+                      {hotel.slug ? (
+                        <Link href={`/hotel-nusuk/${hotel.slug}`} className="hover:underline">
+                          {hotel.label}
+                        </Link>
+                      ) : (
+                        hotel.label
+                      )}
                     </CardTitle>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       <Badge

@@ -3,6 +3,7 @@ import { hotelPrices, hotelMonthlyPrices, exchangeRates } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { HotelPriceList, type HotelWithMonthlyPrices } from '@/components/hotel-nusuk/HotelPriceList'
 import { pageMetadata } from '@/lib/seo/metadata'
+import { buildMonthlyPrices } from '@/lib/hotels/pricing'
 
 export const revalidate = 3600
 
@@ -34,24 +35,18 @@ export default async function HotelNusukPage() {
     monthlyPricesByHotelId[mp.hotelPriceId][mp.month] = mp.sarPerNight
   }
 
-  // Map each hotel to its 12-month pricing structure
+  // Shared with the detail page so the two can never quote different prices
+  // for the same hotel.
   const mappedHotels: HotelWithMonthlyPrices[] = hotels.map((h) => {
-    const monthlyPricesDetail = Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1
-      const overrideSar = monthlyPricesByHotelId[h.id]?.[month]
-      const isOverride = overrideSar !== undefined && overrideSar !== null
-      const sar = isOverride ? overrideSar : h.sarPerNight
-      const idr = sar * sarToIdrRate
-      return {
-        month,
-        sar,
-        idr,
-        isOverride,
-      }
-    })
+    const monthlyPricesDetail = buildMonthlyPrices(
+      h.sarPerNight,
+      monthlyPricesByHotelId[h.id] ?? {},
+      sarToIdrRate,
+    )
 
     return {
       id: h.id,
+      slug: h.slug,
       city: h.city,
       tier: h.tier,
       label: h.label,
