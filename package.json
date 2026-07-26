@@ -55,6 +55,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@mdx-js/mdx": "^3.1.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
