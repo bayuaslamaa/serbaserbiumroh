@@ -7,19 +7,32 @@ vi.mock("@/auth", () => ({
   signOut: vi.fn(),
 }))
 
+// Keep the nav's visitor read off the real database.
+vi.mock("@/lib/stats/visitor-count", () => ({
+  getPublicVisitorCount: vi.fn(),
+}))
+
 import { auth } from "@/auth"
 import { services } from "@/lib/services/catalog"
+import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
+import { COMMUNITY_SIZE, PILGRIMS_HELPED } from "@/lib/stats/community"
 import { NavBar } from "../NavBar"
 
 const mockAuth = auth as ReturnType<typeof vi.fn>
+const mockVisitorCount = getPublicVisitorCount as ReturnType<typeof vi.fn>
 
 /** The desktop bar and the mobile bar both render; scope queries to one. */
 function desktop() {
   return within(screen.getByTestId("desktop-nav"))
 }
 
-async function renderNav(session: unknown = null, props: { isAdmin?: boolean } = {}) {
+async function renderNav(
+  session: unknown = null,
+  props: { isAdmin?: boolean } = {},
+  visitorCount: number | null = 8778
+) {
   mockAuth.mockResolvedValue(session)
+  mockVisitorCount.mockResolvedValue(visitorCount)
   return render(await NavBar(props))
 }
 
@@ -51,6 +64,27 @@ describe("NavBar structure", () => {
       "href",
       "/komunitas"
     )
+  })
+
+  it("shows the three community figures as compact pills", async () => {
+    await renderNav(null, {}, 8778)
+
+    const stats = within(desktop().getByTestId("nav-stats"))
+    expect(stats.getByText(COMMUNITY_SIZE)).toBeDefined()
+    expect(stats.getByText(PILGRIMS_HELPED)).toBeDefined()
+    expect(stats.getByText("8.878+")).toBeDefined()
+
+    // The word labels are dropped for space; meaning stays for screen readers.
+    expect(stats.getByText("anggota komunitas")).toBeDefined()
+    expect(stats.getByText("pengunjung")).toBeDefined()
+  })
+
+  it("drops the visitor pill but keeps the rest when the count is unreadable", async () => {
+    await renderNav(null, {}, null)
+
+    const stats = within(desktop().getByTestId("nav-stats"))
+    expect(stats.getByText(COMMUNITY_SIZE)).toBeDefined()
+    expect(stats.queryByText("pengunjung")).toBeNull()
   })
 
   it("exposes Layanan and Lainnya as closed popover triggers", async () => {

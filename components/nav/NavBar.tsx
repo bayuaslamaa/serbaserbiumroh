@@ -1,9 +1,13 @@
 import { auth, signOut } from "@/auth"
+import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import { DesktopNav } from "./DesktopNav"
 import { MobileMenu } from "./MobileMenu"
 
 export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
-  const session = await auth()
+  const [session, visitorCount] = await Promise.all([
+    auth(),
+    getPublicVisitorCount(),
+  ])
   const user = session?.user
   const showAdmin = isAdmin || user?.role === "ADMIN"
 
@@ -27,6 +31,7 @@ export async function NavBar({ isAdmin = false }: { isAdmin?: boolean }) {
         isLoggedIn={!!user}
         isAdmin={user?.role === "ADMIN"}
         showAdmin={!!showAdmin}
+        visitorCount={visitorCount}
         signOutAction={handleSignOut}
       />
       <MobileMenu

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { CommunityStats } from "@/components/stats/CommunityStats"
 import { AccountMenu } from "./AccountMenu"
 import { EstimateCta } from "./EstimateCta"
 import { LayananPanel, LayananTrigger } from "./LayananMegaMenu"
@@ -16,6 +17,7 @@ export function DesktopNav({
   isLoggedIn,
   isAdmin,
   showAdmin,
+  visitorCount,
   signOutAction,
 }: {
   userName?: string | null
@@ -23,6 +25,8 @@ export function DesktopNav({
   isLoggedIn: boolean
   isAdmin: boolean
   showAdmin: boolean
+  /** Raw unique-visitor count, resolved by NavBar. Null when unreadable. */
+  visitorCount: number | null
   signOutAction: () => Promise<void>
 }) {
   const { openId, toggle, close } = useSingleOpenMenu()
@@ -65,6 +69,13 @@ export function DesktopNav({
               onNavigate={close}
             />
           </div>
+        </div>
+
+        {/* Social proof sits between the nav links and the CTA. Measured at a
+            1200px container: links 561px + pills 225px + actions 324px + gaps
+            needs ~1190px of viewport, so below xl the row would wrap. */}
+        <div className="hidden min-w-0 flex-shrink xl:flex" data-testid="nav-stats">
+          <CommunityStats visitorCount={visitorCount} variant="compact" />
         </div>
 
         <div className="flex flex-shrink-0 items-center gap-3">

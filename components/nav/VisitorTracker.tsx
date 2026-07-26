@@ -10,8 +10,8 @@ const BLACKLIST_PATHS = ["/admin", "/dashboard", "/login", "/api"]
  * Records a pageview on every public route and renders nothing.
  *
  * This is the beacon half of the old VisitorCounter — the pills it used to
- * render now live on /layanan (see components/layanan/StatBadges.tsx). Mount
- * this in the route-group layouts so tracking stays site-wide.
+ * render are now server-rendered by components/stats/CommunityStats.tsx.
+ * Mount this in the route-group layouts so tracking stays site-wide.
  */
 export function VisitorTracker() {
   const pathname = usePathname()

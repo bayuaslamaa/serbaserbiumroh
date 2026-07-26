@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { MessageCircle } from "lucide-react"
 import { ServiceCard } from "@/components/layanan/ServiceCard"
-import { StatBadges } from "@/components/layanan/StatBadges"
+import { CommunityStats } from "@/components/stats/CommunityStats"
+import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import { layananConsultHref, services } from "@/lib/services/catalog"
 
 export const metadata = {
@@ -10,11 +11,13 @@ export const metadata = {
     "Semua kebutuhan umroh mandiri dalam satu tempat — visa, badal umroh, transportasi, hotel, kereta cepat Haramain, dan muthowwif.",
 }
 
-export default function LayananPage() {
+export default async function LayananPage() {
+  const visitorCount = await getPublicVisitorCount()
+
   return (
     <div className="mx-auto max-w-6xl pb-20">
       <section className="px-2 pb-9 pt-10 text-center md:pt-14">
-        <StatBadges />
+        <CommunityStats visitorCount={visitorCount} />
 
         <h1
           className="mt-6 text-3xl font-bold text-text md:text-[42px]"

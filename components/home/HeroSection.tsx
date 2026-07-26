@@ -1,11 +1,18 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { CommunityStats } from '@/components/stats/CommunityStats'
 
 interface HeroSectionProps {
   isAdmin?: boolean
+  /**
+   * Raw unique-visitor count, already resolved by the page. Null when
+   * unreadable. Required on purpose — a default would let a caller drop the
+   * prop and silently lose the pill with nothing failing.
+   */
+  visitorCount: number | null
 }
 
-export function HeroSection({ isAdmin = false }: HeroSectionProps) {
+export function HeroSection({ isAdmin = false, visitorCount }: HeroSectionProps) {
   return (
     <section className="py-16 text-center">
       <h1
@@ -21,6 +28,11 @@ export function HeroSection({ isAdmin = false }: HeroSectionProps) {
         Rencanakan perjalanan umroh mandiri Anda dengan panduan lengkap, cerita nyata dari para jamaah,
         dan estimasi biaya yang akurat berbasis data riil.
       </p>
+
+      <div className="mb-8">
+        <CommunityStats visitorCount={visitorCount} />
+      </div>
+
       <div className="flex gap-4 justify-center flex-wrap">
         <Link href="/cerita-jamaah">
           <Button style={{ backgroundColor: 'var(--color-gold)', color: '#0b1c12' }}>
