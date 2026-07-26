@@ -6,6 +6,7 @@ import { Stepper } from "./Stepper"
 import { ServiceCheckboxGrid } from "./ServiceCheckboxGrid"
 import { Badge } from "@/components/ui/badge"
 import { resolveCityHotelOptions, resolveHotelSelection } from "@/lib/estimate/hotel-selection"
+import { availableRoomTypes, resolveRoomMultiplier } from "@/lib/estimate/room-types"
 import { resolveMonthlyHotelSar, sarLabel } from "@/lib/estimate/hotel-pricing"
 import { MONTH_LABELS } from "@/lib/estimate/months"
 
@@ -52,13 +53,15 @@ export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPa
     }))
   }
 
-  const roomOptions = (["QUAD", "TRIPLE", "DOUBLE", "SINGLE"] as const).map((rt) => {
-    const rm = pricing.roomMultipliers[rt]
+  const roomOptions = availableRoomTypes(pricing).map((rt) => {
+    const rm = resolveRoomMultiplier(pricing, rt).config
     return {
       value: rt,
       label: rt.charAt(0) + rt.slice(1).toLowerCase(),
       sublabel: `${rm.paxPerRoom} orang/kamar`,
-      badge: `×${rm.multiplier}`,
+      // The ratio is a room-rate difference, not a per-person uplift. It is 1.0 everywhere today,
+      // so showing "×1" on every card is noise that invites the misreading this bug came from.
+      badge: rm.multiplier === 1 ? undefined : `×${rm.multiplier}`,
     }
   })
 

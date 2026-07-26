@@ -4,7 +4,7 @@ import { buildSystemPrompt } from "./prompt"
 import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDaysToNights } from "@/lib/estimate/nights"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
-const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"] as const
+const ROOM_TYPES = ["QUINT", "QUAD", "TRIPLE", "DOUBLE"] as const
 const AIRLINE_TIERS = ["NONE", "BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const
 const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
 

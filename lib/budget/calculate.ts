@@ -1,4 +1,5 @@
 import { asc, desc } from "drizzle-orm"
+import { resolveRoomMultiplier } from "@/lib/estimate/room-types"
 import type {
   EstimateParams,
   BudgetBreakdown,
@@ -90,7 +91,9 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
 
   const madinahHotel = resolveCityHotel(pricing, "MADINAH", params.madinahHotelId, params.hotelTier)
   const makkahHotel = resolveCityHotel(pricing, "MAKKAH", params.makkahHotelId, params.hotelTier)
-  const room = pricing.roomMultipliers[params.roomType]
+  // Saved estimates carry whatever roomType was valid when written (e.g. the retired SINGLE) and
+  // are cast straight out of JSONB, so resolve defensively rather than indexing raw.
+  const room = resolveRoomMultiplier(pricing, params.roomType).config
   const madinahPrice = resolveHotelSar(madinahHotel, params.travelMonth)
   const makkahPrice = resolveHotelSar(makkahHotel, params.travelMonth)
   const madinahSarPerNight = madinahPrice.sarPerNight

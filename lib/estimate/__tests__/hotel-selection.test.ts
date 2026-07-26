@@ -46,9 +46,9 @@ const mockPricing: PricingConfig = {
   },
   roomMultipliers: {
     QUAD: { paxPerRoom: 4, multiplier: 1.0 },
-    TRIPLE: { paxPerRoom: 3, multiplier: 1.25 },
-    DOUBLE: { paxPerRoom: 2, multiplier: 1.5 },
-    SINGLE: { paxPerRoom: 1, multiplier: 2.8 },
+    TRIPLE: { paxPerRoom: 3, multiplier: 1.0 },
+    DOUBLE: { paxPerRoom: 2, multiplier: 1.0 },
+    QUINT: { paxPerRoom: 5, multiplier: 1.0 },
   },
 }
 

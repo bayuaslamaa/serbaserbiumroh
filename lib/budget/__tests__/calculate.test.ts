@@ -42,11 +42,14 @@ const mockPricing: PricingConfig = {
     TOUR_MAKKAH: { currency: "SAR", amount: 150, label: "Tour Makkah", enabled: true, divideByPax: true },
     TOUR_MADINAH: { currency: "SAR", amount: 150, label: "Tour Madinah", enabled: true, divideByPax: true },
   },
+  // multiplier = this room type's nightly rate ÷ a quad room's rate (NOT a per-person uplift —
+  // roomCount already carries the occupancy math). All 1.0 today: rooms cost the same whatever
+  // the occupancy, so only the number of rooms differs.
   roomMultipliers: {
+    QUINT: { paxPerRoom: 5, multiplier: 1.0 },
     QUAD: { paxPerRoom: 4, multiplier: 1.0 },
-    TRIPLE: { paxPerRoom: 3, multiplier: 1.25 },
-    DOUBLE: { paxPerRoom: 2, multiplier: 1.5 },
-    SINGLE: { paxPerRoom: 1, multiplier: 2.8 },
+    TRIPLE: { paxPerRoom: 3, multiplier: 1.0 },
+    DOUBLE: { paxPerRoom: 2, multiplier: 1.0 },
   },
 }
 
@@ -75,18 +78,43 @@ describe("calculateBudget", () => {
       expect(result.hotelMakkahIdr).toBe(13_747_500)
     })
 
-    it("SINGLE room (paxPerRoom=1, mult=2.8), ECONOMY Makkah 9 nights → 94,752,000", () => {
-      // 800 × 9 × 2.8 / 1 = 20160 SAR × 4700 = 94,752,000
-      const params = { ...baseParams, hotelTier: "ECONOMY" as const, roomType: "SINGLE" as const }
+    it("QUINT room (5/room) houses a 5-person group in one room, ECONOMY Makkah 9 nights", () => {
+      // 800 SAR × 9 nights × 1 room × 4700, split 5 ways.
+      const params = { ...baseParams, pax: 5, hotelTier: "ECONOMY" as const, roomType: "QUINT" as const }
       const result = calculateBudget(params, mockPricing)
-      expect(result.hotelMakkahIdr).toBe(94_752_000)
+      expect(result.hotelMakkahDetail.roomCount).toBe(1)
+      expect(result.hotelMakkahIdr).toBe(Math.round((800 * 9 * 1 * 4700) / 5))
     })
 
-    it("TRIPLE room (paxPerRoom=3, mult=1.25), STANDARD Madinah 4 nights", () => {
-      // 650 × 4 × 1.25 / 3 = 1083.33... SAR → Math.round(1083.33 × 4700) = Math.round(5,091,666.66) = 5,091,667
+    it("TRIPLE room (3/room), STANDARD Madinah 4 nights", () => {
+      // 3 pax fit one triple room: 650 × 4 × 1 room × 4700, split 3 ways.
       const params = { ...baseParams, pax: 3, roomType: "TRIPLE" as const }
       const result = calculateBudget(params, mockPricing)
-      expect(result.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1.25 / 3) * 4700))
+      expect(result.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1 * 4700) / 3))
+    })
+
+    // Regression guard for the double-counting bug: roomMultiplier used to hold a per-person
+    // uplift (triple 1.25 / double 1.5 / single 2.8) applied on top of roomCount, scaling the
+    // same axis twice — double came out 50% high, single 180% high. Cost must be driven by how
+    // many rooms the group needs, nothing else.
+    it("prices every room type as rooms-needed × room rate, with no second scaling", () => {
+      const quad = calculateBudget({ ...baseParams, pax: 4, roomType: "QUAD" as const }, mockPricing)
+      const triple = calculateBudget({ ...baseParams, pax: 4, roomType: "TRIPLE" as const }, mockPricing)
+      const double = calculateBudget({ ...baseParams, pax: 4, roomType: "DOUBLE" as const }, mockPricing)
+
+      expect(quad.hotelMadinahDetail.roomCount).toBe(1)
+      expect(triple.hotelMadinahDetail.roomCount).toBe(2)
+      expect(double.hotelMadinahDetail.roomCount).toBe(2)
+
+      // Two rooms for the same group is exactly twice one room — not 2.5× or 3× as the old
+      // multipliers made it.
+      expect(triple.hotelMadinahIdr).toBe(quad.hotelMadinahIdr * 2)
+      expect(double.hotelMadinahIdr).toBe(quad.hotelMadinahIdr * 2)
+
+      // Five sharing one quint room beats five spread across two quad rooms.
+      const quint5 = calculateBudget({ ...baseParams, pax: 5, roomType: "QUINT" as const }, mockPricing)
+      const quad5 = calculateBudget({ ...baseParams, pax: 5, roomType: "QUAD" as const }, mockPricing)
+      expect(quint5.hotelMadinahIdr).toBeLessThan(quad5.hotelMadinahIdr)
     })
 
     it("rounds hotel room count up from pax and divides total room cost per person", () => {
