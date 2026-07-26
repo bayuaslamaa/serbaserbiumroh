@@ -58,4 +58,47 @@ describe("middleware public route matching", () => {
     expect(isPublicPath("/dashboard")).toBe(false)
     expect(isPublicPath("/admin/community-requests")).toBe(false)
   })
+
+  it("allows the hotel directory without login", async () => {
+    const { isPublicPath } = await import("./middleware")
+
+    expect(isPublicPath("/hotel-nusuk")).toBe(true)
+    expect(isPublicPath("/hotel-nusuk/safwa-tower-3")).toBe(true)
+  })
+})
+
+describe("middleware matcher", () => {
+  // The matcher is a raw regex embedded in a path pattern. Anything it matches
+  // runs the auth middleware; anything it skips is served directly. Crawler
+  // metadata files and public static assets must never reach the middleware:
+  // robots.txt and sitemap.xml are Next metadata routes that stop executing
+  // once middleware intercepts them, and public/ downloads have no session.
+  async function matchesMiddleware(pathname: string) {
+    const { config } = await import("./middleware")
+    return config.matcher.some((pattern) => new RegExp(`^${pattern}$`).test(pathname))
+  }
+
+  it("skips crawler metadata routes", async () => {
+    expect(await matchesMiddleware("/robots.txt")).toBe(false)
+    expect(await matchesMiddleware("/sitemap.xml")).toBe(false)
+    expect(await matchesMiddleware("/sitemap-0.xml")).toBe(false)
+  })
+
+  it("skips public static downloads and images", async () => {
+    expect(await matchesMiddleware("/pdf/panduan-umroh-mandiri.pdf")).toBe(false)
+    expect(await matchesMiddleware("/transportasi/vehicles/sedan.webp")).toBe(false)
+    expect(await matchesMiddleware("/logo.png")).toBe(false)
+  })
+
+  it("still guards protected routes", async () => {
+    expect(await matchesMiddleware("/dashboard")).toBe(true)
+    expect(await matchesMiddleware("/admin/pricing")).toBe(true)
+    expect(await matchesMiddleware("/estimate/new")).toBe(true)
+  })
+
+  it("still runs on public pages so session-aware redirects keep working", async () => {
+    expect(await matchesMiddleware("/")).toBe(true)
+    expect(await matchesMiddleware("/login")).toBe(true)
+    expect(await matchesMiddleware("/hotel-nusuk")).toBe(true)
+  })
 })

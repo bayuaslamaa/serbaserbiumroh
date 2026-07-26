@@ -53,5 +53,16 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  // Everything this pattern matches runs the auth middleware. Two kinds of
+  // request must skip it entirely:
+  //
+  // 1. Crawler metadata routes. robots.txt and sitemap.xml are Next metadata
+  //    routes, and middleware intercepting them stops the route handler from
+  //    running at all -- so Google was served a login redirect instead.
+  // 2. Public static files under public/. They carry no session, and the
+  //    middleware was redirecting anonymous visitors away from the panduan
+  //    PDF downloads.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|robots\\.txt|sitemap\\.xml|sitemap-.*\\.xml|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|txt|xml|webmanifest)$).*)",
+  ],
 }
