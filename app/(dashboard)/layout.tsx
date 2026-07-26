@@ -1,5 +1,8 @@
 import { NavBar } from "@/components/nav/NavBar"
 import { VisitorTracker } from "@/components/nav/VisitorTracker"
+import { NOINDEX_METADATA } from "@/lib/seo/metadata"
+
+export const metadata = NOINDEX_METADATA
 
 export default function DashboardLayout({
   children,

@@ -2,13 +2,16 @@ import { db } from '@/lib/db'
 import { hotelPrices, hotelMonthlyPrices, exchangeRates } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 import { HotelPriceList, type HotelWithMonthlyPrices } from '@/components/hotel-nusuk/HotelPriceList'
+import { pageMetadata } from '@/lib/seo/metadata'
 
 export const revalidate = 3600
 
-export const metadata = {
-  title: 'Hotel Nusuk — Umroh Mandiri',
-  description: 'Direktori hotel umroh dengan estimasi harga IDR terkini',
-}
+export const metadata = pageMetadata({
+  title: 'Hotel Nusuk: Direktori Hotel Umroh Makkah & Madinah',
+  description:
+    'Direktori hotel umroh di Makkah dan Madinah dengan estimasi harga per malam dalam Rupiah, jarak ke Masjidil Haram dan Masjid Nabawi, serta tautan pemesanan langsung.',
+  path: '/hotel-nusuk',
+})
 
 export default async function HotelNusukPage() {
   const [hotels, monthlyPrices, rateRows] = await Promise.all([

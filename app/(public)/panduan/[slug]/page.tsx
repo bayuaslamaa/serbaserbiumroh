@@ -3,6 +3,7 @@ import { getAllGuides, getGuideBySlug } from '@/lib/panduan'
 import { GuideSidebar } from '@/components/panduan/GuideSidebar'
 import { ArabicText, Callout } from '@/components/mdx/MDXComponents'
 import { PdfViewer } from '@/components/panduan/PdfViewer'
+import { pageMetadata } from '@/lib/seo/metadata'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -17,7 +18,11 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params
   const guide = getGuideBySlug(slug)
   if (!guide) return {}
-  return { title: guide.title, description: guide.description }
+  return pageMetadata({
+    title: guide.title,
+    description: guide.description,
+    path: `/panduan/${slug}`,
+  })
 }
 
 const PDF_MAPPING: Record<string, string> = {

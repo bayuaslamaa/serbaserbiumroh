@@ -1,7 +1,13 @@
 import { FaqList } from "@/components/faq/FaqList"
 import { getPublishedFaqGroups } from "@/lib/faq"
+import { pageMetadata } from "@/lib/seo/metadata"
 
-export const metadata = { title: "FAQ Umroh Mandiri" }
+export const metadata = pageMetadata({
+  title: "FAQ Umroh Mandiri",
+  description:
+    "Jawaban atas pertanyaan yang paling sering ditanyakan seputar umroh mandiri: biaya, visa, hotel, dokumen, dan alur keberangkatan.",
+  path: "/faq",
+})
 
 export default async function FaqPage() {
   const groups = await getPublishedFaqGroups()

@@ -1,9 +1,12 @@
 import { CommunityJoinForm } from "@/components/community/CommunityJoinForm"
+import { pageMetadata } from "@/lib/seo/metadata"
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Gabung Komunitas Umroh Mandiri",
-  description: "Ajukan bergabung ke komunitas WhatsApp Umroh Mandiri yang dikelola admin.",
-}
+  description:
+    "Ajukan bergabung ke komunitas WhatsApp Umroh Mandiri yang dikelola admin — tempat bertanya dan berbagi pengalaman dengan sesama jamaah mandiri.",
+  path: "/komunitas",
+})
 
 export default function KomunitasPage() {
   return (

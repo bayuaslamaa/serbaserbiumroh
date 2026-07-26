@@ -2,13 +2,15 @@ import Link from "next/link"
 import { auth } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { Info, Youtube, Tv } from "lucide-react"
+import { pageMetadata } from "@/lib/seo/metadata"
 
 const WEBINAR_PATH = "/webinar-umroh-mandiri"
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Webinar Umroh Mandiri",
   description: "RSVP webinar Umroh Mandiri Selasa, 16 Juni 2026 untuk user terdaftar.",
-}
+  path: WEBINAR_PATH,
+})
 
 export default async function WebinarUmrohMandiriPage() {
   const session = await auth()
