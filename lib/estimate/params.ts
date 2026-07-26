@@ -2,7 +2,7 @@ import { SERVICE_KEYS } from "@/types"
 import type { City, EstimateParams, PricingConfig } from "@/types"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
-const ROOM_TYPES = ["QUAD", "TRIPLE", "DOUBLE", "SINGLE"]
+const ROOM_TYPES = ["QUINT", "QUAD", "TRIPLE", "DOUBLE"]
 const AIRLINE_TIERS = ["NONE", "BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
 
 export function validateEstimateParamsShape(p: unknown): p is EstimateParams {

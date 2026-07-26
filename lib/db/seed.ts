@@ -215,30 +215,32 @@ async function seed() {
   console.log("✓ Service fees seeded")
 
   // Room multipliers (PRD §8 — seeded, not admin-editable)
+  //
+  // `multiplier` is this room type's nightly rate DIVIDED BY a quad room's rate — NOT a per-person
+  // uplift. hotel_prices.sarPerNight is the price of one quad room per night, and the cost formula
+  // already multiplies by roomCount (= ceil(pax / paxPerRoom)), which is what carries the occupancy
+  // math. A per-person uplift here would scale that same axis a second time and over-charge every
+  // non-quad type. All 1.0 today: a room costs the same whatever its occupancy, so only the number
+  // of rooms differs. Change a value here only if a supplier genuinely charges a different nightly
+  // rate for that room type.
   await db
     .insert(roomMultipliers)
     .values([
+      { type: "QUINT", paxPerRoom: 5, multiplier: "1.0", label: "Quint", sublabel: "5 orang/kamar" },
       { type: "QUAD", paxPerRoom: 4, multiplier: "1.0", label: "Quad", sublabel: "4 orang/kamar" },
       {
         type: "TRIPLE",
         paxPerRoom: 3,
-        multiplier: "1.25",
+        multiplier: "1.0",
         label: "Triple",
         sublabel: "3 orang/kamar",
       },
       {
         type: "DOUBLE",
         paxPerRoom: 2,
-        multiplier: "1.5",
+        multiplier: "1.0",
         label: "Double",
         sublabel: "2 orang/kamar",
-      },
-      {
-        type: "SINGLE",
-        paxPerRoom: 1,
-        multiplier: "2.8",
-        label: "Single",
-        sublabel: "1 orang/kamar",
       },
     ])
     .onConflictDoNothing()

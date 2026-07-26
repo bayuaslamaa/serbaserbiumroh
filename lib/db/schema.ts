@@ -165,7 +165,7 @@ export const airlineMonthlyPrices = pgTable(
 
 // --- Room Multipliers (seeded, not admin-editable in v1) ---
 export const roomMultipliers = pgTable("room_multipliers", {
-  type: text("type").primaryKey(), // "QUAD" | "TRIPLE" | "DOUBLE" | "SINGLE"
+  type: text("type").primaryKey(), // "QUINT" | "QUAD" | "TRIPLE" | "DOUBLE"
   paxPerRoom: integer("pax_per_room").notNull(), // 4 | 3 | 2 | 1
   multiplier: text("multiplier").notNull(), // stored as string to avoid float precision issues
   label: text("label").notNull(),

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   infoValue: { fontSize: 11, color: WHITE },
 })
 
-const ROOM_LABELS: Record<string, string> = { QUAD: "Quad (4 org/kamar)", TRIPLE: "Triple (3 org/kamar)", DOUBLE: "Double (2 org/kamar)", SINGLE: "Single" }
+const ROOM_LABELS: Record<string, string> = { QUINT: "Quint (5 org/kamar)", QUAD: "Quad (4 org/kamar)", TRIPLE: "Triple (3 org/kamar)", DOUBLE: "Double (2 org/kamar)" }
 const AIRLINE_LABELS: Record<string, string> = { BUDGET: "Budget (Lion/AirAsia)", STANDARD: "Batik Air", GARUDA: "Garuda Indonesia", BUSINESS: "Business Class" }
 
 export async function generatePDF(

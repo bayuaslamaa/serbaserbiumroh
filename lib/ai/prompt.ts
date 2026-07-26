@@ -10,7 +10,7 @@ JSON schema:
   "hotelTier": "ECONOMY"|"STANDARD"|"PELATARAN"|"PREMIUM",
   "madinahHotelId": string | null,
   "makkahHotelId": string | null,
-  "roomType": "QUAD"|"TRIPLE"|"DOUBLE"|"SINGLE",
+  "roomType": "QUINT"|"QUAD"|"TRIPLE"|"DOUBLE",
   "airline": "NONE"|"BUDGET"|"STANDARD"|"GARUDA"|"BUSINESS",
   "travelMonth": integer | null,
   "services": ["VISA","SISKOPATUH","TASREH","TRANSPORT","TOUR_MAKKAH","TOUR_MADINAH"],

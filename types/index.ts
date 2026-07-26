@@ -1,7 +1,7 @@
 // Core domain enums
 export type City = "MAKKAH" | "MADINAH"
 export type HotelTier = "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM"
-export type RoomType = "QUAD" | "TRIPLE" | "DOUBLE" | "SINGLE"
+export type RoomType = "QUINT" | "QUAD" | "TRIPLE" | "DOUBLE"
 export type AirlineTier = "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"
 export type EstimateAirline = AirlineTier | "NONE"
 export const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const

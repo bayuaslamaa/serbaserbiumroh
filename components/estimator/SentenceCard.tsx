@@ -4,6 +4,7 @@ import { useState } from "react"
 import type { City, EstimateAirline, EstimateParams, HotelOptionConfig, PricingConfig, RoomType } from "@/types"
 import { DEFAULT_PARAMS } from "@/types"
 import { cn } from "@/lib/utils"
+import { availableRoomTypes, resolveRoomMultiplier } from "@/lib/estimate/room-types"
 import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDays, totalTripDaysToNights } from "@/lib/estimate/nights"
 import { resolveCityHotelOptions, resolveHotelSelection } from "@/lib/estimate/hotel-selection"
@@ -99,13 +100,15 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
   const madinahHotelLabel = madinahHotelOptions.find((h) => h.id === madinahSelectedId)?.label
   const makkahHotelLabel = makkahHotelOptions.find((h) => h.id === makkahSelectedId)?.label
 
-  const roomOptions = (["QUAD", "TRIPLE", "DOUBLE", "SINGLE"] as const).map((rt) => {
-    const rm = pricing.roomMultipliers[rt]
+  const roomOptions = availableRoomTypes(pricing).map((rt) => {
+    const rm = resolveRoomMultiplier(pricing, rt).config
     return {
       value: rt,
       label: rt.charAt(0) + rt.slice(1).toLowerCase(),
       sublabel: `${rm.paxPerRoom} orang/kamar`,
-      badge: `×${rm.multiplier}`,
+      // The ratio is a room-rate difference, not a per-person uplift. It is 1.0 everywhere today,
+      // so showing "×1" on every card is noise that invites the misreading this bug came from.
+      badge: rm.multiplier === 1 ? undefined : `×${rm.multiplier}`,
     }
   })
 
