@@ -63,7 +63,13 @@ type QueuedPage = {
   total?: number
   page?: number
   pageCount?: number
-  stats?: { total: number; newCount: number; matchedCount: number; duplicateCount: number }
+  stats?: {
+    total: number
+    newCount: number
+    matchedCount: number
+    rejectedCount: number
+    duplicateCount: number
+  }
 }
 
 function queuePage(options: QueuedPage = {}) {
@@ -71,7 +77,13 @@ function queuePage(options: QueuedPage = {}) {
   const total = options.total ?? requests.length
   const page = options.page ?? 1
   const pageCount = options.pageCount ?? Math.max(1, Math.ceil(total / PAGE_SIZE))
-  const stats = options.stats ?? { total, newCount: total, matchedCount: 0, duplicateCount: 0 }
+  const stats = options.stats ?? {
+    total,
+    newCount: total,
+    matchedCount: 0,
+    rejectedCount: 0,
+    duplicateCount: 0,
+  }
 
   mockFetchDuplicateKeys.mockResolvedValue({ phones: new Set(), socials: new Set() })
   mockFetchRequestStats.mockResolvedValue(stats)
@@ -120,17 +132,58 @@ describe("AdminCommunityRequestsPage", () => {
   })
 
   it("shows whole-table stats rather than the filtered count", async () => {
+    // 3 rows matched the filter, but the cards must still describe all 1616.
     queuePage({
       requests: [makeRequest(1)],
       total: 3,
-      stats: { total: 1616, newCount: 1612, matchedCount: 4, duplicateCount: 240 },
+      stats: { total: 1616, newCount: 1612, matchedCount: 4, rejectedCount: 0, duplicateCount: 240 },
     })
 
     render(await AdminCommunityRequestsPage({ searchParams: { status: "MATCHED" } }))
 
+    const total = screen.getByRole("link", { name: /Total pengajuan/ })
+    expect(within(total).getByText("1.616")).toBeDefined()
     expect(
-      screen.getByText(/1616 pengajuan tersimpan, 1612 baru, 4 sudah dicocokkan, 240 kemungkinan duplikat/)
+      within(screen.getByRole("link", { name: /Kemungkinan duplikat/ })).getByText("240")
     ).toBeDefined()
+  })
+
+  it("marks the stat card matching the active filter", async () => {
+    queuePage({ requests: [makeRequest(1)], total: 1 })
+
+    render(await AdminCommunityRequestsPage({ searchParams: { dup: "1" } }))
+
+    expect(
+      screen.getByRole("link", { name: /Kemungkinan duplikat/ }).getAttribute("aria-current")
+    ).toBe("page")
+    expect(
+      screen.getByRole("link", { name: /Total pengajuan/ }).getAttribute("aria-current")
+    ).toBeNull()
+  })
+
+  it("links each stat card to its own slice, leaving the old page behind", async () => {
+    queuePage({ requests: [makeRequest(1)], total: 100, page: 3, pageCount: 4 })
+
+    render(await AdminCommunityRequestsPage({ searchParams: { page: "3" } }))
+
+    // Landing on page 3 of a differently-sized result set reads as a bug, so
+    // every filter shortcut returns to the first page.
+    expect(screen.getByRole("link", { name: /Baru/ }).getAttribute("href")).toBe(
+      "/admin/community-requests?status=NEW"
+    )
+    expect(screen.getByRole("link", { name: /Total pengajuan/ }).getAttribute("href")).toBe(
+      "/admin/community-requests"
+    )
+  })
+
+  it("turns the active status card into its own reset", async () => {
+    queuePage({ requests: [makeRequest(1)], total: 5 })
+
+    render(await AdminCommunityRequestsPage({ searchParams: { status: "NEW" } }))
+
+    expect(screen.getByRole("link", { name: /Baru/ }).getAttribute("href")).toBe(
+      "/admin/community-requests"
+    )
   })
 
   it("offers a clear-filter escape when a filter matched nothing", async () => {

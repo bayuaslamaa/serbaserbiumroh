@@ -2,6 +2,8 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { CommunityRequestActions } from "@/components/admin/community-requests/CommunityRequestActions"
 import { CommunityRequestsPagination } from "@/components/admin/community-requests/CommunityRequestsPagination"
+import { CommunityRequestsStats } from "@/components/admin/community-requests/CommunityRequestsStats"
+import { CommunityRequestsToolbar } from "@/components/admin/community-requests/CommunityRequestsToolbar"
 import { requireAdmin } from "@/lib/auth"
 import { fetchDuplicateKeys } from "@/lib/community/admin-requests"
 import {
@@ -70,10 +72,13 @@ export default async function AdminCommunityRequestsPage({
           Pengajuan Komunitas
         </h1>
         <p className="mt-1 text-sm" style={{ color: "var(--color-text-muted)" }}>
-          {stats.total} pengajuan tersimpan, {stats.newCount} baru, {stats.matchedCount} sudah
-          dicocokkan, {stats.duplicateCount} kemungkinan duplikat.
+          Kelola pengajuan bergabung komunitas dan tandai yang sudah dicocokkan.
         </p>
       </div>
+
+      <CommunityRequestsStats stats={stats} filters={filters} searchParams={searchParams} />
+
+      <CommunityRequestsToolbar q={filters.q} />
 
       <div
         className="overflow-x-auto rounded-lg border"

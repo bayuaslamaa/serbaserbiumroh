@@ -319,7 +319,7 @@ describe("fetchAdminRequests", () => {
 
 describe("fetchRequestStats", () => {
   it("returns whole-table counts", async () => {
-    dbState.countQueue = [1616, 1612, 4, 240]
+    dbState.countQueue = [1616, 1612, 4, 0, 240]
 
     const stats = await fetchRequestStats(keys(["628111"]))
 
@@ -327,12 +327,13 @@ describe("fetchRequestStats", () => {
       total: 1616,
       newCount: 1612,
       matchedCount: 4,
+      rejectedCount: 0,
       duplicateCount: 240,
     })
   })
 
   it("counts no duplicates when there are no duplicate keys", async () => {
-    dbState.countQueue = [10, 10, 0, 0]
+    dbState.countQueue = [10, 10, 0, 0, 0]
 
     const stats = await fetchRequestStats(keys())
 

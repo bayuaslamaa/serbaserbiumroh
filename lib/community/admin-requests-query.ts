@@ -153,6 +153,7 @@ export type AdminRequestStats = {
   total: number
   newCount: number
   matchedCount: number
+  rejectedCount: number
   duplicateCount: number
 }
 
@@ -164,7 +165,7 @@ export type AdminRequestStats = {
 export async function fetchRequestStats(
   duplicateKeys: DuplicateKeys
 ): Promise<AdminRequestStats> {
-  const [total, newCount, matchedCount, duplicateCount] = await Promise.all([
+  const [total, newCount, matchedCount, rejectedCount, duplicateCount] = await Promise.all([
     db.select({ value: count() }).from(communityJoinRequests),
     db
       .select({ value: count() })
@@ -177,6 +178,10 @@ export async function fetchRequestStats(
     db
       .select({ value: count() })
       .from(communityJoinRequests)
+      .where(eq(communityJoinRequests.status, "REJECTED")),
+    db
+      .select({ value: count() })
+      .from(communityJoinRequests)
       .where(buildDuplicateCondition(duplicateKeys)),
   ])
 
@@ -184,6 +189,7 @@ export async function fetchRequestStats(
     total: Number(total[0]?.value ?? 0),
     newCount: Number(newCount[0]?.value ?? 0),
     matchedCount: Number(matchedCount[0]?.value ?? 0),
+    rejectedCount: Number(rejectedCount[0]?.value ?? 0),
     duplicateCount: Number(duplicateCount[0]?.value ?? 0),
   }
 }
