@@ -3,6 +3,29 @@ import type { PricingConfig, RoomMultiplierConfig, RoomType } from "@/types"
 // Room types the app offers, widest occupancy first.
 export const ROOM_TYPES: RoomType[] = ["QUINT", "QUAD", "TRIPLE", "DOUBLE"]
 
+// The canonical room_multipliers rows. Both the seed and the production sync script read this, so
+// the two can never drift apart.
+//
+// `multiplier` is this room type's nightly rate DIVIDED BY a quad room's rate — NOT a per-person
+// uplift. The cost formula already multiplies by roomCount (= ceil(pax / paxPerRoom)), which is
+// what carries the occupancy math; a per-person uplift here would scale that same axis twice.
+//
+// Bigger room, higher nightly rate: quint > quad > triple > double. Per person this inverts, which
+// is the expected shape — fewer people sharing a room each pay more:
+//   4 pax quad   1 room × 1.00 ÷ 4 = 0.250 × rate
+//   3 pax triple 1 room × 0.85 ÷ 3 = 0.283 × rate
+//   2 pax double 1 room × 0.70 ÷ 2 = 0.350 × rate
+//   5 pax quint  1 room × 1.15 ÷ 5 = 0.230 × rate
+//
+// These ratios are a starting point with the right ordering, NOT supplier-confirmed figures.
+// Verify them against a real quote before quoting jamaah from them.
+export const ROOM_MULTIPLIER_ROWS = [
+  { type: "QUINT", paxPerRoom: 5, multiplier: "1.15", label: "Quint", sublabel: "5 orang/kamar" },
+  { type: "QUAD", paxPerRoom: 4, multiplier: "1.0", label: "Quad", sublabel: "4 orang/kamar" },
+  { type: "TRIPLE", paxPerRoom: 3, multiplier: "0.85", label: "Triple", sublabel: "3 orang/kamar" },
+  { type: "DOUBLE", paxPerRoom: 2, multiplier: "0.7", label: "Double", sublabel: "2 orang/kamar" },
+] as const
+
 // Every deployment has a QUAD row — it is the basis `sarPerNight` is quoted in.
 export const FALLBACK_ROOM_TYPE: RoomType = "QUAD"
 

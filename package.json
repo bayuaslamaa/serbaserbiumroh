@@ -13,6 +13,7 @@
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
     "seed": "dotenv -e .env.local -- tsx lib/db/seed.ts",
     "import:real-prices": "dotenv -e .env.local -- tsx scripts/import-real-prices.ts",
+    "sync:room-multipliers": "dotenv -e .env.local -- tsx scripts/sync-room-multipliers.ts",
     "backfill:hotel-slugs": "dotenv -e .env.local -- tsx scripts/backfill-hotel-slugs.ts",
     "test": "vitest run",
     "test:watch": "vitest"

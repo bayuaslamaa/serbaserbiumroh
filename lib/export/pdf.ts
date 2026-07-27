@@ -2,7 +2,7 @@ import { Document, Page, Text, View, StyleSheet, renderToBuffer, Image } from "@
 import { createElement } from "react"
 import path from "path"
 import type { BreakdownDisplay, BudgetBreakdown, EstimateParams } from "@/types"
-import { rp, rowCalc, exportLabel, basisNote, kursLine, EXPORT_NOTES } from "./summary"
+import { rp, rowCalc, exportLabel, basisNote, kursLine, travelMonthLabel, EXPORT_NOTES } from "./summary"
 
 const GOLD = "#c9a84c"
 const GREEN = "#2c6b42"
@@ -90,6 +90,17 @@ export async function generatePDF(
           createElement(View, { style: styles.infoItem },
             createElement(Text, { style: styles.infoLabel }, "JAMAAH"),
             createElement(Text, { style: styles.infoValue }, `${params.pax} orang`)
+          ),
+          // Hotel rates are seasonal, so the quote is only checkable against the month it was
+          // priced for. "Belum ditentukan" is stated rather than omitted — a blank slot would read
+          // as an oversight, and it flags to the reader that the figure is not month-specific.
+          createElement(View, { style: styles.infoItem },
+            createElement(Text, { style: styles.infoLabel }, "KEBERANGKATAN"),
+            createElement(
+              Text,
+              { style: styles.infoValue },
+              travelMonthLabel(params.travelMonth) ?? "Belum ditentukan"
+            )
           )
         ),
         createElement(

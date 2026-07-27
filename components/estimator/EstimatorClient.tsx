@@ -442,6 +442,7 @@ export function EstimatorClient({
             display={display}
             customRows={state.manualOverrides.customRows}
             pax={state.params.pax}
+            travelMonth={state.params.travelMonth}
             editable={canEditOverrides}
             {...rowHandlers}
           />

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { RotateCcw, X } from "lucide-react"
 import type { BreakdownDisplay, BreakdownDisplayRow, CustomRow, HotelCostDetail } from "@/types"
 import { MAX_LABEL_LEN, MAX_ROWS } from "@/lib/estimate/overrides"
-import { rp, rowCalc, exportLabel, basisNote, kursLine, EXPORT_NOTES } from "@/lib/export/summary"
+import { rp, rowCalc, exportLabel, basisNote, kursLine, travelMonthLabel, EXPORT_NOTES } from "@/lib/export/summary"
 
 // Parse an amount input into an integer; blank → null (treated as "no override").
 function parseAmount(raw: string): number | null {
@@ -30,6 +30,8 @@ interface BudgetBreakdownProps {
   display: BreakdownDisplay
   customRows: CustomRow[]
   pax: number
+  /** Departure month (1-12) shown in the copied text; hotel rates are seasonal. */
+  travelMonth?: number
   editable?: boolean
   onSetAmount: (key: string, idr: number | null) => void
   onSetUnitPrice: (key: string, unitPrice: number | null) => void
@@ -50,9 +52,12 @@ function hotelFormula(detail: HotelCostDetail): string {
   return `SAR ${detail.sarPerNight.toLocaleString("id-ID")} × ${detail.nights} malam × ${detail.roomCount} kamar${multiplier} ÷ ${detail.totalPax} orang (${detail.roomPax} orang/kamar)`
 }
 
-function buildCopyText(display: BreakdownDisplay, pax: number): string {
+function buildCopyText(display: BreakdownDisplay, pax: number, travelMonth?: number): string {
   const lines: string[] = [
     "*ESTIMASI BIAYA UMROH*",
+    // Hotel rates are seasonal, so the month is what makes this quote checkable later. Stated even
+    // when unset, so an unspecified departure reads as a question to answer rather than an omission.
+    `Keberangkatan: ${travelMonthLabel(travelMonth) ?? "belum ditentukan"}`,
     `Rincian per orang${basisNote(display)}:`,
     "",
   ]
@@ -140,6 +145,7 @@ export function BudgetBreakdown({
   display,
   customRows,
   pax,
+  travelMonth,
   editable = true,
   onSetAmount,
   onSetUnitPrice,
@@ -155,7 +161,7 @@ export function BudgetBreakdown({
 
   async function copyEstimate() {
     try {
-      await navigator.clipboard.writeText(buildCopyText(display, pax))
+      await navigator.clipboard.writeText(buildCopyText(display, pax, travelMonth))
       setCopyStatus("copied")
       window.setTimeout(() => setCopyStatus("idle"), 1800)
     } catch {
