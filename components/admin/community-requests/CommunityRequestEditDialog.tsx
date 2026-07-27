@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -19,6 +19,8 @@ type CommunityRequestEditDialogProps = {
   status: RequestStatus
   adminNote: string
 }
+
+const REQUEST_TIMEOUT_MS = 10_000
 
 const fieldStyle = {
   borderColor: "var(--color-border)",
@@ -42,9 +44,13 @@ export function CommunityRequestEditDialog({
   const [currentStatus, setCurrentStatus] = useState(status)
   const [note, setNote] = useState(adminNote)
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  // Explicit rather than useTransition: React 18 does not await an async
+  // transition callback, so isPending would clear the moment the fetch was
+  // issued -- leaving Simpan live and double-submittable for the whole request.
+  const [isPending, setIsPending] = useState(false)
 
   function handleOpenChange(next: boolean) {
+    if (isPending) return
     if (next) {
       // Reseed from the server's copy: a refresh may have changed it since the
       // last time this row was opened.
@@ -55,28 +61,33 @@ export function CommunityRequestEditDialog({
     setOpen(next)
   }
 
-  function save() {
+  async function save() {
+    if (isPending) return
     setError(null)
-    startTransition(async () => {
-      try {
-        const res = await fetch(`/api/admin/community-requests/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: currentStatus, adminNote: note }),
-        })
+    setIsPending(true)
+    try {
+      const res = await fetch(`/api/admin/community-requests/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: currentStatus, adminNote: note }),
+        // A hang, unlike a rejection, never reaches the catch below -- without
+        // this the dialog stays disabled with no way forward.
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
 
-        if (!res.ok) {
-          const data = await res.json()
-          setError(data.error ?? "Gagal menyimpan.")
-          return
-        }
-
-        setOpen(false)
-        router.refresh()
-      } catch {
-        setError("Gagal menyimpan.")
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setError(data.error ?? "Gagal menyimpan.")
+        return
       }
-    })
+
+      setOpen(false)
+      router.refresh()
+    } catch {
+      setError("Gagal menyimpan.")
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import type { RawSearchParams } from "@/lib/community/admin-requests-query"
@@ -21,10 +21,27 @@ export function CommunityRequestsToolbar({ q }: CommunityRequestsToolbarProps) {
   const searchParams = useSearchParams()
   const [term, setTerm] = useState(q)
 
+  // The last value this toolbar wrote to the URL. Anything else changing `q`
+  // -- the empty-state "Hapus filter" link, a stat card, browser Back -- is an
+  // external edit the box must adopt.
+  const pushedRef = useRef(q)
+
   const current = useMemo<RawSearchParams>(
     () => Object.fromEntries(searchParams.entries()),
     [searchParams]
   )
+
+  // Read at fire time, not capture time: a filter link clicked during the
+  // debounce window would otherwise be overwritten by the stale params the
+  // effect closed over.
+  const currentRef = useRef(current)
+  currentRef.current = current
+
+  useEffect(() => {
+    if (q === pushedRef.current) return
+    pushedRef.current = q
+    setTerm(q)
+  }, [q])
 
   useEffect(() => {
     // Already in sync -- covers the first render and the settle after a
@@ -32,11 +49,12 @@ export function CommunityRequestsToolbar({ q }: CommunityRequestsToolbarProps) {
     if (term === q) return
 
     const timer = setTimeout(() => {
-      router.replace(buildAdminRequestsHref(current, { q: term || null }))
+      pushedRef.current = term
+      router.replace(buildAdminRequestsHref(currentRef.current, { q: term || null }))
     }, SEARCH_DEBOUNCE_MS)
 
     return () => clearTimeout(timer)
-  }, [term, q, current, router])
+  }, [term, q, router])
 
   return (
     <div>

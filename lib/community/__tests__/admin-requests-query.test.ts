@@ -61,10 +61,11 @@ vi.mock("drizzle-orm", async (importOriginal) => {
     ilike: vi.fn(actual.ilike),
     inArray: vi.fn(actual.inArray),
     eq: vi.fn(actual.eq),
+    desc: vi.fn(actual.desc),
   }
 })
 
-import { eq, ilike, inArray } from "drizzle-orm"
+import { desc, eq, ilike, inArray } from "drizzle-orm"
 import { communityJoinRequests } from "@/lib/db/schema"
 import {
   PAGE_SIZE,
@@ -78,6 +79,7 @@ import {
 const mockIlike = ilike as unknown as ReturnType<typeof vi.fn>
 const mockInArray = inArray as unknown as ReturnType<typeof vi.fn>
 const mockEq = eq as unknown as ReturnType<typeof vi.fn>
+const mockDesc = desc as unknown as ReturnType<typeof vi.fn>
 
 function keys(phones: string[] = [], socials: string[] = []) {
   return { phones: new Set(phones), socials: new Set(socials) }
@@ -87,15 +89,24 @@ function filters(overrides: Partial<ReturnType<typeof parseAdminRequestFilters>>
   return { status: "ALL" as const, q: "", duplicatesOnly: false, page: 1, ...overrides }
 }
 
-/** Flattens a drizzle SQL object's literal chunks so a simple clause is readable. */
+/**
+ * Flattens a drizzle SQL tree into its literal text, recursing into nested
+ * conditions so the composition operators (` and `, ` or `) are visible.
+ * Asserting the operators is the only way to prove buildWhere combined the
+ * filters correctly -- spying on ilike/eq/inArray proves each fragment was
+ * built, never how they were joined.
+ */
 function renderSql(condition: unknown): string {
-  const chunks = (condition as { queryChunks?: unknown[] })?.queryChunks ?? []
-  return chunks
-    .map((chunk) => (chunk as { value?: unknown })?.value)
-    .filter((value): value is string[] => Array.isArray(value))
-    .flat()
-    .join("")
-    .trim()
+  const node = condition as { queryChunks?: unknown[]; value?: unknown }
+  if (!node) return ""
+
+  if (Array.isArray(node.queryChunks)) {
+    return node.queryChunks.map(renderSql).join("")
+  }
+  if (Array.isArray(node.value)) {
+    return node.value.join("")
+  }
+  return ""
 }
 
 function makeRow(id: string, overrides: Record<string, unknown> = {}) {
@@ -283,6 +294,55 @@ describe("fetchAdminRequests", () => {
     expect(mockInArray).toHaveBeenCalledWith(communityJoinRequests.normalizedSocialUsername, [
       "shared",
     ])
+  })
+
+  // Matching a phone OR a handle -- AND would return only requests that share
+  // both, which is a different and much smaller set.
+  it("joins the phone and social duplicate keys with OR, not AND", async () => {
+    dbState.countQueue = [2]
+
+    await fetchAdminRequests(filters({ duplicatesOnly: true }), keys(["628111"], ["shared"]))
+
+    const where = renderSql(dbState.queries.find((query) => !query.limitCalled)?.where)
+    expect(where).toContain(" or ")
+    expect(where).not.toContain(" and ")
+  })
+
+  it("joins status and search with AND, not OR", async () => {
+    dbState.countQueue = [1]
+
+    await fetchAdminRequests(filters({ status: "MATCHED", q: "irham" }), keys())
+
+    const where = renderSql(dbState.queries.find((query) => !query.limitCalled)?.where)
+    // The three ILIKE columns are OR'd inside their own group; the status
+    // predicate must be AND'd against that group.
+    expect(where).toContain(" and ")
+    expect(mockEq).toHaveBeenCalledWith(communityJoinRequests.status, "MATCHED")
+    expect(mockIlike).toHaveBeenCalledWith(communityJoinRequests.fullName, "%irham%")
+  })
+
+  it("composes all three filter dimensions at once", async () => {
+    dbState.countQueue = [1]
+
+    await fetchAdminRequests(
+      filters({ status: "NEW", q: "irham", duplicatesOnly: true }),
+      keys(["628111"])
+    )
+
+    const where = renderSql(dbState.queries.find((query) => !query.limitCalled)?.where)
+    expect(where).toContain(" and ")
+    expect(where).toContain(" or ")
+    expect(mockEq).toHaveBeenCalledWith(communityJoinRequests.status, "NEW")
+    expect(mockIlike).toHaveBeenCalledWith(communityJoinRequests.phone, "%irham%")
+    expect(mockInArray).toHaveBeenCalledWith(communityJoinRequests.normalizedPhone, ["628111"])
+  })
+
+  it("orders newest first by createdAt, not by an arbitrary column", async () => {
+    dbState.countQueue = [5]
+
+    await fetchAdminRequests(filters(), keys())
+
+    expect(mockDesc).toHaveBeenCalledWith(communityJoinRequests.createdAt)
   })
 
   it("matches nothing -- not everything -- when the duplicate filter has no keys", async () => {

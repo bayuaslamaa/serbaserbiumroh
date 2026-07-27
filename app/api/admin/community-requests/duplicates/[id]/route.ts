@@ -3,6 +3,7 @@ import { and, desc, eq, ne, or, type SQL } from "drizzle-orm"
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { communityJoinRequests } from "@/lib/db/schema"
+import type { RequestStatus } from "@/lib/community/admin-requests-status"
 
 async function requireAdmin() {
   const session = await auth()
@@ -12,6 +13,25 @@ async function requireAdmin() {
 }
 
 type RouteCtx = { params: Promise<{ id: string }> }
+
+/** One shared submission can attract a long tail; cap what one response carries. */
+const MAX_PARTNERS = 50
+
+/**
+ * The response shape, exported so the client renders the contract rather than
+ * a hand-copied guess at it.
+ */
+export type DuplicatePartner = {
+  id: string
+  fullName: string
+  phone: string
+  socialUsername: string | null
+  status: RequestStatus
+  adminNote: string
+  createdAt: string
+  matchedByPhone: boolean
+  matchedBySocial: boolean
+}
 
 /**
  * The requests sharing this one's phone or social handle.
@@ -56,6 +76,7 @@ export async function GET(_req: Request, ctx: RouteCtx) {
       )
     )
     .orderBy(desc(communityJoinRequests.createdAt))
+    .limit(MAX_PARTNERS)
 
   const duplicates = rows.map((row) => ({
     id: row.id,

@@ -5,6 +5,7 @@ import type {
   RawSearchParams,
 } from "@/lib/community/admin-requests-query"
 import { buildAdminRequestsHref } from "@/lib/community/admin-requests-url"
+import type { RequestStatus } from "@/lib/community/admin-requests-status"
 
 type CommunityRequestsStatsProps = {
   stats: AdminRequestStats
@@ -26,12 +27,7 @@ export function CommunityRequestsStats({
   filters,
   searchParams,
 }: CommunityRequestsStatsProps) {
-  function statusCard(
-    key: string,
-    label: string,
-    value: number,
-    status: "NEW" | "MATCHED" | "REJECTED"
-  ) {
+  function statusCard(key: string, label: string, value: number, status: RequestStatus) {
     const active = filters.status === status
     return {
       key,
@@ -48,8 +44,10 @@ export function CommunityRequestsStats({
       key: "total",
       label: "Total pengajuan",
       value: stats.total,
-      active: filters.status === "ALL" && !filters.duplicatesOnly,
-      href: buildAdminRequestsHref(searchParams, { status: null, dup: null }),
+      // q counts as a filter: without it this card marks itself current and
+      // links to the URL already being viewed while a search narrows the table.
+      active: filters.status === "ALL" && !filters.duplicatesOnly && filters.q === "",
+      href: buildAdminRequestsHref(searchParams, { status: null, dup: null, q: null }),
     },
     statusCard("new", "Baru", stats.newCount, "NEW"),
     statusCard("matched", "Sudah dicocokkan", stats.matchedCount, "MATCHED"),

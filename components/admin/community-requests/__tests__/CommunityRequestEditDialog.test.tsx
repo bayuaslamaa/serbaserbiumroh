@@ -152,6 +152,49 @@ describe("CommunityRequestEditDialog", () => {
     })
   })
 
+  // The plan listed this scenario; under useTransition it did not hold, because
+  // React 18 does not await an async transition callback.
+  it("disables the form while the save is in flight", async () => {
+    let release: (value: Response) => void = () => {}
+    vi.spyOn(global, "fetch").mockReturnValue(
+      new Promise<Response>((resolve) => {
+        release = resolve
+      })
+    )
+    renderDialog()
+    openDialog()
+
+    fireEvent.click(screen.getByRole("button", { name: "Simpan" }))
+
+    expect(screen.getByRole("button", { name: "Menyimpan..." })).toBeDisabled()
+    expect(screen.getByLabelText("Status")).toBeDisabled()
+    expect(screen.getByLabelText("Catatan admin")).toBeDisabled()
+
+    release({ ok: true, json: async () => ({}) } as Response)
+    await waitFor(() => expect(screen.queryByLabelText("Catatan admin")).toBeNull())
+  })
+
+  it("ignores a second click while the first save is still running", async () => {
+    let release: (value: Response) => void = () => {}
+    const fetchSpy = vi.spyOn(global, "fetch").mockReturnValue(
+      new Promise<Response>((resolve) => {
+        release = resolve
+      })
+    )
+    renderDialog()
+    openDialog()
+
+    const button = screen.getByRole("button", { name: "Simpan" })
+    fireEvent.click(button)
+    fireEvent.click(button)
+    fireEvent.click(button)
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1)
+
+    release({ ok: true, json: async () => ({}) } as Response)
+    await waitFor(() => expect(screen.queryByLabelText("Catatan admin")).toBeNull())
+  })
+
   it("does not save when the dialog is dismissed", () => {
     const fetchSpy = mockFetch({ ok: true })
     renderDialog()

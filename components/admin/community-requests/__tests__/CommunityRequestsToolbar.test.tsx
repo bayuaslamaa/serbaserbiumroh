@@ -100,6 +100,65 @@ describe("CommunityRequestsToolbar", () => {
     expect((searchBox() as HTMLInputElement).value).toBe("irham")
   })
 
+  // The clear-filter escape hatch, a stat card, and browser Back all change `q`
+  // from outside. If the box keeps the old term it re-arms the debounce and
+  // navigates the search straight back.
+  it("adopts an externally cleared search instead of restoring it", () => {
+    currentParams = new URLSearchParams("q=irham")
+    const { rerender } = render(<CommunityRequestsToolbar q="irham" />)
+
+    currentParams = new URLSearchParams()
+    rerender(<CommunityRequestsToolbar q="" />)
+    vi.advanceTimersByTime(1000)
+
+    expect((searchBox() as HTMLInputElement).value).toBe("")
+    expect(mockReplace).not.toHaveBeenCalled()
+  })
+
+  it("adopts an externally changed search term", () => {
+    currentParams = new URLSearchParams("q=irham")
+    const { rerender } = render(<CommunityRequestsToolbar q="irham" />)
+
+    currentParams = new URLSearchParams("q=dessy")
+    rerender(<CommunityRequestsToolbar q="dessy" />)
+    vi.advanceTimersByTime(1000)
+
+    expect((searchBox() as HTMLInputElement).value).toBe("dessy")
+    expect(mockReplace).not.toHaveBeenCalled()
+  })
+
+  it("still debounces the user's own typing after an external change", () => {
+    currentParams = new URLSearchParams("q=irham")
+    const { rerender } = render(<CommunityRequestsToolbar q="irham" />)
+
+    currentParams = new URLSearchParams()
+    rerender(<CommunityRequestsToolbar q="" />)
+    vi.advanceTimersByTime(1000)
+
+    fireEvent.change(searchBox(), { target: { value: "dessy" } })
+    vi.advanceTimersByTime(300)
+
+    expect(mockReplace).toHaveBeenCalledWith("/admin/community-requests?q=dessy")
+  })
+
+  // A filter link clicked mid-debounce must not be undone by params the effect
+  // closed over before the click.
+  it("writes against the params current at fire time, not at capture time", () => {
+    currentParams = new URLSearchParams()
+    const { rerender } = render(<CommunityRequestsToolbar q="" />)
+
+    fireEvent.change(searchBox(), { target: { value: "irham" } })
+    vi.advanceTimersByTime(100)
+
+    // A stat card was clicked mid-debounce; the navigation re-renders us.
+    currentParams = new URLSearchParams("status=MATCHED")
+    rerender(<CommunityRequestsToolbar q="" />)
+
+    vi.advanceTimersByTime(300)
+
+    expect(mockReplace).toHaveBeenCalledWith("/admin/community-requests?status=MATCHED&q=irham")
+  })
+
   it("labels the search box for assistive technology", () => {
     render(<CommunityRequestsToolbar q="" />)
 

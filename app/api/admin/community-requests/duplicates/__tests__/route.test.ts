@@ -59,7 +59,9 @@ function queueReads(subject: Row | undefined, partners: Row[]) {
       from: () => ({ where: () => ({ limit: async () => (subject ? [subject] : []) }) }),
     })
     .mockReturnValueOnce({
-      from: () => ({ where: () => ({ orderBy: async () => partners }) }),
+      from: () => ({
+        where: () => ({ orderBy: () => ({ limit: async () => partners }) }),
+      }),
     })
 }
 

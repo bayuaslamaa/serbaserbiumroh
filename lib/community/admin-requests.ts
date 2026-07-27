@@ -18,11 +18,6 @@ export type DuplicateKeys = {
   socials: Set<string>
 }
 
-export const EMPTY_DUPLICATE_KEYS: DuplicateKeys = {
-  phones: new Set(),
-  socials: new Set(),
-}
-
 /**
  * Duplicate detection has to see the whole table, not the rows currently on
  * screen. Aggregating in SQL is what keeps the flags honest once the admin list

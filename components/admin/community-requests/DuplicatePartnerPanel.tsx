@@ -13,18 +13,11 @@ import {
 } from "@/components/ui/dialog"
 import { formatAbsoluteDateTime, formatPhoneDisplay } from "@/lib/community/admin-requests-format"
 import { statusLabel } from "@/lib/community/admin-requests-status"
+// Imported, not re-declared: a hand-copied shape drifts silently the first time
+// the route adds or renames a field.
+import type { DuplicatePartner } from "@/app/api/admin/community-requests/duplicates/[id]/route"
 
-type DuplicatePartner = {
-  id: string
-  fullName: string
-  phone: string
-  socialUsername: string | null
-  status: "NEW" | "MATCHED" | "REJECTED"
-  adminNote: string
-  createdAt: string
-  matchedByPhone: boolean
-  matchedBySocial: boolean
-}
+const REQUEST_TIMEOUT_MS = 10_000
 
 type DuplicatePartnerPanelProps = {
   id: string
@@ -52,7 +45,11 @@ export function DuplicatePartnerPanel({ id, fullName, reason }: DuplicatePartner
     setIsLoading(true)
     setError(null)
     try {
-      const res = await fetch(`/api/admin/community-requests/duplicates/${id}`)
+      const res = await fetch(`/api/admin/community-requests/duplicates/${id}`, {
+        // A hang never reaches the catch below, and the retry button is gated
+        // on `error` -- without a timeout the panel spins forever.
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
         setError(data.error ?? "Gagal memuat pengajuan serupa.")
@@ -69,8 +66,15 @@ export function DuplicatePartnerPanel({ id, fullName, reason }: DuplicatePartner
 
   function handleOpenChange(next: boolean) {
     setOpen(next)
-    // Only fetch the first time; reopening reuses what was already loaded.
-    if (next && partners === null && !isLoading) void load()
+    // Reload every time. Status and admin notes on these partners change from
+    // the rows right beside this one, so a cached list goes stale as soon as
+    // the admin acts on what the panel showed them.
+    if (next) {
+      void load()
+    } else {
+      setPartners(null)
+      setError(null)
+    }
   }
 
   return (

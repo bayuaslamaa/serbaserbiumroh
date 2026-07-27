@@ -139,7 +139,10 @@ export async function fetchAdminRequests(
     .select()
     .from(communityJoinRequests)
     .where(where)
-    .orderBy(desc(communityJoinRequests.createdAt))
+    // id breaks ties: Postgres leaves the order among equal created_at values
+    // unspecified, so without it rows sharing a timestamp can repeat or vanish
+    // across a page boundary.
+    .orderBy(desc(communityJoinRequests.createdAt), desc(communityJoinRequests.id))
     .limit(PAGE_SIZE)
     .offset(offset)
 

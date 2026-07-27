@@ -53,7 +53,10 @@ describe("DuplicatePartnerPanel", () => {
     await waitFor(() => {
       expect(screen.getByText("Dessy Dwi Lestari")).toBeInTheDocument()
     })
-    expect(global.fetch).toHaveBeenCalledWith("/api/admin/community-requests/duplicates/join-1")
+    expect(global.fetch).toHaveBeenCalledWith(
+      "/api/admin/community-requests/duplicates/join-1",
+      expect.objectContaining({ signal: expect.anything() })
+    )
   })
 
   it("says what each partner matched on", async () => {
@@ -127,19 +130,30 @@ describe("DuplicatePartnerPanel", () => {
     })
   })
 
-  it("does not refetch when reopened", async () => {
-    const fetchSpy = mockFetch({ ok: true, body: { duplicates: [partner()] } })
+  // These partners' statuses and notes are edited from the rows right beside
+  // this panel, so reusing a cached list shows the admin a state they already
+  // changed.
+  it("refetches on reopen so an edited partner is not shown stale", async () => {
+    const fetchSpy = mockFetch({
+      ok: true,
+      body: { duplicates: [partner({ status: "NEW" })] },
+    })
     renderPanel()
 
     openPanel()
-    await waitFor(() => expect(screen.getByText("Dessy Dwi Lestari")).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText("Baru")).toBeInTheDocument())
 
     fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" })
     await waitFor(() => expect(screen.queryByText("Dessy Dwi Lestari")).toBeNull())
 
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: async () => ({ duplicates: [partner({ status: "MATCHED" })] }),
+    } as Response)
+
     openPanel()
-    await waitFor(() => expect(screen.getByText("Dessy Dwi Lestari")).toBeInTheDocument())
-    expect(fetchSpy).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(screen.getByText("Sudah dicocokkan")).toBeInTheDocument())
+    expect(fetchSpy).toHaveBeenCalledTimes(2)
   })
 
   it("stays read-only -- no status control in the comparison view", async () => {
