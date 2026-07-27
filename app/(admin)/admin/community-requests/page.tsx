@@ -1,10 +1,16 @@
-import { desc } from "drizzle-orm"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { CommunityRequestActions } from "@/components/admin/community-requests/CommunityRequestActions"
+import { CommunityRequestsPagination } from "@/components/admin/community-requests/CommunityRequestsPagination"
 import { requireAdmin } from "@/lib/auth"
-import { db } from "@/lib/db"
-import { communityJoinRequests } from "@/lib/db/schema"
-import { addDuplicateFlags, fetchDuplicateKeys } from "@/lib/community/admin-requests"
+import { fetchDuplicateKeys } from "@/lib/community/admin-requests"
+import {
+  fetchAdminRequests,
+  fetchRequestStats,
+  parseAdminRequestFilters,
+  type RawSearchParams,
+} from "@/lib/community/admin-requests-query"
+import { ADMIN_REQUESTS_PATH } from "@/lib/community/admin-requests-url"
 
 export const metadata = { title: "Admin — Pengajuan Komunitas" }
 
@@ -36,18 +42,23 @@ function truncate(text: string | null, length = 90) {
   return `${text.slice(0, length).trim()}...`
 }
 
-export default async function AdminCommunityRequestsPage() {
+export default async function AdminCommunityRequestsPage({
+  searchParams = {},
+}: {
+  // Next 14 hands searchParams to a page as a plain synchronous object. This is
+  // not the Promise-shaped `params` that route handlers receive.
+  searchParams?: RawSearchParams
+}) {
   await requireAdmin()
 
-  const [rows, duplicateKeys] = await Promise.all([
-    db.select().from(communityJoinRequests).orderBy(desc(communityJoinRequests.createdAt)),
-    fetchDuplicateKeys(),
+  const filters = parseAdminRequestFilters(searchParams)
+  const duplicateKeys = await fetchDuplicateKeys()
+  const [stats, { requests, total, page, pageCount }] = await Promise.all([
+    fetchRequestStats(duplicateKeys),
+    fetchAdminRequests(filters, duplicateKeys),
   ])
 
-  const requests = addDuplicateFlags(rows, duplicateKeys)
-  const newCount = requests.filter((request) => request.status === "NEW").length
-  const matchedCount = requests.filter((request) => request.status === "MATCHED").length
-  const duplicateCount = requests.filter((request) => request.possibleDuplicate).length
+  const isFiltered = filters.status !== "ALL" || filters.q !== "" || filters.duplicatesOnly
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -59,7 +70,8 @@ export default async function AdminCommunityRequestsPage() {
           Pengajuan Komunitas
         </h1>
         <p className="mt-1 text-sm" style={{ color: "var(--color-text-muted)" }}>
-          {requests.length} pengajuan tersimpan, {newCount} baru, {matchedCount} sudah dicocokkan, {duplicateCount} kemungkinan duplikat.
+          {stats.total} pengajuan tersimpan, {stats.newCount} baru, {stats.matchedCount} sudah
+          dicocokkan, {stats.duplicateCount} kemungkinan duplikat.
         </p>
       </div>
 
@@ -86,10 +98,19 @@ export default async function AdminCommunityRequestsPage() {
               <tr>
                 <td
                   colSpan={7}
-                  className="px-4 py-8 text-center text-sm italic"
+                  className="px-4 py-8 text-center text-sm"
                   style={{ color: "var(--color-text-muted)" }}
                 >
-                  Belum ada pengajuan komunitas.
+                  {isFiltered ? (
+                    <span>
+                      Tidak ada pengajuan yang cocok dengan filter ini.{" "}
+                      <Link href={ADMIN_REQUESTS_PATH} style={{ color: "var(--color-gold)" }}>
+                        Hapus filter
+                      </Link>
+                    </span>
+                  ) : (
+                    <span className="italic">Belum ada pengajuan komunitas.</span>
+                  )}
                 </td>
               </tr>
             )}
@@ -152,6 +173,13 @@ export default async function AdminCommunityRequestsPage() {
           </tbody>
         </table>
       </div>
+
+      <CommunityRequestsPagination
+        page={page}
+        pageCount={pageCount}
+        total={total}
+        searchParams={searchParams}
+      />
     </div>
   )
 }
