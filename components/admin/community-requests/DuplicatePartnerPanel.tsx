@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { formatAbsoluteDateTime, formatPhoneDisplay } from "@/lib/community/admin-requests-format"
+import { statusLabel } from "@/lib/community/admin-requests-status"
 
 type DuplicatePartner = {
   id: string
@@ -28,12 +29,6 @@ type DuplicatePartnerPanelProps = {
   id: string
   fullName: string
   reason: string
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  NEW: "Baru",
-  MATCHED: "Sudah dicocokkan",
-  REJECTED: "Ditolak",
 }
 
 function matchLabel(partner: DuplicatePartner) {
@@ -137,7 +132,7 @@ export function DuplicatePartnerPanel({ id, fullName, reason }: DuplicatePartner
                     {partner.fullName}
                   </span>
                   <Badge variant="secondary" className="text-xs">
-                    {STATUS_LABELS[partner.status] ?? partner.status}
+                    {statusLabel(partner.status)}
                   </Badge>
                 </div>
                 <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>

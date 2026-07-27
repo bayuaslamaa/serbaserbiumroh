@@ -3,12 +3,11 @@ import { db } from "@/lib/db"
 import { communityJoinRequests } from "@/lib/db/schema"
 import { addDuplicateFlags, type DuplicateKeys } from "./admin-requests"
 import type { CommunityJoinRequestWithDuplicateFlags } from "./admin-requests"
+import { isRequestStatus, type RequestStatus } from "./admin-requests-status"
 
 export const PAGE_SIZE = 25
 
-const STATUSES = ["NEW", "MATCHED", "REJECTED"] as const
-
-export type RequestStatus = (typeof STATUSES)[number]
+export type { RequestStatus }
 export type StatusFilter = RequestStatus | "ALL"
 
 export type AdminRequestFilters = {
@@ -36,9 +35,7 @@ function readParam(params: RawSearchParams, key: string): string {
  */
 export function parseAdminRequestFilters(params: RawSearchParams): AdminRequestFilters {
   const rawStatus = readParam(params, "status").toUpperCase()
-  const status = (STATUSES as readonly string[]).includes(rawStatus)
-    ? (rawStatus as RequestStatus)
-    : "ALL"
+  const status: StatusFilter = isRequestStatus(rawStatus) ? rawStatus : "ALL"
 
   const rawPage = Number.parseInt(readParam(params, "page"), 10)
   const page = Number.isFinite(rawPage) && rawPage > 1 ? rawPage : 1

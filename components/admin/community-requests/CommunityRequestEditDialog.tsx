@@ -11,19 +11,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { STATUS_OPTIONS, type RequestStatus } from "@/lib/community/admin-requests-status"
 
 type CommunityRequestEditDialogProps = {
   id: string
   fullName: string
-  status: "NEW" | "MATCHED" | "REJECTED"
+  status: RequestStatus
   adminNote: string
 }
-
-const STATUS_OPTIONS = [
-  { value: "NEW", label: "Baru" },
-  { value: "MATCHED", label: "Sudah dicocokkan" },
-  { value: "REJECTED", label: "Ditolak" },
-] as const
 
 const fieldStyle = {
   borderColor: "var(--color-border)",

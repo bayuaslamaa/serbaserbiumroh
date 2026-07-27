@@ -9,18 +9,7 @@ import {
   formatRelativeTime,
   whatsappHref,
 } from "@/lib/community/admin-requests-format"
-
-const STATUS_LABELS: Record<string, string> = {
-  NEW: "Baru",
-  MATCHED: "Sudah dicocokkan",
-  REJECTED: "Ditolak",
-}
-
-const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  NEW: "secondary",
-  MATCHED: "default",
-  REJECTED: "destructive",
-}
+import { statusBadgeVariant, statusLabel } from "@/lib/community/admin-requests-status"
 
 function duplicateReason(request: CommunityJoinRequestWithDuplicateFlags) {
   return [request.duplicateByPhone ? "nomor" : null, request.duplicateBySocial ? "sosial" : null]
@@ -91,8 +80,8 @@ export function CommunityRequestRow({ request }: CommunityRequestRowProps) {
 
       <td className="px-4 py-3 align-middle">
         <span className="flex flex-wrap items-center gap-1">
-          <Badge variant={STATUS_VARIANTS[request.status] ?? "secondary"} className="text-xs">
-            {STATUS_LABELS[request.status] ?? request.status}
+          <Badge variant={statusBadgeVariant(request.status)} className="text-xs">
+            {statusLabel(request.status)}
           </Badge>
           {request.possibleDuplicate && (
             <DuplicatePartnerPanel
