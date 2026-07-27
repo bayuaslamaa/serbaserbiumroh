@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest"
+import { SERVICE_KEYS, type ServiceKey } from "@/types"
 
-// Unit tests for admin pricing validation logic — no DB or auth needed
+// Unit tests for admin pricing validation logic — no DB or auth needed.
+// Service keys come from @/types rather than a local copy: a copy here would keep passing after
+// the route stopped agreeing with the estimator. The route itself is driven in service-route.test.ts.
 const CITIES = ["MAKKAH", "MADINAH"]
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
 const AIRLINE_TIERS = ["BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
-const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"]
 
 function validateRates(body: unknown): string | null {
   const b = body as Record<string, unknown>
@@ -30,7 +32,7 @@ function validateAirline(body: unknown): string | null {
 
 function validateService(body: unknown): string | null {
   const b = body as Record<string, unknown>
-  if (!SERVICE_KEYS.includes(b.key as string)) return "invalid key"
+  if (!SERVICE_KEYS.includes(b.key as ServiceKey)) return "invalid key"
   if (b.amount !== undefined && (typeof b.amount !== "number" || (b.amount as number) <= 0)) {
     return "amount must be a positive number"
   }
@@ -91,6 +93,11 @@ describe("Admin pricing validation", () => {
 
     it("valid service body with amount passes", () => {
       expect(validateService({ key: "TRANSPORT", amount: 350 })).toBeNull()
+    })
+
+    it("transport leg and muthowif keys pass", () => {
+      expect(validateService({ key: "TRANSPORT_JED_MAKKAH", amount: 400 })).toBeNull()
+      expect(validateService({ key: "MUTHOWIF", amount: 100 })).toBeNull()
     })
 
     it("invalid key → error", () => {

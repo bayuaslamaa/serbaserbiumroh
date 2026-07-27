@@ -28,6 +28,10 @@ export const airlineTierEnum = pgEnum("airline_tier", [
   "GARUDA",
   "BUSINESS",
 ])
+// New values are appended, never inserted: Postgres can add an enum value without a table
+// rewrite but cannot drop one, so retired keys (TRANSPORT) stay in the type and are retired at
+// the application layer instead. Enum order only affects sorting; the order services are
+// offered in lives in SERVICE_KEYS (types/index.ts).
 export const serviceKeyEnum = pgEnum("service_key", [
   "VISA",
   "SISKOPATUH",
@@ -35,6 +39,12 @@ export const serviceKeyEnum = pgEnum("service_key", [
   "TRANSPORT",
   "TOUR_MAKKAH",
   "TOUR_MADINAH",
+  "TRANSPORT_JED_MAKKAH",
+  "TRANSPORT_JED_MADINAH",
+  "TRANSPORT_MAKKAH_MADINAH",
+  "TRANSPORT_MAKKAH_JED",
+  "TRANSPORT_MADINAH_JED",
+  "MUTHOWIF",
 ])
 export const roleEnum = pgEnum("role", ["USER", "ADMIN"])
 export const communityJoinRequestStatusEnum = pgEnum("community_join_request_status", [

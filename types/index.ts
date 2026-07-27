@@ -4,7 +4,24 @@ export type HotelTier = "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM"
 export type RoomType = "QUINT" | "QUAD" | "TRIPLE" | "DOUBLE"
 export type AirlineTier = "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"
 export type EstimateAirline = AirlineTier | "NONE"
-export const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
+// Order here is the order the services are offered in — the pickers and the exports walk this
+// list. Transport is quoted per leg: an itinerary uses three of the five (a trip arrives at
+// Jeddah once and leaves once), so JED_MAKKAH/JED_MADINAH are alternatives, as are the two
+// return legs. TRANSPORT is the retiring all-or-nothing key and is removed in a later step.
+export const SERVICE_KEYS = [
+  "VISA",
+  "SISKOPATUH",
+  "TASREH",
+  "TRANSPORT",
+  "TRANSPORT_JED_MAKKAH",
+  "TRANSPORT_JED_MADINAH",
+  "TRANSPORT_MAKKAH_MADINAH",
+  "TRANSPORT_MAKKAH_JED",
+  "TRANSPORT_MADINAH_JED",
+  "TOUR_MAKKAH",
+  "TOUR_MADINAH",
+  "MUTHOWIF",
+] as const
 export type ServiceKey = (typeof SERVICE_KEYS)[number]
 
 // Core estimation parameters (stored as JSONB snapshot in estimates table)

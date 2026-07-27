@@ -56,6 +56,12 @@ const mockPricing: PricingConfig = {
     TRANSPORT: { currency: "SAR", amount: 325, label: "Transportasi", enabled: true, divideByPax: true },
     TOUR_MAKKAH: { currency: "SAR", amount: 150, label: "Tour Makkah", enabled: true, divideByPax: true },
     TOUR_MADINAH: { currency: "SAR", amount: 150, label: "Tour Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_JED_MAKKAH: { currency: "SAR", amount: 400, label: "Transportasi Jeddah → Makkah", enabled: true, divideByPax: true },
+    TRANSPORT_JED_MADINAH: { currency: "SAR", amount: 650, label: "Transportasi Jeddah → Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_MAKKAH_MADINAH: { currency: "SAR", amount: 550, label: "Transportasi Makkah ↔ Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_MAKKAH_JED: { currency: "SAR", amount: 300, label: "Transportasi Makkah → Jeddah", enabled: true, divideByPax: true },
+    TRANSPORT_MADINAH_JED: { currency: "SAR", amount: 550, label: "Transportasi Madinah → Jeddah", enabled: true, divideByPax: true },
+    MUTHOWIF: { currency: "SAR", amount: 0, label: "Muthowif", enabled: false, divideByPax: true },
   },
   roomMultipliers: {
     QUAD: { paxPerRoom: 4, multiplier: 1.0 },
