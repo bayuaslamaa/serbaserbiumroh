@@ -252,3 +252,51 @@ describe("PATCH /api/estimate/[id] manual overrides", () => {
     )
   })
 })
+
+describe("PATCH /api/estimate/[id] with a stored estimate that names a retired service key", () => {
+  // The estimator seeds its reducer from the stored snapshot and posts it straight back on save.
+  // If the retired key is only handled at the pricing boundary, the quote looks right on screen
+  // and the save comes back a 400 — which is why this asserts on the re-save, not on the total.
+  const legacyParams = { ...params, services: ["VISA", "TRANSPORT"] } as unknown as EstimateParams
+
+  it("re-saves without a 400 and persists the legs in place of the retired key", async () => {
+    mockExisting({ id: "e1", userId: "admin-1", params: legacyParams, manualOverrides: null })
+    const set = mockUpdate()
+    const { PATCH } = await import("../[id]/route")
+
+    const res = await PATCH(req({ params: legacyParams }), ctx)
+
+    expect(res.status).toBe(200)
+    const written = set.mock.calls[0][0] as { params: EstimateParams }
+    expect(written.params.services).toEqual([
+      "VISA",
+      "TRANSPORT_JED_MAKKAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MADINAH_JED",
+    ])
+  })
+
+  it("re-costs against the legs when only the title changes and params come from the stored row", async () => {
+    mockExisting({ id: "e1", userId: "admin-1", params: legacyParams, manualOverrides: null })
+    mockUpdate()
+    const { PATCH } = await import("../[id]/route")
+
+    const res = await PATCH(req({ params: legacyParams, title: "Judul Baru" }), ctx)
+
+    expect(res.status).toBe(200)
+    const costed = mockCalc.mock.calls[0][0] as EstimateParams
+    expect(costed.services).not.toContain("TRANSPORT")
+    expect(costed.services).toContain("TRANSPORT_MADINAH_JED")
+  })
+
+  it("still rejects a genuinely unknown service key", async () => {
+    mockExisting({ id: "e1", userId: "admin-1", params, manualOverrides: null })
+    const set = mockUpdate()
+    const { PATCH } = await import("../[id]/route")
+
+    const res = await PATCH(req({ params: { ...params, services: ["VISA", "NOT_A_SERVICE"] } }), ctx)
+
+    expect(res.status).toBe(400)
+    expect(set).not.toHaveBeenCalled()
+  })
+})

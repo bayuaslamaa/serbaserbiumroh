@@ -12,6 +12,7 @@ import { DEFAULT_PARAMS } from "@/types"
 import { calculateBudget } from "@/lib/budget/calculate"
 import { applyOverrides, breakdownToBaseRows, isEmptyOverrides } from "@/lib/budget/overrides"
 import { arePersistableEstimateTotals, MAX_IDR, MAX_LABEL_LEN, MAX_ROWS } from "@/lib/estimate/overrides"
+import { normaliseStoredOverrides, normaliseStoredParams } from "@/lib/estimate/services"
 import { InputPanel } from "./InputPanel"
 import { ParamsPanel } from "./ParamsPanel"
 import { SentenceCard } from "./SentenceCard"
@@ -137,10 +138,17 @@ export function EstimatorClient({
   storySource,
   canEditOverrides = true,
 }: EstimatorClientProps) {
-  const startOverrides = existingOverrides ?? EMPTY_OVERRIDES
+  // A saved estimate is seeded straight into the reducer and posted back verbatim on save, so the
+  // retired service keys its JSONB may still name are rewritten here too — normalising only at the
+  // pricing boundary would show the right total and then fail the save with a 400.
+  const startOverrides = normaliseStoredOverrides(existingOverrides ?? EMPTY_OVERRIDES)
   const startState: State = {
     rawInput: existingRawInput ?? "",
-    params: existingParams ?? (initialParams ? { ...DEFAULT_PARAMS, ...initialParams } : DEFAULT_PARAMS),
+    params: existingParams
+      ? normaliseStoredParams(existingParams)
+      : initialParams
+        ? normaliseStoredParams({ ...DEFAULT_PARAMS, ...initialParams })
+        : DEFAULT_PARAMS,
     manualOverrides: startOverrides,
     aiNotes: existingAiNotes ?? "",
     parseStatus: "idle",

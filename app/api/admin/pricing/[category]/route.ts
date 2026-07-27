@@ -13,6 +13,9 @@ import { eq, and } from "drizzle-orm"
 import { normalizeHotelPricingImportKey } from "@/lib/admin/hotel-pricing-import"
 import { normalizeAirlinePricingImportKey } from "@/lib/admin/airline-pricing-import"
 import { nextAvailableSlug } from "@/lib/hotels/slug"
+// The one list of service keys. This route used to keep its own copy, which meant every key added
+// to the estimator was unpriceable through the admin screen until someone remembered this file.
+import { SERVICE_KEYS, type ServiceKey } from "@/types"
 
 async function requireAdmin() {
   const session = await auth()
@@ -24,7 +27,6 @@ async function requireAdmin() {
 const CITIES = ["MAKKAH", "MADINAH"]
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
 const AIRLINE_TIERS = ["BUDGET", "STANDARD", "GARUDA", "BUSINESS"]
-const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"]
 const HOTEL_URL_FIELDS = ["agodaUrl", "bookingcomUrl", "tripcomUrl", "bookingUrl"] as const
 
 function normalizeOptionalUrl(value: unknown): { provided: boolean; valid: boolean; value: string | null } {
@@ -362,7 +364,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
 
   if (category === "service") {
     const { key, amount, enabled, divideByPax } = body
-    if (!SERVICE_KEYS.includes(key as string)) {
+    if (!SERVICE_KEYS.includes(key as ServiceKey)) {
       return NextResponse.json({ error: "invalid key" }, { status: 400 })
     }
     if (amount !== undefined && (typeof amount !== "number" || amount <= 0)) {
@@ -376,7 +378,7 @@ export async function PATCH(req: NextRequest, ctx: RouteCtx) {
     const [updated] = await db
       .update(serviceFees)
       .set(updates)
-      .where(eq(serviceFees.key, key as "VISA" | "SISKOPATUH" | "TASREH" | "TRANSPORT" | "TOUR_MAKKAH" | "TOUR_MADINAH"))
+      .where(eq(serviceFees.key, key as ServiceKey))
       .returning()
     if (!updated) return NextResponse.json({ error: "Service fee not found" }, { status: 404 })
     return NextResponse.json({ service: updated })

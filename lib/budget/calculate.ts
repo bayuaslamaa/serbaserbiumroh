@@ -1,5 +1,6 @@
 import { asc, desc } from "drizzle-orm"
 import { resolveRoomMultiplier } from "@/lib/estimate/room-types"
+import { isServiceKey, normaliseServices } from "@/lib/estimate/services"
 import type {
   EstimateParams,
   BudgetBreakdown,
@@ -122,7 +123,9 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   const serviceItems: BudgetBreakdown["serviceItems"] = []
   let servicesIdr = 0
 
-  for (const key of params.services) {
+  // Saved params carry retired keys (TRANSPORT). Expand them before pricing — the loop below skips
+  // an unknown key in silence, so an un-normalised list loses its transport line without an error.
+  for (const key of normaliseServices(params.services)) {
     const svc = pricing.services[key as ServiceKey]
     if (!svc || !svc.enabled) continue
 
@@ -285,6 +288,10 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
 
   const servicesMap: PricingConfig["services"] = {} as PricingConfig["services"]
   for (const s of services) {
+    // A deployed database can still hold a row for a retired key — the Postgres enum keeps the
+    // value and syncServiceFees may not have run yet. Skip it rather than publishing a price for
+    // something the catalogue no longer offers.
+    if (!isServiceKey(s.key)) continue
     servicesMap[s.key] = {
       currency: s.currency,
       amount: s.amount,

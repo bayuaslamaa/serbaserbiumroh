@@ -5,10 +5,10 @@ import { estimates } from "@/lib/db/schema"
 import { fetchPricingConfig } from "@/lib/budget/calculate"
 import { calculateBudget } from "@/lib/budget/calculate"
 import { applyOverrides, isEmptyOverrides } from "@/lib/budget/overrides"
-import { estimateTitle, validateEstimateHotelIds, validateEstimateParamsShape } from "@/lib/estimate/params"
-import { arePersistableEstimateTotals, validateManualOverrides } from "@/lib/estimate/overrides"
+import { estimateTitle, normaliseAndValidateEstimateParams, validateEstimateHotelIds } from "@/lib/estimate/params"
+import { arePersistableEstimateTotals, normaliseAndValidateManualOverrides } from "@/lib/estimate/overrides"
 import { eq, desc, count } from "drizzle-orm"
-import type { EstimateParams, ManualOverrides } from "@/types"
+import type { ManualOverrides } from "@/types"
 import { errorMessage, logActivity } from "@/lib/logging/activity-log"
 
 export async function GET(req: NextRequest) {
@@ -71,10 +71,12 @@ export async function POST(req: NextRequest) {
         overrides: raw.overrides,
         customRows: raw.customRows?.map(({ id, label, idr }) => ({ id, label, idr })),
       }
-      if (!validateManualOverrides(normalized)) {
+      // The source row was written against an older catalogue, so its override keys are
+      // normalised (not merely validated) before they are carried onto the duplicate.
+      storedOverrides = normaliseAndValidateManualOverrides(normalized)
+      if (!storedOverrides) {
         return NextResponse.json({ error: "Source estimate overrides are invalid" }, { status: 409 })
       }
-      storedOverrides = normalized
     }
 
     body = {
@@ -99,7 +101,10 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json({ error: "rawInput is required" }, { status: 400 })
   }
-  if (!validateEstimateParamsShape(body.params)) {
+  // Normalise before validating: a duplicate carries the source row's stored params verbatim, and
+  // the estimator posts back whatever it was seeded with, so retired keys reach this boundary.
+  const normalisedParams = normaliseAndValidateEstimateParams(body.params)
+  if (!normalisedParams) {
     await logActivity(db, {
       userId: session.user.id,
       flow: "estimate",
@@ -117,7 +122,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "params is invalid" }, { status: 400 })
   }
 
-  const params = body.params as EstimateParams
+  const params = normalisedParams
   let pricing
   try {
     pricing = await fetchPricingConfig(db)
@@ -150,7 +155,8 @@ export async function POST(req: NextRequest) {
   // (the page-level gate is not an API trust boundary).
   let overrides: ManualOverrides | null = null
   if (body.manualOverrides != null) {
-    if (!validateManualOverrides(body.manualOverrides)) {
+    const normalisedOverrides = normaliseAndValidateManualOverrides(body.manualOverrides)
+    if (!normalisedOverrides) {
       await logActivity(db, {
         userId: session.user.id,
         flow: "estimate",
@@ -162,7 +168,7 @@ export async function POST(req: NextRequest) {
       })
       return NextResponse.json({ error: "manual overrides invalid" }, { status: 400 })
     }
-    if (!overridesFromStoredSource && !isEmptyOverrides(body.manualOverrides) && session.user.role !== "ADMIN") {
+    if (!overridesFromStoredSource && !isEmptyOverrides(normalisedOverrides) && session.user.role !== "ADMIN") {
       await logActivity(db, {
         userId: session.user.id,
         flow: "estimate",
@@ -174,7 +180,7 @@ export async function POST(req: NextRequest) {
       })
       return NextResponse.json({ error: "manual overrides require admin" }, { status: 403 })
     }
-    overrides = isEmptyOverrides(body.manualOverrides) ? null : body.manualOverrides
+    overrides = isEmptyOverrides(normalisedOverrides) ? null : normalisedOverrides
   }
 
   const title =

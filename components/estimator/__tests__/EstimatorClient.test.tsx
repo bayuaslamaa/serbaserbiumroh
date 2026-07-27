@@ -191,3 +191,61 @@ describe("EstimatorClient override orchestration", () => {
     expect(request.manualOverrides.overrides.flight.autoIdrAtOverride).toBeUndefined()
   })
 })
+
+describe("EstimatorClient seeded from a stored estimate naming a retired service key", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, json: vi.fn().mockResolvedValue({}) }))
+  })
+
+  it("posts back the legs, not the retired key, so the save is not rejected", async () => {
+    // The reducer seeds straight from existingParams and sends that snapshot on save. Guarding
+    // only the pricing boundary would leave this request carrying TRANSPORT, and the API would
+    // answer 400 on an estimate that had just displayed a correct total.
+    render(
+      <EstimatorClient
+        pricingConfig={{} as PricingConfig}
+        estimateId="e1"
+        existingParams={{ ...params, services: ["VISA", "TRANSPORT"] } as unknown as EstimateParams}
+        existingOverrides={{ overrides: { "service:TRANSPORT": { unitPrice: 650 } }, customRows: [] }}
+        savedAt="2026-07-12T00:00:00.000Z"
+      />,
+    )
+
+    // Touch an override so the whole map is sent too, not just the params.
+    fireEvent.click(screen.getByText("override flight"))
+    fireEvent.click(screen.getByText("Perbarui Estimasi"))
+    fireEvent.click(screen.getByText("Simpan", { selector: "button" }))
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled())
+    const request = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string)
+    expect(request.params.services).toEqual([
+      "VISA",
+      "TRANSPORT_JED_MAKKAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MADINAH_JED",
+    ])
+    expect(request.manualOverrides.overrides["service:TRANSPORT"]).toBeUndefined()
+    expect(request.manualOverrides.overrides["service:TRANSPORT_JED_MAKKAH"]).toEqual({ unitPrice: 650 })
+  })
+
+  it("leaves the stored override column alone when nothing is edited", () => {
+    // The seed is normalised, so the remap must not read as a user edit — otherwise every legacy
+    // estimate would rewrite its own override column just by being opened.
+    render(
+      <EstimatorClient
+        pricingConfig={{} as PricingConfig}
+        estimateId="e1"
+        existingParams={{ ...params, services: ["VISA", "TRANSPORT"] } as unknown as EstimateParams}
+        existingOverrides={{ overrides: { "service:TRANSPORT": { unitPrice: 650 } }, customRows: [] }}
+        savedAt="2026-07-12T00:00:00.000Z"
+      />,
+    )
+
+    fireEvent.click(screen.getByText("Perbarui Estimasi"))
+    fireEvent.click(screen.getByText("Simpan", { selector: "button" }))
+
+    const request = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body as string)
+    expect(request.manualOverrides).toBeUndefined()
+  })
+})

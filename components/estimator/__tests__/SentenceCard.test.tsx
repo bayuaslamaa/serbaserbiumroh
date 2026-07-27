@@ -82,9 +82,14 @@ const mockPricing: PricingConfig = {
     VISA: { currency: "USD", amount: 165, label: "Visa Umroh Reguler", enabled: true, divideByPax: false },
     SISKOPATUH: { currency: "IDR", amount: 200000, label: "Siskopatuh", enabled: true, divideByPax: false },
     TASREH: { currency: "SAR", amount: 25, label: "Tasreh Raudhah", enabled: true, divideByPax: false },
-    TRANSPORT: { currency: "SAR", amount: 325, label: "Transportasi", enabled: true, divideByPax: true },
     TOUR_MAKKAH: { currency: "SAR", amount: 150, label: "Tour Makkah", enabled: true, divideByPax: true },
     TOUR_MADINAH: { currency: "SAR", amount: 150, label: "Tour Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_JED_MAKKAH: { currency: "SAR", amount: 400, label: "Transportasi Jeddah → Makkah", enabled: true, divideByPax: true },
+    TRANSPORT_JED_MADINAH: { currency: "SAR", amount: 650, label: "Transportasi Jeddah → Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_MAKKAH_MADINAH: { currency: "SAR", amount: 550, label: "Transportasi Makkah ↔ Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_MAKKAH_JED: { currency: "SAR", amount: 300, label: "Transportasi Makkah → Jeddah", enabled: true, divideByPax: true },
+    TRANSPORT_MADINAH_JED: { currency: "SAR", amount: 550, label: "Transportasi Madinah → Jeddah", enabled: true, divideByPax: true },
+    MUTHOWIF: { currency: "SAR", amount: 0, label: "Muthowif", enabled: false, divideByPax: true },
   },
   roomMultipliers: {
     QUAD: { paxPerRoom: 4, multiplier: 1.0 },
@@ -150,6 +155,25 @@ describe("SentenceCard", () => {
     expect(screen.getByLabelText("Layanan tambahan: 2 dipilih, klik untuk ubah")).toBeDefined()
   })
 
+  it("counts transport legs apart from the other services on the services chip", () => {
+    // "6 layanan" would hide that half the selection is road transfers — the part an operator
+    // most often adjusts — now that transport is quoted per leg.
+    const params: EstimateParams = { ...baseParams, services: DEFAULT_PARAMS.services }
+    render(<SentenceCard params={params} pricing={mockPricing} onChange={vi.fn()} />)
+
+    expect(screen.getByLabelText(/^Layanan tambahan:/).textContent).toBe("3 layanan + 3 rute")
+  })
+
+  it("names only the legs when every selected service is a transport leg", () => {
+    const params: EstimateParams = {
+      ...baseParams,
+      services: ["TRANSPORT_JED_MAKKAH", "TRANSPORT_MADINAH_JED"],
+    }
+    render(<SentenceCard params={params} pricing={mockPricing} onChange={vi.fn()} />)
+
+    expect(screen.getByLabelText(/^Layanan tambahan:/).textContent).toBe("2 rute")
+  })
+
   it("shows 'belum dipilih'/'belum ada' fallbacks when a field is unset", () => {
     const params: EstimateParams = { ...baseParams, travelMonth: undefined, services: [] }
     render(<SentenceCard params={params} pricing={mockPricing} onChange={vi.fn()} />)
@@ -212,9 +236,11 @@ describe("SentenceCard", () => {
     expect(screen.getByText("Layanan Tambahan")).toBeDefined() // still open
     expect(onChangeSpy).toHaveBeenCalledWith({ services: ["VISA", "SISKOPATUH", "TASREH"] })
 
-    fireEvent.click(screen.getByText("Transportasi"))
+    fireEvent.click(screen.getByText("Transportasi Jeddah → Makkah"))
     expect(screen.getByText("Layanan Tambahan")).toBeDefined() // still open after a 2nd toggle
-    expect(onChangeSpy).toHaveBeenCalledWith({ services: ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT"] })
+    expect(onChangeSpy).toHaveBeenCalledWith({
+      services: ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT_JED_MAKKAH"],
+    })
 
     fireEvent.click(screen.getByRole("button", { name: "Selesai" }))
     expect(screen.queryByText("Layanan Tambahan")).toBeNull()

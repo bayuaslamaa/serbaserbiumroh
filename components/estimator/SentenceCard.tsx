@@ -8,6 +8,7 @@ import { availableRoomTypes, resolveRoomMultiplier } from "@/lib/estimate/room-t
 import { useIsDesktop } from "@/hooks/use-is-desktop"
 import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDays, totalTripDaysToNights } from "@/lib/estimate/nights"
 import { resolveCityHotelOptions, resolveHotelSelection } from "@/lib/estimate/hotel-selection"
+import { isTransportLeg } from "@/lib/estimate/services"
 import { FieldTray } from "./FieldTray"
 import { FieldSheet } from "./FieldSheet"
 import { MonthGrid } from "./MonthGrid"
@@ -125,6 +126,16 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
   const airlineLabel = airlineOptions.find((o) => o.value === params.airline)?.label ?? params.airline
   const monthLabel = params.travelMonth ? MONTH_LABELS[params.travelMonth - 1] : undefined
   const servicesCount = params.services.length
+  // Transport is quoted per leg now, so a bare "6 layanan" would hide the fact that half of them
+  // are road transfers — the part of the quote an operator most often adjusts. Count them apart.
+  const legCount = params.services.filter(isTransportLeg).length
+  const servicesChipLabel =
+    [
+      servicesCount - legCount > 0 ? `${servicesCount - legCount} layanan` : null,
+      legCount > 0 ? `${legCount} rute` : null,
+    ]
+      .filter(Boolean)
+      .join(" + ") || "belum ada layanan"
 
   function handleHotelSelect(city: City, hotelId: string) {
     const patch = resolveHotelSelection(city, hotelId, pricing)
@@ -342,7 +353,7 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
             <span>, tambah</span>
             {renderChip(
               "services",
-              servicesCount > 0 ? `${servicesCount} layanan` : "belum ada layanan",
+              servicesChipLabel,
               `Layanan tambahan: ${servicesCount > 0 ? `${servicesCount} dipilih` : "belum ada"}, klik untuk ubah`
             )}
             <span>.</span>

@@ -3,7 +3,6 @@ import {
   exchangeRates,
   hotelPrices,
   airlinePrices,
-  serviceFees,
   roomMultipliers,
   hotelMonthlyPrices,
   airlineMonthlyPrices,
@@ -12,6 +11,7 @@ import {
 } from "./schema"
 import { normalizeHotelPricingImportKey } from "../admin/hotel-pricing-import"
 import { syncRoomMultipliers } from "./sync-room-multipliers"
+import { syncServiceFees } from "./sync-service-fees"
 import { normalizeAirlinePricingImportKey } from "../admin/airline-pricing-import"
 
 async function seed() {
@@ -188,32 +188,16 @@ async function seed() {
 
   console.log("✓ Airline prices seeded")
 
-  // Service fees (PRD §8)
-  await db
-    .insert(serviceFees)
-    .values([
-      { key: "VISA", currency: "USD", amount: 165, label: "Visa Umroh Reguler", divideByPax: false },
-      { key: "SISKOPATUH", currency: "IDR", amount: 200000, label: "Siskopatuh", divideByPax: false },
-      { key: "TASREH", currency: "SAR", amount: 25, label: "Tasreh Raudhah", divideByPax: false },
-      {
-        key: "TRANSPORT",
-        currency: "SAR",
-        amount: 325,
-        label: "Transportasi Full Rute (Staria)",
-        divideByPax: true,
-      },
-      { key: "TOUR_MAKKAH", currency: "SAR", amount: 150, label: "Tour Ziarah Makkah", divideByPax: true },
-      {
-        key: "TOUR_MADINAH",
-        currency: "SAR",
-        amount: 150,
-        label: "Tour Ziarah Madinah",
-        divideByPax: true,
-      },
-    ])
-    .onConflictDoNothing()
+  // Service fees (PRD §8). Rows live in lib/db/service-fees.ts, typed over ServiceKey so a key
+  // the estimator offers cannot exist without a price, and are applied by the same sync the
+  // production script uses — see lib/db/sync-service-fees.ts for what it does and does not
+  // overwrite on an already-deployed row.
+  const serviceFeeSync = await syncServiceFees()
 
   console.log("✓ Service fees seeded")
+  if (serviceFeeSync.removed.length > 0) {
+    console.log(`✓ Retired service fees removed: ${serviceFeeSync.removed.join(", ")}`)
+  }
 
   // Room multipliers (PRD §8 — seeded, not admin-editable). Rows and their meaning live in
   // lib/estimate/room-types.ts so the seed and the production sync script cannot drift.

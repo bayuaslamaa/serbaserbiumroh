@@ -4,8 +4,9 @@ import { db } from "@/lib/db"
 import { estimates } from "@/lib/db/schema"
 import { fetchPricingConfig, calculateBudget } from "@/lib/budget/calculate"
 import { applyOverrides, isEmptyOverrides } from "@/lib/budget/overrides"
-import { validateEstimateHotelIds, validateEstimateParamsShape } from "@/lib/estimate/params"
-import { arePersistableEstimateTotals, validateManualOverrides } from "@/lib/estimate/overrides"
+import { normaliseAndValidateEstimateParams, validateEstimateHotelIds } from "@/lib/estimate/params"
+import { arePersistableEstimateTotals, normaliseAndValidateManualOverrides } from "@/lib/estimate/overrides"
+import { normaliseStoredOverrides, normaliseStoredParams } from "@/lib/estimate/services"
 import { and, eq, gte, lt } from "drizzle-orm"
 import type { EstimateParams, ManualOverrides } from "@/types"
 import { errorMessage, logActivity } from "@/lib/logging/activity-log"
@@ -60,8 +61,12 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
     updates.title = body.title.trim() || null
   }
 
-  // Validate params when provided.
-  if (body.params !== undefined && !validateEstimateParamsShape(body.params)) {
+  // Validate params when provided. Normalised first: the estimator seeds its state from the stored
+  // snapshot and posts it straight back, so a saved estimate naming a retired service key must
+  // survive a re-save instead of coming back as a 400.
+  const normalisedBodyParams =
+    body.params !== undefined ? normaliseAndValidateEstimateParams(body.params) : undefined
+  if (body.params !== undefined && !normalisedBodyParams) {
     await logActivity(db, {
       userId: session.user.id,
       flow: "estimate",
@@ -77,6 +82,7 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   }
 
   // Validate + authorize overrides when provided.
+  let normalisedBodyOverrides: ManualOverrides | null = null
   if (body.manualOverrides !== undefined) {
     if (session.user.role !== "ADMIN") {
       await logActivity(db, {
@@ -92,7 +98,8 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
       })
       return NextResponse.json({ error: "manual overrides require admin" }, { status: 403 })
     }
-    if (body.manualOverrides !== null && !validateManualOverrides(body.manualOverrides)) {
+    if (body.manualOverrides !== null) normalisedBodyOverrides = normaliseAndValidateManualOverrides(body.manualOverrides)
+    if (body.manualOverrides !== null && !normalisedBodyOverrides) {
       await logActivity(db, {
         userId: session.user.id,
         flow: "estimate",
@@ -133,14 +140,17 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   // Recompute persisted totals whenever params or overrides change. An absent key
   // leaves the existing value untouched; a present (even empty) manualOverrides clears/sets it.
   if (body.params !== undefined || body.manualOverrides !== undefined) {
+    // Either branch can carry retired service keys — the request body from a stale editor, the
+    // stored row because it was written before the catalogue changed — so both are normalised.
     const effectiveParams =
-      body.params !== undefined ? (body.params as EstimateParams) : (estimate.params as EstimateParams)
+      normalisedBodyParams ?? normaliseStoredParams(estimate.params as EstimateParams)
+    const storedOverrides = (estimate.manualOverrides as ManualOverrides | null) ?? null
     const effectiveOverrides: ManualOverrides | null =
       body.manualOverrides !== undefined
-        ? body.manualOverrides != null && !isEmptyOverrides(body.manualOverrides as ManualOverrides)
-          ? (body.manualOverrides as ManualOverrides)
+        ? normalisedBodyOverrides && !isEmptyOverrides(normalisedBodyOverrides)
+          ? normalisedBodyOverrides
           : null
-        : ((estimate.manualOverrides as ManualOverrides | null) ?? null)
+        : storedOverrides && normaliseStoredOverrides(storedOverrides)
 
     let pricing
     try {

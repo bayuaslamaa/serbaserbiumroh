@@ -57,7 +57,7 @@ const validParams: EstimateParams = {
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "STANDARD",
-  services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+  services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH"],
   fullboard: true,
 }
 

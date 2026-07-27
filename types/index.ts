@@ -4,7 +4,28 @@ export type HotelTier = "ECONOMY" | "STANDARD" | "PELATARAN" | "PREMIUM"
 export type RoomType = "QUINT" | "QUAD" | "TRIPLE" | "DOUBLE"
 export type AirlineTier = "BUDGET" | "STANDARD" | "GARUDA" | "BUSINESS"
 export type EstimateAirline = AirlineTier | "NONE"
-export const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
+// Order here is the order the services are offered in — the pickers and the exports walk this
+// list. Transport is quoted per leg: an itinerary uses three of the five (a trip arrives at
+// Jeddah once and leaves once), so JED_MAKKAH/JED_MADINAH are alternatives, as are the two
+// return legs.
+//
+// The retired all-or-nothing TRANSPORT key is deliberately absent: this constant is what the
+// estimator offers and what the API validates against. Saved estimates still name it, and the
+// Postgres enum still accepts it (an enum value cannot be dropped), so it is resolved on read by
+// `normaliseServices` in lib/estimate/services.ts rather than being recognised here.
+export const SERVICE_KEYS = [
+  "VISA",
+  "SISKOPATUH",
+  "TASREH",
+  "TRANSPORT_JED_MAKKAH",
+  "TRANSPORT_JED_MADINAH",
+  "TRANSPORT_MAKKAH_MADINAH",
+  "TRANSPORT_MAKKAH_JED",
+  "TRANSPORT_MADINAH_JED",
+  "TOUR_MAKKAH",
+  "TOUR_MADINAH",
+  "MUTHOWIF",
+] as const
 export type ServiceKey = (typeof SERVICE_KEYS)[number]
 
 // Core estimation parameters (stored as JSONB snapshot in estimates table)
@@ -183,6 +204,19 @@ export const DEFAULT_PARAMS: EstimateParams = {
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "STANDARD",
-  services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+  // The three legs the default itinerary actually requires: 4 nights Madinah + 9 Makkah means the
+  // group flies into Jeddah, transfers to Makkah, moves to Madinah, and returns to Jeddah. Quoting
+  // only the airport transfer would understate every fresh estimate by 1.100 SAR, and these quotes
+  // go straight to customers — so the default covers the trip and the operator unticks what a
+  // given group skips. Deliberately identical to what the retired TRANSPORT key expands to
+  // (see lib/estimate/services.ts), so a saved estimate and a new one price transport alike.
+  services: [
+    "VISA",
+    "SISKOPATUH",
+    "TRANSPORT_JED_MAKKAH",
+    "TRANSPORT_MAKKAH_MADINAH",
+    "TRANSPORT_MADINAH_JED",
+    "MUTHOWIF",
+  ],
   fullboard: true,
 }

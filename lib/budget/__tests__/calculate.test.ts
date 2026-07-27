@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { calculateBudget } from "@/lib/budget/calculate"
+import { DEFAULT_PARAMS } from "@/types"
 import type { PricingConfig, EstimateParams } from "@/types"
 
 const mockPricing: PricingConfig = {
@@ -38,9 +39,14 @@ const mockPricing: PricingConfig = {
     VISA: { currency: "USD", amount: 165, label: "Visa Umroh Reguler", enabled: true, divideByPax: false },
     SISKOPATUH: { currency: "IDR", amount: 200000, label: "Siskopatuh", enabled: true, divideByPax: false },
     TASREH: { currency: "SAR", amount: 25, label: "Tasreh Raudhah", enabled: true, divideByPax: false },
-    TRANSPORT: { currency: "SAR", amount: 325, label: "Transportasi", enabled: true, divideByPax: true },
     TOUR_MAKKAH: { currency: "SAR", amount: 150, label: "Tour Makkah", enabled: true, divideByPax: true },
     TOUR_MADINAH: { currency: "SAR", amount: 150, label: "Tour Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_JED_MAKKAH: { currency: "SAR", amount: 400, label: "Transportasi Jeddah → Makkah", enabled: true, divideByPax: true },
+    TRANSPORT_JED_MADINAH: { currency: "SAR", amount: 650, label: "Transportasi Jeddah → Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_MAKKAH_MADINAH: { currency: "SAR", amount: 550, label: "Transportasi Makkah ↔ Madinah", enabled: true, divideByPax: true },
+    TRANSPORT_MAKKAH_JED: { currency: "SAR", amount: 300, label: "Transportasi Makkah → Jeddah", enabled: true, divideByPax: true },
+    TRANSPORT_MADINAH_JED: { currency: "SAR", amount: 550, label: "Transportasi Madinah → Jeddah", enabled: true, divideByPax: true },
+    MUTHOWIF: { currency: "SAR", amount: 0, label: "Muthowif", enabled: false, divideByPax: true },
   },
   // multiplier = this room type's nightly rate ÷ a quad room's rate (NOT a per-person uplift —
   // roomCount already carries the occupancy math). All 1.0 today: rooms cost the same whatever
@@ -60,7 +66,7 @@ const baseParams: EstimateParams = {
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "STANDARD",
-  services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+  services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH"],
   fullboard: true,
 }
 
@@ -196,17 +202,17 @@ describe("calculateBudget", () => {
       expect(result.serviceItems[0].amountDisplay).toBe("Rp 200.000")
     })
 
-    it("TRANSPORT (SAR 325, rate 4700) → 1,527,500 IDR for pax=1", () => {
-      const result = calculateBudget({ ...baseParams, pax: 1, services: ["TRANSPORT"] }, mockPricing)
-      expect(result.servicesIdr).toBe(1_527_500) // Math.round(325 * 4700)
-      expect(result.serviceItems[0].amountDisplay).toBe("SAR 325")
+    it("TRANSPORT_JED_MAKKAH (SAR 400, rate 4700) → 1,880,000 IDR for pax=1", () => {
+      const result = calculateBudget({ ...baseParams, pax: 1, services: ["TRANSPORT_JED_MAKKAH"] }, mockPricing)
+      expect(result.servicesIdr).toBe(1_880_000) // Math.round(400 * 4700)
+      expect(result.serviceItems[0].amountDisplay).toBe("SAR 400")
       expect(result.serviceItems[0].divideByPax).toBe(true)
     })
 
-    it("TRANSPORT divideByPax=true: pax=10 → per-person cost is 1/10th of total", () => {
-      const result = calculateBudget({ ...baseParams, pax: 10, services: ["TRANSPORT"] }, mockPricing)
-      // 325 SAR × 4700 = 1,527,500 total ÷ 10 pax = 152,750 per person
-      expect(result.servicesIdr).toBe(Math.round(1_527_500 / 10))
+    it("a transport leg is divideByPax=true: pax=10 → per-person cost is 1/10th of total", () => {
+      const result = calculateBudget({ ...baseParams, pax: 10, services: ["TRANSPORT_JED_MAKKAH"] }, mockPricing)
+      // 400 SAR × 4700 = 1,880,000 total ÷ 10 pax = 188,000 per person
+      expect(result.servicesIdr).toBe(Math.round(1_880_000 / 10))
     })
 
     it("VISA divideByPax=false: pax=10 → full per-person cost unchanged", () => {
@@ -236,6 +242,50 @@ describe("calculateBudget", () => {
       expect(result.servicesIdr).toBe(200_000)
       expect(result.serviceItems).toHaveLength(1)
       expect(result.serviceItems[0].key).toBe("SISKOPATUH")
+    })
+  })
+
+  // The whole point of splitting TRANSPORT into legs is which legs a new estimate starts with.
+  // That lives in a constant no other test reads, so without these the default could silently
+  // drift back to a single leg — understating every fresh quote by 1.100 SAR — and stay green.
+  describe("default service set", () => {
+    it("starts a new estimate on the three legs the default itinerary requires", () => {
+      expect(DEFAULT_PARAMS.services).toEqual([
+        "VISA",
+        "SISKOPATUH",
+        "TRANSPORT_JED_MAKKAH",
+        "TRANSPORT_MAKKAH_MADINAH",
+        "TRANSPORT_MADINAH_JED",
+        "MUTHOWIF",
+      ])
+    })
+
+    it("quotes the full circuit at 1.500 SAR, not the airport transfer alone", () => {
+      const result = calculateBudget(DEFAULT_PARAMS, mockPricing)
+      const transportSar = result.serviceItems
+        .filter((item) => item.key.startsWith("TRANSPORT_"))
+        .reduce((sum, item) => sum + item.unitAmount, 0)
+
+      expect(transportSar).toBe(1_500)
+      expect(transportSar).toBeGreaterThan(mockPricing.services.TRANSPORT_JED_MAKKAH.amount)
+    })
+
+    // Ties the default to the retired key's expansion. If either side moves alone, opening a saved
+    // estimate and starting a new one would quote different transport for the same journey.
+    it("matches what a saved TRANSPORT estimate expands to", () => {
+      const fresh = calculateBudget(DEFAULT_PARAMS, mockPricing)
+      const legacy = calculateBudget(
+        { ...DEFAULT_PARAMS, services: ["VISA", "SISKOPATUH", "TRANSPORT", "MUTHOWIF"] as never },
+        mockPricing
+      )
+      expect(legacy.servicesIdr).toBe(fresh.servicesIdr)
+    })
+
+    // MUTHOWIF is in the default set but has no agreed price yet. Seeded disabled rather than at
+    // zero precisely so it cannot reach a customer as a "SAR 0" line while that is still true.
+    it("keeps muthowif out of the priced rows while it has no price", () => {
+      const result = calculateBudget(DEFAULT_PARAMS, mockPricing)
+      expect(result.serviceItems.map((item) => item.key)).not.toContain("MUTHOWIF")
     })
   })
 
