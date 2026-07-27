@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { Badge, badgeVariants } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -74,13 +75,16 @@ export function DuplicatePartnerPanel({ id, fullName, reason }: DuplicatePartner
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger aria-label={`Lihat pengajuan serupa dengan ${fullName}`}>
-        <Badge
-          variant="outline"
-          className="cursor-pointer text-xs transition-colors hover:border-[var(--color-gold)]"
-        >
-          Duplikat: {reason}
-        </Badge>
+      {/* Badge styling applied to the trigger itself: <Badge> renders a div, and
+          a div inside a button is invalid content. */}
+      <DialogTrigger
+        aria-label={`Lihat pengajuan serupa dengan ${fullName}`}
+        className={cn(
+          badgeVariants({ variant: "outline" }),
+          "cursor-pointer text-xs hover:border-[var(--color-gold)]"
+        )}
+      >
+        Duplikat: {reason}
       </DialogTrigger>
 
       <DialogContent>

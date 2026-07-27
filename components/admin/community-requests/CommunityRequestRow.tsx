@@ -33,7 +33,7 @@ export function CommunityRequestRow({ request }: CommunityRequestRowProps) {
         <span className="block text-sm font-medium" style={{ color: "var(--color-text)" }}>
           {request.fullName}
         </span>
-        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs">
           <a
             href={whatsappHref(request.normalizedPhone)}
             target="_blank"
@@ -51,7 +51,7 @@ export function CommunityRequestRow({ request }: CommunityRequestRowProps) {
           {request.userId && (
             <span style={{ color: "var(--color-text-muted)" }}>· Terhubung dengan akun</span>
           )}
-        </span>
+        </div>
       </td>
 
       <td className="max-w-[22rem] px-4 py-3 align-middle">
@@ -79,7 +79,7 @@ export function CommunityRequestRow({ request }: CommunityRequestRowProps) {
       </td>
 
       <td className="px-4 py-3 align-middle">
-        <span className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <Badge variant={statusBadgeVariant(request.status)} className="text-xs">
             {statusLabel(request.status)}
           </Badge>
@@ -90,7 +90,7 @@ export function CommunityRequestRow({ request }: CommunityRequestRowProps) {
               reason={duplicateReason(request)}
             />
           )}
-        </span>
+        </div>
       </td>
 
       <td className="px-4 py-3 text-right align-middle">
