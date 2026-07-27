@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { CommunityRequestEditDialog } from "./CommunityRequestEditDialog"
 import { CopyPhoneButton } from "./CopyPhoneButton"
+import { DuplicatePartnerPanel } from "./DuplicatePartnerPanel"
 import type { CommunityJoinRequestWithDuplicateFlags } from "@/lib/community/admin-requests"
 import {
   formatAbsoluteDateTime,
@@ -94,9 +95,11 @@ export function CommunityRequestRow({ request }: CommunityRequestRowProps) {
             {STATUS_LABELS[request.status] ?? request.status}
           </Badge>
           {request.possibleDuplicate && (
-            <Badge variant="outline" className="text-xs" title={`Sama ${duplicateReason(request)}`}>
-              Duplikat: {duplicateReason(request)}
-            </Badge>
+            <DuplicatePartnerPanel
+              id={request.id}
+              fullName={request.fullName}
+              reason={duplicateReason(request)}
+            />
           )}
         </span>
       </td>
