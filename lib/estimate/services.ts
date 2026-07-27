@@ -28,6 +28,19 @@ export function isServiceKey(value: unknown): value is ServiceKey {
   return typeof value === "string" && (SERVICE_KEYS as readonly string[]).includes(value)
 }
 
+// The per-leg road transfers, as opposed to the visa/ziyarah/muthowif services. Every leg key is
+// named TRANSPORT_<FROM>_<TO> by construction, so the prefix is the definition rather than a
+// guess — a service that is not a road leg must not be named that way.
+export function isTransportLeg(value: unknown): value is ServiceKey {
+  return isServiceKey(value) && value.startsWith("TRANSPORT_")
+}
+
+// A group flies into Jeddah once and out of Jeddah once, so one itinerary uses at most one arrival
+// leg and at most one departure leg — never both alternatives from either pair. `TRANSPORT_MAKKAH_
+// MADINAH` is the only inter-city leg and covers both directions, so it needs no pairing.
+export const ARRIVAL_LEG_KEYS = ["TRANSPORT_JED_MAKKAH", "TRANSPORT_JED_MADINAH"] as const
+export const DEPARTURE_LEG_KEYS = ["TRANSPORT_MAKKAH_JED", "TRANSPORT_MADINAH_JED"] as const
+
 // Replace retired keys with what they stood for, and collapse duplicates so a list that already
 // holds the legs passes through unchanged — applying this twice is a no-op. Everything else is
 // left exactly as it was found, INCLUDING a value the catalogue has never known: at an input

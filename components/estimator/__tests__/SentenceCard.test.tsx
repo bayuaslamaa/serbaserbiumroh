@@ -155,6 +155,25 @@ describe("SentenceCard", () => {
     expect(screen.getByLabelText("Layanan tambahan: 2 dipilih, klik untuk ubah")).toBeDefined()
   })
 
+  it("counts transport legs apart from the other services on the services chip", () => {
+    // "6 layanan" would hide that half the selection is road transfers — the part an operator
+    // most often adjusts — now that transport is quoted per leg.
+    const params: EstimateParams = { ...baseParams, services: DEFAULT_PARAMS.services }
+    render(<SentenceCard params={params} pricing={mockPricing} onChange={vi.fn()} />)
+
+    expect(screen.getByLabelText(/^Layanan tambahan:/).textContent).toBe("3 layanan + 3 rute")
+  })
+
+  it("names only the legs when every selected service is a transport leg", () => {
+    const params: EstimateParams = {
+      ...baseParams,
+      services: ["TRANSPORT_JED_MAKKAH", "TRANSPORT_MADINAH_JED"],
+    }
+    render(<SentenceCard params={params} pricing={mockPricing} onChange={vi.fn()} />)
+
+    expect(screen.getByLabelText(/^Layanan tambahan:/).textContent).toBe("2 rute")
+  })
+
   it("shows 'belum dipilih'/'belum ada' fallbacks when a field is unset", () => {
     const params: EstimateParams = { ...baseParams, travelMonth: undefined, services: [] }
     render(<SentenceCard params={params} pricing={mockPricing} onChange={vi.fn()} />)

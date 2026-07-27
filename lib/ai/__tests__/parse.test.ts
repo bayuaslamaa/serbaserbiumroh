@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
+import { SERVICE_KEYS } from "@/types"
 import type { PricingConfig } from "@/types"
 
 // Shared mock for messages.create — must be defined before vi.mock hoisting
@@ -339,5 +340,193 @@ describe("parseEstimate", () => {
     expect(system[1].text).toMatch(/id=safwa-close[^\n]*real=catalog/)
     // Estimate-only options are not marked.
     expect(system[1].text).not.toMatch(/id=olayan-ajyad[^\n]*real=catalog/)
+  })
+
+  // --- U4: per-leg transport and muthowif ---
+  //
+  // Which vocabulary maps to which leg is decided by Claude reading the prompt, so a mocked
+  // response asserting that mapping would only prove the fixture says what the fixture says.
+  // These tests split the difference: the instructions themselves are asserted against the prompt
+  // text (that IS the logic), and the invariants parse.ts enforces after the model answers are
+  // asserted against parse.ts's own output.
+
+  describe("prompt instructions (asserted on the prompt text, which is the logic)", () => {
+    async function staticPrompt(): Promise<string> {
+      mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+      await parseEstimate("umroh full rute muthowif", mockPricing)
+      const system = mockCreate.mock.calls[0][0].system as Array<{ text: string }>
+      return system[0].text
+    }
+
+    it("names every key the catalogue offers, so no service is unreachable by the parser", async () => {
+      const text = await staticPrompt()
+      for (const key of SERVICE_KEYS) {
+        expect(text, `${key} is offered but absent from the prompt`).toContain(key)
+      }
+    })
+
+    it("never references the retired TRANSPORT key", async () => {
+      const text = await staticPrompt()
+      // TRANSPORT_JED_MAKKAH and friends must not trip this: only a bare TRANSPORT counts.
+      expect(text).not.toMatch(/\bTRANSPORT(?![_A-Z])/)
+    })
+
+    it("teaches both itineraries and never maps 'full rute' to five legs", async () => {
+      const text = await staticPrompt()
+      expect(text).toContain("full rute")
+      expect(text.toLowerCase()).toContain("madinah dulu")
+
+      // Both three-leg itineraries are spelled out...
+      expect(text).toContain(
+        "TRANSPORT_JED_MAKKAH + TRANSPORT_MAKKAH_MADINAH + TRANSPORT_MADINAH_JED"
+      )
+      expect(text).toContain(
+        "TRANSPORT_JED_MADINAH + TRANSPORT_MAKKAH_MADINAH + TRANSPORT_MAKKAH_JED"
+      )
+
+      // ...the impossibility of a fourth or fifth leg is stated outright...
+      expect(text).toContain("AT MOST ONE arrival leg")
+      expect(text).toContain("AT MOST ONE departure leg")
+      expect(text).toContain("never four or five")
+
+      // ...and the "full rute" rule points at one of those itineraries rather than listing legs of
+      // its own, so it cannot be read as "every leg in the catalogue".
+      const fullRouteRule = text.split("\n").find((line) => line.includes('"full rute"'))
+      expect(fullRouteRule).toBeDefined()
+      expect(fullRouteRule).toContain("three legs of ONE itinerary")
+      expect(fullRouteRule).not.toMatch(/TRANSPORT_/)
+      expect(fullRouteRule).toContain("TOUR_MAKKAH + TOUR_MADINAH")
+    })
+
+    it("teaches the airport-transfer, inter-city and muthowif vocabulary an admin actually types", async () => {
+      const text = await staticPrompt().then((t) => t.toLowerCase())
+      for (const phrase of ["jemput bandara", "antar jeddah", "muthowif", "mutawif", "antar kota"]) {
+        expect(text, `prompt does not teach "${phrase}"`).toContain(phrase)
+      }
+    })
+  })
+
+  it("keeps every catalogue service Claude returns, including muthowif and the return legs", async () => {
+    // parse.ts used to police services against its own short copy of the key list, which silently
+    // dropped MUTHOWIF and four of the five legs. It now validates against the shared SERVICE_KEYS.
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        services: [
+          "VISA",
+          "TRANSPORT_JED_MADINAH",
+          "TRANSPORT_MAKKAH_MADINAH",
+          "TRANSPORT_MAKKAH_JED",
+          "MUTHOWIF",
+        ],
+      })
+    )
+    const result = await parseEstimate("full rute madinah dulu plus muthowif", mockPricing)
+    expect(result.params.services).toEqual([
+      "VISA",
+      "TRANSPORT_JED_MADINAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MAKKAH_JED",
+      "MUTHOWIF",
+    ])
+  })
+
+  it("passes a Makkah-first three-leg answer through untouched", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        services: [
+          "VISA",
+          "TRANSPORT_JED_MAKKAH",
+          "TRANSPORT_MAKKAH_MADINAH",
+          "TRANSPORT_MADINAH_JED",
+          "TOUR_MAKKAH",
+          "TOUR_MADINAH",
+        ],
+      })
+    )
+    const result = await parseEstimate("full rute", mockPricing)
+    expect(result.params.services.filter((s) => s.startsWith("TRANSPORT_"))).toEqual([
+      "TRANSPORT_JED_MAKKAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MADINAH_JED",
+    ])
+    expect(result.params.services).toContain("TOUR_MAKKAH")
+    expect(result.params.services).toContain("TOUR_MADINAH")
+  })
+
+  it("drops the impossible second Jeddah arrival and departure when Claude answers with five legs", async () => {
+    // A group flies into Jeddah once. Five legs would bill two arrivals — the parser corrects it
+    // rather than passing the charge through.
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        services: [
+          "VISA",
+          "TRANSPORT_JED_MAKKAH",
+          "TRANSPORT_JED_MADINAH",
+          "TRANSPORT_MAKKAH_MADINAH",
+          "TRANSPORT_MAKKAH_JED",
+          "TRANSPORT_MADINAH_JED",
+        ],
+      })
+    )
+    const result = await parseEstimate("full rute", mockPricing)
+    const legs = result.params.services.filter((s) => s.startsWith("TRANSPORT_"))
+    expect(legs).toHaveLength(3)
+    expect(legs).toEqual([
+      "TRANSPORT_JED_MAKKAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MADINAH_JED",
+    ])
+    expect(result.notes).toContain("TRANSPORT_JED_MADINAH")
+    expect(result.notes).toContain("satu perjalanan hanya punya satu")
+  })
+
+  it("keeps the return leg that matches the arrival, not merely the first one listed", async () => {
+    // Madinah-first: the group lands at Madinah, so it flies home from Makkah — TRANSPORT_MADINAH_JED
+    // is the incoherent one even though Claude listed it first.
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        services: ["TRANSPORT_JED_MADINAH", "TRANSPORT_MADINAH_JED", "TRANSPORT_MAKKAH_JED"],
+      })
+    )
+    const result = await parseEstimate("full rute madinah dulu", mockPricing)
+    expect(result.params.services).toEqual(["TRANSPORT_JED_MADINAH", "TRANSPORT_MAKKAH_JED"])
+  })
+
+  it("keeps the leg Claude listed first when it names both arrivals (Madinah-first stays Madinah-first)", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({
+        ...defaultParams,
+        services: ["TRANSPORT_JED_MADINAH", "TRANSPORT_JED_MAKKAH", "TRANSPORT_MAKKAH_JED"],
+      })
+    )
+    const result = await parseEstimate("full rute, madinah dulu", mockPricing)
+    expect(result.params.services).toEqual(["TRANSPORT_JED_MADINAH", "TRANSPORT_MAKKAH_JED"])
+  })
+
+  it("expands a retired TRANSPORT key from Claude into the legs it stood for", async () => {
+    // The prompt no longer mentions TRANSPORT, but the filter would drop it in silence and quote a
+    // trip with no transport at all.
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({ ...defaultParams, services: ["VISA", "TRANSPORT"] })
+    )
+    const result = await parseEstimate("umroh full rute", mockPricing)
+    expect(result.params.services).toEqual([
+      "VISA",
+      "TRANSPORT_JED_MAKKAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MADINAH_JED",
+    ])
+  })
+
+  it("still drops keys the catalogue has never known", async () => {
+    mockCreate.mockResolvedValueOnce(
+      claudeResponse({ ...defaultParams, services: ["VISA", "TRANSPORT_JED_ABHA"] })
+    )
+    const result = await parseEstimate("umroh ke abha", mockPricing)
+    expect(result.params.services).toEqual(["VISA"])
   })
 })

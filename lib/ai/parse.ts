@@ -1,12 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk"
-import type { City, EstimateParams, HotelOptionConfig, HotelPriceConfig, HotelTier, PricingConfig } from "@/types"
+import { SERVICE_KEYS } from "@/types"
+import type { City, EstimateParams, HotelOptionConfig, HotelPriceConfig, HotelTier, PricingConfig, ServiceKey } from "@/types"
 import { buildSystemPrompt } from "./prompt"
 import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDaysToNights } from "@/lib/estimate/nights"
+import { ARRIVAL_LEG_KEYS, DEPARTURE_LEG_KEYS, expandRetiredServices } from "@/lib/estimate/services"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
 const ROOM_TYPES = ["QUINT", "QUAD", "TRIPLE", "DOUBLE"] as const
 const AIRLINE_TIERS = ["NONE", "BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const
-const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT_JED_MAKKAH", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
 
 const CITY_HOTEL_FIELDS: Record<City, { id: "madinahHotelId" | "makkahHotelId"; label: string[] }> = {
   MADINAH: { id: "madinahHotelId", label: ["madinahHotel", "madinahHotelLabel", "hotelMadinah"] },
@@ -194,7 +195,10 @@ function validateParams(raw: Record<string, unknown>, pricing: PricingConfig, so
     throw new ParseError(`Missing or invalid fields: ${missing.join(", ")}`)
   }
 
-  const services = (raw.services as string[]).filter((s) =>
+  // Claude can still answer with the retired all-or-nothing TRANSPORT key out of habit, and the
+  // filter below would drop it without a word — a quote with no transport line at all. Expanding
+  // it to the legs it stood for keeps that money in the estimate.
+  const services = expandRetiredServices(raw.services as unknown[]).filter((s) =>
     SERVICE_KEYS.includes(s as never)
   ) as EstimateParams["services"]
 
@@ -250,12 +254,56 @@ function extractTotalTripDays(input: string): number | undefined {
   return Number.isInteger(days) && days >= MIN_TRIP_DAYS && days <= MAX_TRIP_DAYS ? days : undefined
 }
 
+// A group flies into Jeddah once and leaves once, so an itinerary carries at most one arrival leg
+// and at most one departure leg. The prompt says so, but a language model asked for "full rute"
+// can still answer with every leg it knows — and billing two airport arrivals charges the customer
+// for a journey that cannot happen. Keep one leg of each pair — the arrival Claude named first,
+// then the return that matches it — and say so in the notes rather than editing money silently.
+const ARRIVALS: readonly ServiceKey[] = ARRIVAL_LEG_KEYS
+const DEPARTURES: readonly ServiceKey[] = DEPARTURE_LEG_KEYS
+
+// The arrival leg fixes the direction of travel, so it also fixes which city the group flies home
+// from: land at Makkah and the return is from Madinah, and vice versa.
+const RETURN_LEG_FOR_ARRIVAL: Record<string, ServiceKey> = {
+  TRANSPORT_JED_MAKKAH: "TRANSPORT_MADINAH_JED",
+  TRANSPORT_JED_MADINAH: "TRANSPORT_MAKKAH_JED",
+}
+
+function dropImpossibleTransportLegs(services: ServiceKey[], notes: string[]): ServiceKey[] {
+  let kept = services
+
+  function keepOne(candidates: ServiceKey[], preferred: ServiceKey | undefined, what: string) {
+    if (candidates.length < 2) return
+    // Fall back to whichever leg Claude listed first — its own stated direction — when nothing
+    // else in the answer says which one it meant.
+    const keep = preferred && candidates.includes(preferred) ? preferred : candidates[0]
+    const dropped = candidates.filter((key) => key !== keep)
+    kept = kept.filter((key) => !dropped.includes(key))
+    notes.push(
+      `${dropped.join(", ")} dihapus: satu perjalanan hanya punya satu ${what} (dipakai ${keep}).`
+    )
+  }
+
+  keepOne(kept.filter((key) => ARRIVALS.includes(key)), undefined, "penjemputan dari Jeddah")
+
+  const arrival = kept.find((key) => ARRIVALS.includes(key))
+  keepOne(
+    kept.filter((key) => DEPARTURES.includes(key)),
+    arrival ? RETURN_LEG_FOR_ARRIVAL[arrival] : undefined,
+    "pengantaran ke Jeddah"
+  )
+
+  return kept
+}
+
 function applyDeterministicCorrections(
   input: string,
   params: EstimateParams,
   notes: string[]
 ): EstimateParams {
   const corrected: EstimateParams = { ...params }
+
+  corrected.services = dropImpossibleTransportLegs(corrected.services, notes)
 
   if (corrected.airline === "NONE" && !explicitlyRequestsNoFlight(input)) {
     corrected.airline = "STANDARD"
