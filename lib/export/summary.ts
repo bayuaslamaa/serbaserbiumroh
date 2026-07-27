@@ -59,9 +59,36 @@ export function kursLine(display: BreakdownDisplay): string {
   return `Kurs: SAR 1 = ${rp(display.sarRate)} | USD 1 = ${rp(display.usdRate)}`
 }
 
+// Indexed by EstimateParams.travelMonth (1-12), so slot 0 is deliberately empty.
+export const MONTH_NAMES = [
+  "",
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+] as const
+
+// Departure month for the estimate, or null when none was given. Every surface shows this:
+// hotel rates are seasonal, so a quote without its month cannot be checked or honoured later.
+export function travelMonthLabel(travelMonth: number | undefined): string | null {
+  if (travelMonth == null || travelMonth < 1 || travelMonth > 12) return null
+  return MONTH_NAMES[travelMonth]
+}
+
 // Shared footer notes, in display order.
 export const EXPORT_NOTES = {
   exclusions: "Belum termasuk biaya tak terduga, perlengkapan, handling, dan manasik",
   priceChange: "Harga dapat berubah sewaktu-waktu",
-  contact: "Untuk perhitungan lebih detail dan akurat, hubungi WA: 085172117757 / 085161134844",
+  // The recipient is already in a WhatsApp conversation and is holding the detailed quote the team
+  // just built for them, so this is not a "contact us" invitation — it is the next step. It follows
+  // priceChange above it: the price moves, a DP is what stops it moving.
+  contact: "Kunci harga ini dengan DP tanda jadi. Konfirmasi via WA: 085172117757 / 085161134844",
 } as const
