@@ -93,6 +93,28 @@ describe("calculateBudget", () => {
       expect(result.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1 * 4700) / 3))
     })
 
+    // Guards the multiplier's remaining job. Every other fixture uses 1.0, so without this a
+    // deleted or ignored roomMultiplier would keep the whole suite green — the field must still
+    // scale the ROOM rate when a supplier charges more for a bigger room.
+    it("scales the room rate by a non-unit ratio without changing how many rooms are needed", () => {
+      const dearerQuint = {
+        ...mockPricing,
+        roomMultipliers: {
+          ...mockPricing.roomMultipliers,
+          QUINT: { paxPerRoom: 5, multiplier: 1.15 },
+        },
+      }
+      const params = { ...baseParams, pax: 5, roomType: "QUINT" as const }
+      const atUnit = calculateBudget(params, mockPricing)
+      const atRatio = calculateBudget(params, dearerQuint)
+
+      // Occupancy is unchanged, so the room count must not move — only the rate.
+      expect(atRatio.hotelMadinahDetail.roomCount).toBe(1)
+      expect(atUnit.hotelMadinahDetail.roomCount).toBe(1)
+      expect(atRatio.hotelMadinahIdr).toBe(Math.round((650 * 4 * 1.15 * 1 * 4700) / 5))
+      expect(atRatio.hotelMadinahIdr).toBeGreaterThan(atUnit.hotelMadinahIdr)
+    })
+
     // Regression guard for the double-counting bug: roomMultiplier used to hold a per-person
     // uplift (triple 1.25 / double 1.5 / single 2.8) applied on top of roomCount, scaling the
     // same axis twice — double came out 50% high, single 180% high. Cost must be driven by how

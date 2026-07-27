@@ -11,6 +11,7 @@ import {
   faqItems,
 } from "./schema"
 import { normalizeHotelPricingImportKey } from "../admin/hotel-pricing-import"
+import { syncRoomMultipliers } from "./sync-room-multipliers"
 import { normalizeAirlinePricingImportKey } from "../admin/airline-pricing-import"
 
 async function seed() {
@@ -214,36 +215,14 @@ async function seed() {
 
   console.log("✓ Service fees seeded")
 
-  // Room multipliers (PRD §8 — seeded, not admin-editable)
+  // Room multipliers (PRD §8 — seeded, not admin-editable). Rows and their meaning live in
+  // lib/estimate/room-types.ts so the seed and the production sync script cannot drift.
   //
-  // `multiplier` is this room type's nightly rate DIVIDED BY a quad room's rate — NOT a per-person
-  // uplift. hotel_prices.sarPerNight is the price of one quad room per night, and the cost formula
-  // already multiplies by roomCount (= ceil(pax / paxPerRoom)), which is what carries the occupancy
-  // math. A per-person uplift here would scale that same axis a second time and over-charge every
-  // non-quad type. All 1.0 today: a room costs the same whatever its occupancy, so only the number
-  // of rooms differs. Change a value here only if a supplier genuinely charges a different nightly
-  // rate for that room type.
-  await db
-    .insert(roomMultipliers)
-    .values([
-      { type: "QUINT", paxPerRoom: 5, multiplier: "1.0", label: "Quint", sublabel: "5 orang/kamar" },
-      { type: "QUAD", paxPerRoom: 4, multiplier: "1.0", label: "Quad", sublabel: "4 orang/kamar" },
-      {
-        type: "TRIPLE",
-        paxPerRoom: 3,
-        multiplier: "1.0",
-        label: "Triple",
-        sublabel: "3 orang/kamar",
-      },
-      {
-        type: "DOUBLE",
-        paxPerRoom: 2,
-        multiplier: "1.0",
-        label: "Double",
-        sublabel: "2 orang/kamar",
-      },
-    ])
-    .onConflictDoNothing()
+  // This block upserts rather than onConflictDoNothing: an existing deployment already has these
+  // rows, so ignoring conflicts would silently leave stale multipliers in place — the seed would
+  // report success while changing nothing, which is exactly how the old per-person uplifts
+  // survived a "fixed" release. Retired types are deleted for the same reason.
+  await syncRoomMultipliers()
 
   console.log("✓ Room multipliers seeded")
 
