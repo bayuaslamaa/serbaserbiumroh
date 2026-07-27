@@ -4,7 +4,7 @@ import { CommunityRequestActions } from "@/components/admin/community-requests/C
 import { requireAdmin } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { communityJoinRequests } from "@/lib/db/schema"
-import { addDuplicateFlags } from "@/lib/community/admin-requests"
+import { addDuplicateFlags, fetchDuplicateKeys } from "@/lib/community/admin-requests"
 
 export const metadata = { title: "Admin — Pengajuan Komunitas" }
 
@@ -39,12 +39,12 @@ function truncate(text: string | null, length = 90) {
 export default async function AdminCommunityRequestsPage() {
   await requireAdmin()
 
-  const rows = await db
-    .select()
-    .from(communityJoinRequests)
-    .orderBy(desc(communityJoinRequests.createdAt))
+  const [rows, duplicateKeys] = await Promise.all([
+    db.select().from(communityJoinRequests).orderBy(desc(communityJoinRequests.createdAt)),
+    fetchDuplicateKeys(),
+  ])
 
-  const requests = addDuplicateFlags(rows)
+  const requests = addDuplicateFlags(rows, duplicateKeys)
   const newCount = requests.filter((request) => request.status === "NEW").length
   const matchedCount = requests.filter((request) => request.status === "MATCHED").length
   const duplicateCount = requests.filter((request) => request.possibleDuplicate).length

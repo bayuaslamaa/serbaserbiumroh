@@ -36,6 +36,9 @@ vi.mock("@/lib/db", () => ({
 vi.mock("drizzle-orm", () => ({
   desc: vi.fn((value) => value),
   eq: vi.fn((a, b) => ({ a, b })),
+  count: vi.fn(() => "COUNT(*)"),
+  gt: vi.fn((a, b) => ({ gt: [a, b] })),
+  isNotNull: vi.fn((col) => ({ isNotNull: col })),
 }))
 
 vi.mock("@/lib/db/schema", () => ({
@@ -67,11 +70,42 @@ function request(body: Record<string, unknown>) {
   })
 }
 
-function mockSelectRows(rows: unknown[]) {
+/**
+ * The route issues three selects: the row list (ends in .orderBy) plus the two
+ * duplicate-key aggregates (end in .having). One chainable builder serves all
+ * three -- which fixture it resolves to depends on the terminal method, and for
+ * the aggregates on the grouped column.
+ */
+function mockSelectRows(
+  rows: unknown[],
+  duplicates: { phones?: string[]; socials?: string[] } = {}
+) {
   const orderBy = vi.fn().mockResolvedValue(rows)
-  const from = vi.fn().mockReturnValue({ orderBy })
-  mockDb.select.mockReturnValue({ from })
-  return { from, orderBy }
+
+  mockDb.select.mockImplementation(() => {
+    let groupedColumn = ""
+    const builder: Record<string, unknown> = {
+      orderBy,
+      having: vi.fn().mockImplementation(() =>
+        Promise.resolve(
+          (groupedColumn === "community_join_requests.normalized_phone"
+            ? duplicates.phones ?? []
+            : duplicates.socials ?? []
+          ).map((value) => ({ value }))
+        )
+      ),
+    }
+    for (const method of ["from", "where"]) {
+      builder[method] = vi.fn(() => builder)
+    }
+    builder.groupBy = vi.fn((column: string) => {
+      groupedColumn = column
+      return builder
+    })
+    return builder
+  })
+
+  return { orderBy }
 }
 
 function mockUpdateRows(rows: unknown[]) {
@@ -91,11 +125,14 @@ beforeEach(() => {
 
 describe("GET /api/admin/community-requests", () => {
   it("returns admin requests with duplicate flags", async () => {
-    mockSelectRows([
-      { id: "join-1", normalizedPhone: "62851", normalizedSocialUsername: "bayu" },
-      { id: "join-2", normalizedPhone: "62851", normalizedSocialUsername: null },
-      { id: "join-3", normalizedPhone: "62852", normalizedSocialUsername: "bayu" },
-    ])
+    mockSelectRows(
+      [
+        { id: "join-1", normalizedPhone: "62851", normalizedSocialUsername: "bayu" },
+        { id: "join-2", normalizedPhone: "62851", normalizedSocialUsername: null },
+        { id: "join-3", normalizedPhone: "62852", normalizedSocialUsername: "bayu" },
+      ],
+      { phones: ["62851"], socials: ["bayu"] }
+    )
     const { GET } = await import("../route")
 
     const res = await GET()

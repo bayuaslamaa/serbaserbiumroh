@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { db } from "@/lib/db"
 import { communityJoinRequests } from "@/lib/db/schema"
-import { addDuplicateFlags } from "@/lib/community/admin-requests"
+import { addDuplicateFlags, fetchDuplicateKeys } from "@/lib/community/admin-requests"
 import { desc } from "drizzle-orm"
 
 async function requireAdmin() {
@@ -16,10 +16,10 @@ export async function GET() {
   const guard = await requireAdmin()
   if ("error" in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
 
-  const requests = await db
-    .select()
-    .from(communityJoinRequests)
-    .orderBy(desc(communityJoinRequests.createdAt))
+  const [requests, duplicateKeys] = await Promise.all([
+    db.select().from(communityJoinRequests).orderBy(desc(communityJoinRequests.createdAt)),
+    fetchDuplicateKeys(),
+  ])
 
-  return NextResponse.json({ requests: addDuplicateFlags(requests) })
+  return NextResponse.json({ requests: addDuplicateFlags(requests, duplicateKeys) })
 }
