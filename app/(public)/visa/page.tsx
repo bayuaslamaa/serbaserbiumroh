@@ -13,11 +13,14 @@ import {
   Users
 } from "lucide-react"
 import Link from "next/link"
+import { pageMetadata } from "@/lib/seo/metadata"
 
-export const metadata = {
-  title: "Penerbitan Visa Umroh Perorangan | SSU",
-  description: "Layanan pengurusan visa umroh perorangan secara online oleh @badalinbybazanyc. Pilihan reguler lewat approval hotel Nusuk Masar atau BRN.",
-}
+export const metadata = pageMetadata({
+  title: "Visa Umroh Mandiri: Penerbitan Visa Perorangan",
+  description:
+    "Layanan pengurusan visa umroh perorangan secara online oleh @badalinbybazanyc. Pilihan reguler lewat approval hotel Nusuk Masar atau BRN.",
+  path: "/visa",
+})
 
 const whatsappVisaHref =
   "https://wa.me/6285161134844?text=Assalamu%27alaikum%2C%20saya%20ingin%20konsultasi%20pengurusan%20visa%20umroh%20perorangan."

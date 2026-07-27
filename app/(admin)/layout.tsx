@@ -2,6 +2,9 @@ import { NavBar } from "@/components/nav/NavBar"
 import { VisitorTracker } from "@/components/nav/VisitorTracker"
 import { requireAdmin } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
+import { NOINDEX_METADATA } from "@/lib/seo/metadata"
+
+export const metadata = NOINDEX_METADATA
 
 export default async function AdminLayout({
   children,

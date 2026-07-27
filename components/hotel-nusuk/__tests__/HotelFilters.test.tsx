@@ -54,6 +54,7 @@ function makeHotel(overrides: Partial<HotelWithMonthlyPrices> = {}): HotelWithMo
 
   return {
     id: 'default-id',
+    slug: 'default-hotel',
     city: 'MAKKAH',
     tier: 'STANDARD',
     label: 'Default Hotel',

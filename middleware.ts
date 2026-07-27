@@ -53,5 +53,23 @@ export default auth((req) => {
 })
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  // Everything this pattern matches runs the auth middleware. Two kinds of
+  // request must skip it entirely:
+  //
+  // 1. Crawler metadata routes. robots.txt and sitemap.xml are Next metadata
+  //    routes, and middleware intercepting them stops the route handler from
+  //    running at all -- so Google was served a login redirect instead.
+  // 2. Public static files under public/. They carry no session, and the
+  //    middleware was redirecting anonymous visitors away from the panduan
+  //    PDF downloads.
+  //
+  // The inner (?!admin|dashboard|estimate|api) on the extension alternative is
+  // load-bearing. Without it, a protected route whose dynamic segment happens
+  // to end in an excluded extension (/estimate/<id>.pdf, /api/admin/x.txt)
+  // skips the middleware entirely. Page bodies and API handlers do guard
+  // themselves, so that is the edge boundary rather than the only lock -- but
+  // losing it silently is how a future unguarded route would ship open.
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|sitemap-.*\\.xml|(?!(?:admin|dashboard|estimate|api)(?:/|$)).*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|txt|xml|webmanifest)$).*)",
+  ],
 }

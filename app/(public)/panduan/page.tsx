@@ -1,11 +1,14 @@
 import Link from 'next/link'
 import { getAllGuides } from '@/lib/panduan'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { pageMetadata } from '@/lib/seo/metadata'
 
-export const metadata = {
-  title: 'Panduan Umroh Mandiri',
-  description: 'Panduan lengkap ibadah umroh mandiri',
-}
+export const metadata = pageMetadata({
+  title: 'Panduan Umroh Mandiri: Persiapan, Manasik, dan Doa',
+  description:
+    'Panduan lengkap ibadah umroh mandiri — dari persiapan dokumen dan keberangkatan, tata cara manasik, hingga kumpulan doa dan dzikir selama di tanah suci.',
+  path: '/panduan',
+})
 
 export default function PanduanPage() {
   const guides = getAllGuides()

@@ -1,5 +1,13 @@
 # Operations Runbook
 
+> **STALE — does not describe production.** This runbook covers a self-hosted
+> Dokploy/Docker/Traefik topology. Production now runs on **Vercel**
+> (`www.serbaserbiumroh.id`), so the reverse-proxy, container, and migration
+> steps below do not apply. Nothing in the repo records when the move happened.
+>
+> For current operational procedures see [`seo-go-live.md`](./seo-go-live.md).
+> Retire or rewrite this file before following any of it.
+
 ## Service Inventory
 
 Fill in after provisioning in Dokploy:
