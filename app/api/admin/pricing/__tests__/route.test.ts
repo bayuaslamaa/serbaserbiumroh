@@ -92,7 +92,11 @@ describe("Admin pricing validation", () => {
     })
 
     it("valid service body with amount passes", () => {
-      expect(validateService({ key: "TRANSPORT", amount: 350 })).toBeNull()
+      expect(validateService({ key: "TASREH", amount: 350 })).toBeNull()
+    })
+
+    it("the retired TRANSPORT key is rejected → it cannot be re-priced back into the catalogue", () => {
+      expect(validateService({ key: "TRANSPORT", amount: 350 })).toBeTruthy()
     })
 
     it("transport leg and muthowif keys pass", () => {

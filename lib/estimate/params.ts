@@ -1,4 +1,5 @@
 import { SERVICE_KEYS } from "@/types"
+import { expandRetiredStoredParams } from "./services"
 import type { City, EstimateParams, PricingConfig } from "@/types"
 
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
@@ -30,6 +31,17 @@ export function validateEstimateParamsShape(p: unknown): p is EstimateParams {
     typeof o.fullboard === "boolean" &&
     travelMonthValid
   )
+}
+
+// The boundary version: rewrite retired keys, then validate. `validateEstimateParamsShape` stays
+// strict — a retired key is not valid input — but a saved estimate that still names one has to be
+// able to come back through the API when it is re-saved or duplicated, so it is expanded to its
+// replacements before the strict check runs. Only *known retired* keys are rewritten: a key the
+// catalogue has never heard of still fails validation rather than being quietly discarded from a
+// request. Returns the params to persist, or null to reject.
+export function normaliseAndValidateEstimateParams(p: unknown): EstimateParams | null {
+  const expanded = expandRetiredStoredParams(p)
+  return validateEstimateParamsShape(expanded) ? expanded : null
 }
 
 function hotelIdBelongsToCity(pricing: PricingConfig, city: City, hotelId?: string): boolean {

@@ -36,7 +36,7 @@ const params: EstimateParams = {
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "GARUDA",
-  services: ["VISA", "TRANSPORT"],
+  services: ["VISA", "TRANSPORT_JED_MAKKAH"],
   fullboard: true,
 }
 
@@ -66,7 +66,7 @@ const breakdown: BudgetBreakdown = {
   servicesIdr: 4_382_000,
   serviceItems: [
     { key: "VISA", label: "Visa Umroh Reguler", amountDisplay: "$165", unitAmount: 165, currency: "USD", idr: 2_854_500, divideByPax: false },
-    { key: "TRANSPORT", label: "Transportasi", amountDisplay: "SAR 325", unitAmount: 325, currency: "SAR", idr: 1_527_500, divideByPax: true },
+    { key: "TRANSPORT_JED_MAKKAH", label: "Transportasi", amountDisplay: "SAR 325", unitAmount: 325, currency: "SAR", idr: 1_527_500, divideByPax: true },
   ],
   flightIdr: 17_000_000,
   totalIdrPax: 38_184_500,

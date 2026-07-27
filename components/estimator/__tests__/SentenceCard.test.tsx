@@ -82,7 +82,6 @@ const mockPricing: PricingConfig = {
     VISA: { currency: "USD", amount: 165, label: "Visa Umroh Reguler", enabled: true, divideByPax: false },
     SISKOPATUH: { currency: "IDR", amount: 200000, label: "Siskopatuh", enabled: true, divideByPax: false },
     TASREH: { currency: "SAR", amount: 25, label: "Tasreh Raudhah", enabled: true, divideByPax: false },
-    TRANSPORT: { currency: "SAR", amount: 325, label: "Transportasi", enabled: true, divideByPax: true },
     TOUR_MAKKAH: { currency: "SAR", amount: 150, label: "Tour Makkah", enabled: true, divideByPax: true },
     TOUR_MADINAH: { currency: "SAR", amount: 150, label: "Tour Madinah", enabled: true, divideByPax: true },
     TRANSPORT_JED_MAKKAH: { currency: "SAR", amount: 400, label: "Transportasi Jeddah → Makkah", enabled: true, divideByPax: true },
@@ -218,9 +217,11 @@ describe("SentenceCard", () => {
     expect(screen.getByText("Layanan Tambahan")).toBeDefined() // still open
     expect(onChangeSpy).toHaveBeenCalledWith({ services: ["VISA", "SISKOPATUH", "TASREH"] })
 
-    fireEvent.click(screen.getByText("Transportasi"))
+    fireEvent.click(screen.getByText("Transportasi Jeddah → Makkah"))
     expect(screen.getByText("Layanan Tambahan")).toBeDefined() // still open after a 2nd toggle
-    expect(onChangeSpy).toHaveBeenCalledWith({ services: ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT"] })
+    expect(onChangeSpy).toHaveBeenCalledWith({
+      services: ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT_JED_MAKKAH"],
+    })
 
     fireEvent.click(screen.getByRole("button", { name: "Selesai" }))
     expect(screen.queryByText("Layanan Tambahan")).toBeNull()

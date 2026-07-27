@@ -51,7 +51,6 @@ const mockPricing: PricingConfig = {
     VISA: { currency: "USD", amount: 165, label: "Visa Umroh Reguler", enabled: true, divideByPax: false },
     SISKOPATUH: { currency: "IDR", amount: 200000, label: "Siskopatuh", enabled: true, divideByPax: false },
     TASREH: { currency: "SAR", amount: 25, label: "Tasreh Raudhah", enabled: true, divideByPax: false },
-    TRANSPORT: { currency: "SAR", amount: 325, label: "Transportasi", enabled: true, divideByPax: true },
     TOUR_MAKKAH: { currency: "SAR", amount: 150, label: "Tour Makkah", enabled: true, divideByPax: true },
     TOUR_MADINAH: { currency: "SAR", amount: 150, label: "Tour Madinah", enabled: true, divideByPax: true },
     TRANSPORT_JED_MAKKAH: { currency: "SAR", amount: 400, label: "Transportasi Jeddah → Makkah", enabled: true, divideByPax: true },
@@ -82,7 +81,7 @@ const defaultParams = {
   makkahHotelId: null,
   roomType: "QUAD",
   airline: "STANDARD",
-  services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+  services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH"],
   fullboard: true,
   notes: "",
 }
@@ -147,7 +146,7 @@ describe("parseEstimate", () => {
     mockCreate.mockResolvedValueOnce(
       claudeResponse({
         ...defaultParams,
-        services: ["VISA", "SISKOPATUH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"],
+        services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH", "TOUR_MAKKAH", "TOUR_MADINAH"],
       })
     )
     const result = await parseEstimate("tour makkah madinah", mockPricing)

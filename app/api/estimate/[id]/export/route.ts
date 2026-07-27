@@ -8,6 +8,7 @@ import { fetchPricingConfig, calculateBudget } from "@/lib/budget/calculate"
 import { applyOverrides } from "@/lib/budget/overrides"
 import { generateWhatsAppText } from "@/lib/export/whatsapp"
 import { generatePDF } from "@/lib/export/pdf"
+import { normaliseStoredOverrides, normaliseStoredParams } from "@/lib/estimate/services"
 import { eq } from "drizzle-orm"
 import type { EstimateParams, ManualOverrides } from "@/types"
 
@@ -32,8 +33,11 @@ export async function GET(req: NextRequest, ctx: RouteCtx) {
   }
 
   const pricing = await fetchPricingConfig(db)
-  const params = estimate.params as EstimateParams
-  const overrides = (estimate.manualOverrides as ManualOverrides | null) ?? null
+  // Exports read the stored snapshot directly, so they get the same read-time migration the
+  // estimator does — otherwise the retired transport line would simply be missing from the PDF.
+  const params = normaliseStoredParams(estimate.params as EstimateParams)
+  const storedOverrides = (estimate.manualOverrides as ManualOverrides | null) ?? null
+  const overrides = storedOverrides && normaliseStoredOverrides(storedOverrides)
   const breakdown = calculateBudget(params, pricing)
   const display = applyOverrides(breakdown, overrides, params.pax)
 

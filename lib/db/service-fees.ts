@@ -13,6 +13,10 @@ export interface ServiceFeeRow {
 // purpose: adding a key to SERVICE_KEYS without a price here is a compile error, so no key can be
 // offered in the estimator that the database cannot price.
 //
+// The retired TRANSPORT ("Full Rute") key is absent on purpose: it is gone from SERVICE_KEYS, so
+// this Record cannot name it, and syncServiceFees deletes any row left behind in a deployed
+// database. Saved estimates that still reference it are expanded on read, not priced from here.
+//
 // Transport is priced per leg at the rates published on /transportasi, fees included (the page
 // adds a 50 SAR SSU fee to every route and another 50 for an airport pickup, so these are 50-100
 // above the basePrice fields behind it). Labels name the route, not the vehicle: there is one
@@ -21,13 +25,6 @@ const SERVICE_FEE_CATALOGUE: Record<ServiceKey, Omit<ServiceFeeRow, "key">> = {
   VISA: { currency: "USD", amount: 165, label: "Visa Umroh Reguler", enabled: true, divideByPax: false },
   SISKOPATUH: { currency: "IDR", amount: 200000, label: "Siskopatuh", enabled: true, divideByPax: false },
   TASREH: { currency: "SAR", amount: 25, label: "Tasreh Raudhah", enabled: true, divideByPax: false },
-  TRANSPORT: {
-    currency: "SAR",
-    amount: 325,
-    label: "Transportasi Full Rute (Staria)",
-    enabled: true,
-    divideByPax: true,
-  },
   TRANSPORT_JED_MAKKAH: {
     currency: "SAR",
     amount: 400,

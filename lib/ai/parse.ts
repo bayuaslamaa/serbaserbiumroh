@@ -6,7 +6,7 @@ import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDaysToNights } from "@/lib/estim
 const HOTEL_TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
 const ROOM_TYPES = ["QUINT", "QUAD", "TRIPLE", "DOUBLE"] as const
 const AIRLINE_TIERS = ["NONE", "BUDGET", "STANDARD", "GARUDA", "BUSINESS"] as const
-const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
+const SERVICE_KEYS = ["VISA", "SISKOPATUH", "TASREH", "TRANSPORT_JED_MAKKAH", "TOUR_MAKKAH", "TOUR_MADINAH"] as const
 
 const CITY_HOTEL_FIELDS: Record<City, { id: "madinahHotelId" | "makkahHotelId"; label: string[] }> = {
   MADINAH: { id: "madinahHotelId", label: ["madinahHotel", "madinahHotelLabel", "hotelMadinah"] },

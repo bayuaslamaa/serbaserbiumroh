@@ -16,7 +16,7 @@ const params: EstimateParams = {
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "STANDARD",
-  services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+  services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH"],
   fullboard: true,
 }
 
@@ -47,7 +47,7 @@ const breakdown: BudgetBreakdown = {
   serviceItems: [
     { key: "VISA", label: "Visa Umroh Reguler", amountDisplay: "$165", unitAmount: 165, currency: "USD", idr: 2_854_500, divideByPax: false },
     { key: "SISKOPATUH", label: "Siskopatuh", amountDisplay: "Rp 200.000", unitAmount: 200_000, currency: "IDR", idr: 200_000, divideByPax: false },
-    { key: "TRANSPORT", label: "Transportasi", amountDisplay: "SAR 325", unitAmount: 325, currency: "SAR", idr: 1_527_500, divideByPax: true },
+    { key: "TRANSPORT_JED_MAKKAH", label: "Transportasi", amountDisplay: "SAR 325", unitAmount: 325, currency: "SAR", idr: 1_527_500, divideByPax: true },
   ],
   flightIdr: 14_500_000,
   totalIdrPax: 35_884_500,
@@ -85,7 +85,7 @@ describe("generateWhatsAppText", () => {
     const text = generateWhatsAppText(groupParams, groupBreakdown, d(groupBreakdown, null, 3))
     expect(text).toContain("TOTAL 3 ORANG")
     expect(text).toContain((breakdown.totalIdrPax * 3).toLocaleString("id-ID"))
-    // TRANSPORT is divideByPax → its unit price is spelled out with ÷pax
+    // The transport leg is divideByPax → its unit price is spelled out with ÷pax
     expect(text).toContain("SAR 325 ÷ 3 pax")
   })
 

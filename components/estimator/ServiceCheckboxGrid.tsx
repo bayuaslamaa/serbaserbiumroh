@@ -17,7 +17,7 @@ function formatAmount(currency: string, amount: number): string {
 const SERVICE_ORDER: ServiceKey[] = [
   "VISA",
   "SISKOPATUH",
-  "TRANSPORT",
+  "TRANSPORT_JED_MAKKAH",
   "TASREH",
   "TOUR_MAKKAH",
   "TOUR_MADINAH",

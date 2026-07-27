@@ -69,9 +69,12 @@ describe("service fee catalogue", () => {
     })
   })
 
-  it("keeps the retiring TRANSPORT key priced until it is retired", () => {
-    // 19 saved estimates still reference it; removing the row before they are normalised would
-    // leave them unpriceable.
-    expect(byKey.get("TRANSPORT")).toMatchObject({ currency: "SAR", enabled: true, divideByPax: true })
+  it("no longer seeds the retired TRANSPORT key", () => {
+    // Saved estimates that still reference it are expanded on read by normaliseServices, so the
+    // row has no reason to exist — and while it exists the admin pricing screen offers it back.
+    expect(SERVICE_FEE_ROWS.map((r) => r.key)).not.toContain("TRANSPORT")
+    // The Postgres enum keeps the value (it cannot be dropped), which is exactly why the
+    // application-layer catalogue is the thing that has to stop naming it.
+    expect(serviceKeyEnum.enumValues).toContain("TRANSPORT")
   })
 })

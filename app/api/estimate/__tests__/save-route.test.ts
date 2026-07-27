@@ -78,7 +78,7 @@ const params: EstimateParams = {
   hotelTier: "STANDARD",
   roomType: "QUAD",
   airline: "STANDARD",
-  services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+  services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH"],
   fullboard: true,
 }
 // Full breakdown fixture so the real applyOverrides can run. Rows sum to 25M/person.
@@ -201,6 +201,40 @@ describe("POST /api/estimate manual overrides", () => {
       totalIdrPax: 32_300_000,
       totalIdrGrp: 64_600_000,
     }))
+  })
+
+  it("duplicates a stored estimate that still names the retired TRANSPORT key", async () => {
+    // The 19 saved estimates. This path re-validates the source row's stored params before they
+    // ever reach calculateBudget, so a retired key that is not normalised here comes back as a 400
+    // — and the copy that does get written must carry the legs, not the retired key.
+    mockSourceEstimate({
+      id: "source-legacy",
+      userId: "user-1",
+      rawInput: "umroh",
+      params: { ...params, services: ["VISA", "TRANSPORT"] },
+      aiNotes: null,
+      title: "Estimasi Lama",
+      manualOverrides: { overrides: { "service:TRANSPORT": { unitPrice: 650 } }, customRows: [] },
+    })
+    const { values } = mockInsertReturning({ id: "copy-legacy", userId: "user-1" })
+    const { POST } = await import("../route")
+
+    const res = await POST(request({ sourceEstimateId: "source-legacy" }))
+
+    expect(res.status).toBe(201)
+    const written = values.mock.calls[0][0] as {
+      params: EstimateParams
+      manualOverrides: { overrides: Record<string, unknown> }
+    }
+    expect(written.params.services).toEqual([
+      "VISA",
+      "TRANSPORT_JED_MAKKAH",
+      "TRANSPORT_MAKKAH_MADINAH",
+      "TRANSPORT_MADINAH_JED",
+    ])
+    // The operator's hand-set transport price moved onto a leg instead of being rejected.
+    expect(written.manualOverrides.overrides["service:TRANSPORT"]).toBeUndefined()
+    expect(written.manualOverrides.overrides["service:TRANSPORT_JED_MAKKAH"]).toEqual({ unitPrice: 650 })
   })
 
   it("rejects duplicating another user's estimate", async () => {

@@ -192,9 +192,12 @@ async function seed() {
   // the estimator offers cannot exist without a price, and are applied by the same sync the
   // production script uses — see lib/db/sync-service-fees.ts for what it does and does not
   // overwrite on an already-deployed row.
-  await syncServiceFees()
+  const serviceFeeSync = await syncServiceFees()
 
   console.log("✓ Service fees seeded")
+  if (serviceFeeSync.removed.length > 0) {
+    console.log(`✓ Retired service fees removed: ${serviceFeeSync.removed.join(", ")}`)
+  }
 
   // Room multipliers (PRD §8 — seeded, not admin-editable). Rows and their meaning live in
   // lib/estimate/room-types.ts so the seed and the production sync script cannot drift.

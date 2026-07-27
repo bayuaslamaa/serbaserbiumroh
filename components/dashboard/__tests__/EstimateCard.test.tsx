@@ -15,7 +15,7 @@ const mockEstimate: Estimate = {
     hotelTier: "STANDARD",
     roomType: "TRIPLE",
     airline: "GARUDA",
-    services: ["VISA", "SISKOPATUH", "TRANSPORT"],
+    services: ["VISA", "SISKOPATUH", "TRANSPORT_JED_MAKKAH"],
     fullboard: true,
   },
   manualOverrides: null,

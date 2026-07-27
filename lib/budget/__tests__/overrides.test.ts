@@ -34,7 +34,7 @@ function makeBreakdown(): BudgetBreakdown {
     serviceItems: [
       { key: "VISA", label: "Visa Umroh Reguler", amountDisplay: "$165", unitAmount: 165, currency: "USD", idr: 2_800_000, divideByPax: false },
       { key: "SISKOPATUH", label: "Siskopatuh", amountDisplay: "Rp 200.000", unitAmount: 200_000, currency: "IDR", idr: 200_000, divideByPax: false },
-      { key: "TRANSPORT", label: "Transportasi", amountDisplay: "SAR 325", unitAmount: 325, currency: "SAR", idr: 1_500_000, divideByPax: true },
+      { key: "TRANSPORT_JED_MAKKAH", label: "Transportasi", amountDisplay: "SAR 325", unitAmount: 325, currency: "SAR", idr: 1_500_000, divideByPax: true },
     ],
     flightIdr: 14_500_000,
     totalIdrPax: 34_000_000,
@@ -54,7 +54,7 @@ describe("breakdownToBaseRows", () => {
       "hotelMakkah",
       "service:VISA",
       "service:SISKOPATUH",
-      "service:TRANSPORT",
+      "service:TRANSPORT_JED_MAKKAH",
       "flight",
     ])
   })
@@ -174,10 +174,10 @@ describe("applyOverrides — unit price column", () => {
   })
 
   it("rescales a divide-by-pax service and keeps the group total consistent", () => {
-    // TRANSPORT is shared (÷pax); 325 → 650 SAR doubles its per-person value
-    const ov: ManualOverrides = { overrides: { "service:TRANSPORT": { unitPrice: 650 } }, customRows: [] }
+    // The Jeddah→Makkah leg is shared (÷pax); 325 → 650 SAR doubles its per-person value
+    const ov: ManualOverrides = { overrides: { "service:TRANSPORT_JED_MAKKAH": { unitPrice: 650 } }, customRows: [] }
     const d = applyOverrides(makeBreakdown(), ov, 4)
-    const transport = d.rows.find((r) => r.key === "service:TRANSPORT")!
+    const transport = d.rows.find((r) => r.key === "service:TRANSPORT_JED_MAKKAH")!
     expect(transport.idr).toBe(3_000_000) // 650/325 × 1,500,000
     expect(transport.shared).toBe(true)
     expect(d.totalIdrGrp).toBe(d.totalIdrPax * 4)

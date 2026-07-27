@@ -4,6 +4,7 @@ import {
   HOTEL_MAKKAH_ROW_KEY,
   SERVICE_KEYS,
 } from "@/types"
+import { normaliseStoredOverrides } from "./services"
 import type { ManualOverrides } from "@/types"
 
 // Bounds on the client-supplied JSONB override object (stored raw in estimates.manual_overrides).
@@ -94,4 +95,13 @@ export function validateManualOverrides(v: unknown): v is ManualOverrides {
   if (new Set(ids).size !== ids.length) return false // reject duplicate custom-row ids
 
   return true
+}
+
+// The boundary version, mirroring normaliseAndValidateEstimateParams: a stored override keyed on a
+// retired service (`service:TRANSPORT`) is remapped onto the legs that replaced it before the
+// strict key check runs, so an operator's hand-set price survives the retirement instead of being
+// rejected as an unknown key. Returns the overrides to persist, or null to reject.
+export function normaliseAndValidateManualOverrides(v: unknown): ManualOverrides | null {
+  const normalised = normaliseStoredOverrides(v)
+  return validateManualOverrides(normalised) ? normalised : null
 }

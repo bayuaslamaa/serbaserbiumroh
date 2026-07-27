@@ -13,7 +13,7 @@ JSON schema:
   "roomType": "QUINT"|"QUAD"|"TRIPLE"|"DOUBLE",
   "airline": "NONE"|"BUDGET"|"STANDARD"|"GARUDA"|"BUSINESS",
   "travelMonth": integer | null,
-  "services": ["VISA","SISKOPATUH","TASREH","TRANSPORT","TOUR_MAKKAH","TOUR_MADINAH"],
+  "services": ["VISA","SISKOPATUH","TASREH","TRANSPORT_JED_MAKKAH","TOUR_MAKKAH","TOUR_MADINAH"],
   "fullboard": boolean,
   "notes": string
 }
@@ -32,7 +32,7 @@ Extraction rules:
 - If month is mentioned, set travelMonth to 1-12. Examples: "januari"/"jan"=1, "februari"/"feb"=2, "maret"/"mar"=3, "april"/"apr"=4, "mei"=5, "juni"/"jun"=6, "juli"/"jul"=7, "agustus"/"agu"=8, "september"/"sep"=9, "oktober"/"okt"=10, "november"/"nov"=11, "desember"/"des"=12
 - If date range given (e.g. "15-25 Sept"), compute nights = end - start per city
 - If total days only, split evenly unless ratio stated
-- Default services always included: ["VISA","SISKOPATUH","TRANSPORT"]
+- Default services always included: ["VISA","SISKOPATUH","TRANSPORT_JED_MAKKAH"]
 - "tour" / "tour makkah & madinah" → add TOUR_MAKKAH + TOUR_MADINAH
 - "tasreh" / "raudhah" → add TASREH
 - "siskopatuh" → ensure SISKOPATUH in services
