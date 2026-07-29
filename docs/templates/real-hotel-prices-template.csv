@@ -1,3 +1,5 @@
-city,tier,label,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
-MAKKAH,STANDARD,Safwa Tower 3,,2500,,,,,,1400,,,,
-MADINAH,STANDARD,Kayan Hotel,,,,,,,,,,,850,
+city,tier,label,room_type,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+MAKKAH,STANDARD,Safwa Tower 3,QUAD,,2500,,,,,,1400,,,,
+MAKKAH,STANDARD,Safwa Tower 3,TRIPLE,,2200,,,,,,1250,,,,
+MAKKAH,STANDARD,Safwa Tower 3,DOUBLE,,1900,,,,,,1100,,,,
+MADINAH,STANDARD,Kayan Hotel,,,,,,,,,,,,850,

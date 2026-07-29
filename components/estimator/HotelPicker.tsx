@@ -4,13 +4,16 @@ import { useState } from "react"
 import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import type { HotelOptionConfig, HotelTier } from "@/types"
+import type { HotelOptionConfig, HotelTier, RoomType } from "@/types"
 import { resolveMonthlyHotelSar, sarLabel } from "@/lib/estimate/hotel-pricing"
 
 interface HotelPickerProps {
   hotels: HotelOptionConfig[]
   selectedId: string | undefined
   travelMonth: number | undefined
+  // The rate shown per hotel is the one this room type will actually be charged, so the badge
+  // matches the breakdown. Optional: an omitted type resolves on the quad basis, as before.
+  roomType?: RoomType
   onSelect: (id: string) => void
 }
 
@@ -24,7 +27,7 @@ const TIER_FILTERS: { value: HotelTier | "ALL"; label: string }[] = [
 
 const PRICE_THRESHOLD_SAR = 300
 
-export function HotelPicker({ hotels, selectedId, travelMonth, onSelect }: HotelPickerProps) {
+export function HotelPicker({ hotels, selectedId, travelMonth, roomType, onSelect }: HotelPickerProps) {
   const [search, setSearch] = useState("")
   const [tierFilter, setTierFilter] = useState<HotelTier | "ALL">("ALL")
   const [priceFilterActive, setPriceFilterActive] = useState(false)
@@ -35,7 +38,7 @@ export function HotelPicker({ hotels, selectedId, travelMonth, onSelect }: Hotel
 
   const matches = (hotel: HotelOptionConfig): boolean => {
     if (tierFilter !== "ALL" && hotel.tier !== tierFilter) return false
-    if (priceFilterActive && resolveMonthlyHotelSar(hotel, travelMonth) > PRICE_THRESHOLD_SAR) return false
+    if (priceFilterActive && resolveMonthlyHotelSar(hotel, travelMonth, roomType) > PRICE_THRESHOLD_SAR) return false
     if (query !== "") {
       const haystack = `${hotel.label} ${hotel.sublabel} ${hotel.tier}`.toLowerCase()
       if (!haystack.includes(query)) return false
@@ -102,6 +105,7 @@ export function HotelPicker({ hotels, selectedId, travelMonth, onSelect }: Hotel
             hotel={selectedHotel}
             selected
             travelMonth={travelMonth}
+            roomType={roomType}
             onSelect={onSelect}
           />
         )}
@@ -123,7 +127,14 @@ export function HotelPicker({ hotels, selectedId, travelMonth, onSelect }: Hotel
         ) : (
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {filtered.map((hotel) => (
-              <HotelRow key={hotel.id} hotel={hotel} selected={false} travelMonth={travelMonth} onSelect={onSelect} />
+              <HotelRow
+                key={hotel.id}
+                hotel={hotel}
+                selected={false}
+                travelMonth={travelMonth}
+                roomType={roomType}
+                onSelect={onSelect}
+              />
             ))}
           </div>
         )}
@@ -136,11 +147,13 @@ function HotelRow({
   hotel,
   selected,
   travelMonth,
+  roomType,
   onSelect,
 }: {
   hotel: HotelOptionConfig
   selected: boolean
   travelMonth: number | undefined
+  roomType: RoomType | undefined
   onSelect: (id: string) => void
 }) {
   return (
@@ -168,7 +181,7 @@ function HotelRow({
         {hotel.tier} - {hotel.sublabel}
       </div>
       <div className="text-xs mt-1 font-medium" style={{ color: "var(--color-gold)" }}>
-        {sarLabel(resolveMonthlyHotelSar(hotel, travelMonth))}
+        {sarLabel(resolveMonthlyHotelSar(hotel, travelMonth, roomType))}
       </div>
     </button>
   )

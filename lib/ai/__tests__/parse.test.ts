@@ -286,12 +286,17 @@ describe("parseEstimate", () => {
 
   // --- U5: prefer real-priced hotels among comparable options ---
 
-  // Clone mockPricing and attach realMonthlyPrices to specific hotel options by id.
+  // Clone mockPricing and attach realMonthlyPrices to specific hotel options by id. Takes the
+  // flat month -> SAR shape and stores it as a QUAD rate: these tests assert which hotel gets
+  // *picked* when a real price exists for the month, so the room-type dimension is incidental.
   function withRealPrices(real: Record<string, Record<number, number>>): PricingConfig {
     const clone = structuredClone(mockPricing)
     for (const city of ["MADINAH", "MAKKAH"] as const) {
       for (const h of clone.hotelOptions?.[city] ?? []) {
-        if (real[h.id]) h.realMonthlyPrices = real[h.id]
+        if (!real[h.id]) continue
+        h.realMonthlyPrices = Object.fromEntries(
+          Object.entries(real[h.id]).map(([month, sar]) => [month, { QUAD: sar }]),
+        )
       }
     }
     return clone

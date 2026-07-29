@@ -379,7 +379,10 @@ describe("calculateBudget", () => {
   })
 
   describe("real price layer (U3)", () => {
-    function withReal(city: "MADINAH" | "MAKKAH", real: Record<number, number>): PricingConfig {
+    function withReal(
+      city: "MADINAH" | "MAKKAH",
+      real: Record<number, Partial<Record<"QUINT" | "QUAD" | "TRIPLE" | "DOUBLE", number>>>,
+    ): PricingConfig {
       return {
         ...mockPricing,
         hotels: {
@@ -393,7 +396,7 @@ describe("calculateBudget", () => {
     }
 
     it("prefers the real price for the requested month", () => {
-      const r = calculateBudget({ ...baseParams, travelMonth: 2 }, withReal("MADINAH", { 2: 900 }))
+      const r = calculateBudget({ ...baseParams, travelMonth: 2 }, withReal("MADINAH", { 2: { QUAD: 900 } }))
       expect(r.hotelMadinahDetail.sarPerNight).toBe(900)
       expect(r.hotelMadinahDetail.priceSource).toBe("real")
       // 900 SAR × 4 nights ÷ 4 pax × 4700 = 4,230,000
@@ -401,19 +404,19 @@ describe("calculateBudget", () => {
     })
 
     it("falls back to the estimate when no real price covers that month", () => {
-      const r = calculateBudget({ ...baseParams, travelMonth: 5 }, withReal("MADINAH", { 2: 900 }))
+      const r = calculateBudget({ ...baseParams, travelMonth: 5 }, withReal("MADINAH", { 2: { QUAD: 900 } }))
       expect(r.hotelMadinahIdr).toBe(3_055_000) // base 650 estimate
       expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
     })
 
     it("ignores real prices when travelMonth is unset (real is seasonal)", () => {
-      const r = calculateBudget(baseParams, withReal("MADINAH", { 2: 900 }))
+      const r = calculateBudget(baseParams, withReal("MADINAH", { 2: { QUAD: 900 } }))
       expect(r.hotelMadinahIdr).toBe(3_055_000)
       expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
     })
 
     it("resolves each city's price source independently", () => {
-      const r = calculateBudget({ ...baseParams, travelMonth: 6 }, withReal("MAKKAH", { 6: 1500 }))
+      const r = calculateBudget({ ...baseParams, travelMonth: 6 }, withReal("MAKKAH", { 6: { QUAD: 1500 } }))
       expect(r.hotelMakkahDetail.priceSource).toBe("real")
       // 1500 SAR × 9 nights ÷ 4 pax × 4700 = 15,862,500
       expect(r.hotelMakkahIdr).toBe(15_862_500)
@@ -423,6 +426,131 @@ describe("calculateBudget", () => {
     it("labels a monthly estimate override as estimate, not real", () => {
       const r = calculateBudget({ ...baseParams, travelMonth: 3 }, mockPricing)
       expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+    })
+  })
+
+  describe("per-room-type real prices", () => {
+    // Supplier catalogs quote each room type separately (AZKA Al-Safa July: QUAD 700 / TRIPLE 625 /
+    // DOUBLE 550). A rate found per room type is already type-specific, so the global ratio must
+    // NOT be applied on top of it. These ratios are deliberately non-unit — with the all-1.0
+    // fixture above, a missed bypass would be invisible.
+    const ratioed: PricingConfig = {
+      ...mockPricing,
+      roomMultipliers: {
+        QUINT: { paxPerRoom: 5, multiplier: 1.15 },
+        QUAD: { paxPerRoom: 4, multiplier: 1.0 },
+        TRIPLE: { paxPerRoom: 3, multiplier: 0.85 },
+        DOUBLE: { paxPerRoom: 2, multiplier: 0.7 },
+      },
+    }
+
+    function withRoomTypeReal(
+      real: Record<number, Partial<Record<"QUINT" | "QUAD" | "TRIPLE" | "DOUBLE", number>>>,
+    ): PricingConfig {
+      return {
+        ...ratioed,
+        hotels: {
+          ...ratioed.hotels,
+          MADINAH: {
+            ...ratioed.hotels.MADINAH,
+            STANDARD: { ...ratioed.hotels.MADINAH.STANDARD, realMonthlyPrices: real },
+          },
+        },
+      }
+    }
+
+    const julyCatalog = { 7: { QUAD: 700, TRIPLE: 625, DOUBLE: 550 } }
+
+    it("uses the catalog's double rate as-is, without applying the global double ratio", () => {
+      const r = calculateBudget(
+        { ...baseParams, pax: 2, roomType: "DOUBLE", travelMonth: 7 },
+        withRoomTypeReal(julyCatalog),
+      )
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(550)
+      expect(r.hotelMadinahDetail.priceSource).toBe("real")
+      // 550 × 4 nights × 1 room × 4700 ÷ 2 pax. NOT 700 × 0.7.
+      expect(r.hotelMadinahIdr).toBe(5_170_000)
+    })
+
+    it("reports a bypassed multiplier as 1 so the rendered formula reconciles with the total", () => {
+      const r = calculateBudget(
+        { ...baseParams, pax: 2, roomType: "DOUBLE", travelMonth: 7 },
+        withRoomTypeReal(julyCatalog),
+      )
+      expect(r.hotelMadinahDetail.roomMultiplier).toBe(1)
+      const d = r.hotelMadinahDetail
+      expect(Math.round((d.sarPerNight * d.nights * d.roomMultiplier * d.roomCount * 4700) / d.totalPax)).toBe(
+        r.hotelMadinahIdr,
+      )
+    })
+
+    it("uses the catalog's triple rate for a 3-person group", () => {
+      const r = calculateBudget(
+        { ...baseParams, pax: 3, roomType: "TRIPLE", travelMonth: 7 },
+        withRoomTypeReal(julyCatalog),
+      )
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(625)
+      expect(r.hotelMadinahIdr).toBe(Math.round((625 * 4 * 1 * 4700) / 3))
+    })
+
+    it("falls back to the quad real rate times the global ratio when the catalog has no rate for that type", () => {
+      const r = calculateBudget(
+        { ...baseParams, pax: 2, roomType: "DOUBLE", travelMonth: 8 },
+        withRoomTypeReal({ 8: { QUAD: 700 } }),
+      )
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(700)
+      expect(r.hotelMadinahDetail.roomMultiplier).toBe(0.7)
+      // Still authoritative — the badge must keep reading "harga real".
+      expect(r.hotelMadinahDetail.priceSource).toBe("real")
+      expect(r.hotelMadinahIdr).toBe(4_606_000)
+    })
+
+    it("prices QUINT off the quad rate when the catalog prints no five-bed rate", () => {
+      const r = calculateBudget(
+        { ...baseParams, pax: 5, roomType: "QUINT", travelMonth: 7 },
+        withRoomTypeReal(julyCatalog),
+      )
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(700)
+      expect(r.hotelMadinahDetail.roomMultiplier).toBe(1.15)
+      expect(r.hotelMadinahIdr).toBe(3_026_800)
+    })
+
+    it("uses a catalog QUINT rate as-is where one exists — QUINT is not special-cased", () => {
+      // Rare but real: Saif Al Yamani and Al Manara both print a 5-bed rate. Such a rate takes the
+      // same step-1 path as DOUBLE, so the 1.15 ratio must not be layered on top of it.
+      const r = calculateBudget(
+        { ...baseParams, pax: 5, roomType: "QUINT", travelMonth: 7 },
+        withRoomTypeReal({ 7: { QUAD: 700, QUINT: 810 } }),
+      )
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(810)
+      expect(r.hotelMadinahDetail.roomMultiplier).toBe(1)
+      expect(r.hotelMadinahIdr).toBe(Math.round((810 * 4 * 1 * 4700) / 5))
+    })
+
+    it("does not reach a room-type rate for a month the catalog does not cover", () => {
+      // The catalog covers August only; a July quote must fall all the way to the base estimate.
+      const r = calculateBudget(
+        { ...baseParams, pax: 2, roomType: "DOUBLE", travelMonth: 7 },
+        withRoomTypeReal({ 8: { DOUBLE: 550 } }),
+      )
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(650)
+      expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+      expect(r.hotelMadinahDetail.roomMultiplier).toBe(0.7)
+      expect(r.hotelMadinahIdr).toBe(4_277_000)
+    })
+
+    it("ignores room-type real rates when travelMonth is unset", () => {
+      const r = calculateBudget({ ...baseParams, pax: 2, roomType: "DOUBLE" }, withRoomTypeReal(julyCatalog))
+      expect(r.hotelMadinahDetail.sarPerNight).toBe(650)
+      expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
+      expect(r.hotelMadinahIdr).toBe(4_277_000)
+    })
+
+    it("leaves a hotel with no real rates priced exactly as the ratio-only path", () => {
+      const params = { ...baseParams, pax: 2, roomType: "DOUBLE" as const, travelMonth: 7 }
+      expect(calculateBudget(params, withRoomTypeReal({})).hotelMadinahIdr).toBe(
+        calculateBudget(params, ratioed).hotelMadinahIdr,
+      )
     })
   })
 })

@@ -208,6 +208,7 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
             hotels={madinahHotelOptions}
             selectedId={madinahSelectedId}
             travelMonth={params.travelMonth}
+            roomType={params.roomType}
             onSelect={(id) => handleHotelSelect("MADINAH", id)}
           />
         )
@@ -221,6 +222,7 @@ export function SentenceCard({ params, pricing, onChange, onStartOver, storySour
             hotels={makkahHotelOptions}
             selectedId={makkahSelectedId}
             travelMonth={params.travelMonth}
+            roomType={params.roomType}
             onSelect={(id) => handleHotelSelect("MAKKAH", id)}
           />
         )

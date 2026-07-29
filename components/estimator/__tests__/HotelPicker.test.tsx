@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, it, expect, vi } from "vitest"
 import { HotelPicker } from "../HotelPicker"
-import type { HotelOptionConfig } from "@/types"
+import type { HotelOptionConfig, RoomType } from "@/types"
 
 const hotels: HotelOptionConfig[] = [
   {
@@ -12,6 +12,7 @@ const hotels: HotelOptionConfig[] = [
     label: "Al Ansar Mall Hotel",
     sublabel: "700m dari masjid",
     monthlyPrices: { 11: 700 },
+    realMonthlyPrices: { 7: { QUAD: 720, TRIPLE: 640, DOUBLE: 560 } },
   },
   {
     id: "h2",
@@ -36,6 +37,7 @@ const hotels: HotelOptionConfig[] = [
 function renderPicker(opts: {
   selectedId?: string
   travelMonth?: number
+  roomType?: RoomType
   onSelect?: (id: string) => void
 } = {}) {
   const onSelect = opts.onSelect ?? vi.fn()
@@ -44,6 +46,7 @@ function renderPicker(opts: {
       hotels={hotels}
       selectedId={opts.selectedId}
       travelMonth={opts.travelMonth}
+      roomType={opts.roomType}
       onSelect={onSelect}
     />
   )
@@ -145,5 +148,30 @@ describe("HotelPicker", () => {
     renderPicker()
 
     expect(screen.getByText("SAR 650/mlm")).toBeDefined()
+  })
+
+  it("shows the rate for the selected room type, not the quad rate", () => {
+    renderPicker({ travelMonth: 7, roomType: "DOUBLE" })
+
+    expect(screen.getByText("SAR 560/mlm")).toBeDefined() // h1's July double rate
+    expect(screen.queryByText("SAR 720/mlm")).toBeNull()
+  })
+
+  it("shows the quad rate when quad is selected", () => {
+    renderPicker({ travelMonth: 7, roomType: "QUAD" })
+
+    expect(screen.getByText("SAR 720/mlm")).toBeDefined()
+  })
+
+  it("shows the quad rate for QUINT, which no catalog prices", () => {
+    renderPicker({ travelMonth: 7, roomType: "QUINT" })
+
+    expect(screen.getByText("SAR 720/mlm")).toBeDefined()
+  })
+
+  it("renders hotels carrying no real prices without error when a room type is selected", () => {
+    renderPicker({ travelMonth: 7, roomType: "DOUBLE" })
+
+    expect(screen.getByText("SAR 900/mlm")).toBeDefined() // h2 has no realMonthlyPrices
   })
 })
