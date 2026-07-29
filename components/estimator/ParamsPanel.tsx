@@ -49,7 +49,7 @@ export function ParamsPanel({ params, pricing, onChange, storySource }: ParamsPa
       value: hotel.id,
       label: hotel.label,
       sublabel: `${hotel.tier} - ${hotel.sublabel}`,
-      badge: `${sarLabel(resolveMonthlyHotelSar(hotel, params.travelMonth))} ${cityLabel(city)}`,
+      badge: `${sarLabel(resolveMonthlyHotelSar(hotel, params.travelMonth, params.roomType))} ${cityLabel(city)}`,
     }))
   }
 

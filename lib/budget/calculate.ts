@@ -1,5 +1,6 @@
 import { asc, desc } from "drizzle-orm"
-import { resolveRoomMultiplier } from "@/lib/estimate/room-types"
+import { resolveHotelSar } from "@/lib/estimate/hotel-pricing"
+import { ROOM_TYPES, resolveRoomMultiplier } from "@/lib/estimate/room-types"
 import { isServiceKey, normaliseServices } from "@/lib/estimate/services"
 import type {
   EstimateParams,
@@ -9,6 +10,7 @@ import type {
   HotelPriceConfig,
   City,
   HotelTier,
+  RoomType,
   AirlinePriceConfig,
 } from "@/types"
 
@@ -23,22 +25,6 @@ function formatAmountDisplay(currency: string, amount: number): string {
   if (currency === "SAR") return `SAR ${amount.toLocaleString("id-ID")}`
   // IDR
   return `Rp ${amount.toLocaleString("id-ID")}`
-}
-
-// Resolve the SAR/night for a hotel + month, preferring the authoritative real price when one
-// exists for that month (real prices are seasonal, so this only fires when travelMonth is set),
-// then the monthly estimate override, then the base estimate. Reports which source was used.
-function resolveHotelSar(
-  config: HotelPriceConfig,
-  travelMonth?: number
-): { sarPerNight: number; source: "real" | "estimate" } {
-  if (travelMonth != null) {
-    const real = config.realMonthlyPrices?.[travelMonth]
-    if (real != null) return { sarPerNight: real, source: "real" }
-    const monthly = config.monthlyPrices[travelMonth]
-    if (monthly != null) return { sarPerNight: monthly, source: "estimate" }
-  }
-  return { sarPerNight: config.sarPerNight, source: "estimate" }
 }
 
 function resolveCityHotel(
@@ -93,17 +79,25 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   const madinahHotel = resolveCityHotel(pricing, "MADINAH", params.madinahHotelId, params.hotelTier)
   const makkahHotel = resolveCityHotel(pricing, "MAKKAH", params.makkahHotelId, params.hotelTier)
   // Saved estimates carry whatever roomType was valid when written (e.g. the retired SINGLE) and
-  // are cast straight out of JSONB, so resolve defensively rather than indexing raw.
-  const room = resolveRoomMultiplier(pricing, params.roomType).config
-  const madinahPrice = resolveHotelSar(madinahHotel, params.travelMonth)
-  const makkahPrice = resolveHotelSar(makkahHotel, params.travelMonth)
+  // are cast straight out of JSONB, so resolve defensively rather than indexing raw. The resolved
+  // type — not the raw one — is what the real-price lookup keys on.
+  const resolvedRoom = resolveRoomMultiplier(pricing, params.roomType)
+  const room = resolvedRoom.config
+  const madinahPrice = resolveHotelSar(madinahHotel, resolvedRoom.roomType, params.travelMonth)
+  const makkahPrice = resolveHotelSar(makkahHotel, resolvedRoom.roomType, params.travelMonth)
   const madinahSarPerNight = madinahPrice.sarPerNight
   const makkahSarPerNight = makkahPrice.sarPerNight
+
+  // A rate the catalog quoted for this room type already IS the room's rate; scaling it by the
+  // quad-relative ratio would price the room twice. Resolved per city, because one city can have a
+  // room-type rate while the other falls back to its quad rate.
+  const madinahMultiplier = madinahPrice.roomTypePriced ? 1 : room.multiplier
+  const makkahMultiplier = makkahPrice.roomTypePriced ? 1 : room.multiplier
 
   const madinahHotelCost = calculateHotelIdrPerPerson(
     madinahSarPerNight,
     params.nightsMadinah,
-    room.multiplier,
+    madinahMultiplier,
     room.paxPerRoom,
     params.pax,
     sarRate
@@ -111,7 +105,7 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
   const makkahHotelCost = calculateHotelIdrPerPerson(
     makkahSarPerNight,
     params.nightsMakkah,
-    room.multiplier,
+    makkahMultiplier,
     room.paxPerRoom,
     params.pax,
     sarRate
@@ -172,7 +166,9 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       roomPax: room.paxPerRoom,
       roomCount: madinahHotelCost.roomCount,
       totalPax: params.pax,
-      roomMultiplier: room.multiplier,
+      // The effective multiplier, so the formula rendered from this detail reconciles with the
+      // total. A bypassed ratio reports 1, which the breakdown and export both omit from display.
+      roomMultiplier: madinahMultiplier,
       priceSource: madinahPrice.source,
     },
     hotelMakkahDetail: {
@@ -184,7 +180,7 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       roomPax: room.paxPerRoom,
       roomCount: makkahHotelCost.roomCount,
       totalPax: params.pax,
-      roomMultiplier: room.multiplier,
+      roomMultiplier: makkahMultiplier,
       priceSource: makkahPrice.source,
     },
     servicesIdr,
@@ -228,10 +224,16 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
     monthlyByHotelId[mp.hotelPriceId][mp.month] = mp.sarPerNight
   }
 
-  const realByHotelId: Record<string, Record<number, number>> = {}
+  const realByHotelId: Record<string, Record<number, Partial<Record<RoomType, number>>>> = {}
   for (const rp of realPrices) {
+    // real_hotel_prices.room_type is plain text, so a row can carry a value this build does not
+    // know (a retired type, or a hand-inserted typo). Skip it rather than publishing a rate under
+    // a key nothing will ever read — same posture as the retired-service-key skip below.
+    const roomType = rp.roomType as RoomType
+    if (!ROOM_TYPES.includes(roomType)) continue
     if (!realByHotelId[rp.hotelPriceId]) realByHotelId[rp.hotelPriceId] = {}
-    realByHotelId[rp.hotelPriceId][rp.month] = rp.sarPerNight
+    if (!realByHotelId[rp.hotelPriceId][rp.month]) realByHotelId[rp.hotelPriceId][rp.month] = {}
+    realByHotelId[rp.hotelPriceId][rp.month][roomType] = rp.sarPerNight
   }
 
   const hotelsMap: PricingConfig["hotels"] = {} as PricingConfig["hotels"]

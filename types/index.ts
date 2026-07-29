@@ -144,9 +144,13 @@ export interface HotelPriceConfig {
   tripcomUrl?: string | null
   bookingUrl?: string | null
   monthlyPrices: Record<number, number> // month 1-12 → sarPerNight override (estimate)
-  // month 1-12 → authoritative catalog price (real). Optional: absent/undefined means no real
-  // price is known, so resolution falls back to the estimate. fetchPricingConfig always sets it.
-  realMonthlyPrices?: Record<number, number>
+  // month 1-12 → room type → authoritative catalog price (real), one room of that type per night.
+  // Catalogs quote each room type separately, so a rate found here is already type-specific and
+  // the global room multiplier must NOT be applied on top of it. Sparse in both dimensions: a
+  // catalog may cover only some months, and only some room types within a month (QUAD is the
+  // common case; QUINT is rare but does occur). Optional: absent means no real price is known,
+  // so resolution falls back to the estimate. fetchPricingConfig always sets it.
+  realMonthlyPrices?: Record<number, Partial<Record<RoomType, number>>>
 }
 
 export interface HotelOptionConfig extends HotelPriceConfig {

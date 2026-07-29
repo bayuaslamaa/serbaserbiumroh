@@ -153,11 +153,17 @@ export const realHotelPrices = pgTable(
       .notNull()
       .references(() => hotelPrices.id, { onDelete: "cascade" }),
     month: integer("month").notNull(), // 1-12
-    sarPerNight: integer("sar_per_night").notNull(),
+    // Which room this rate rents. Supplier catalogues quote DBL/TRPL/QUAD per room per night, and
+    // the step between them is a per-hotel SAR increment, not a shared ratio — so each type gets
+    // its own row. Plain text (not a pgEnum) to match room_multipliers.type; validated in TS.
+    // A rate stored here is already type-specific: the global room_multipliers ratio must NOT be
+    // applied on top of it. See resolveHotelSar in lib/budget/calculate.ts.
+    roomType: text("room_type").notNull().default("QUAD"),
+    sarPerNight: integer("sar_per_night").notNull(), // SAR for one room of roomType, per night
     sourceLabel: text("source_label").notNull().default(""), // e.g. "Katalog Emaar 2027"
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [unique().on(t.hotelPriceId, t.month)]
+  (t) => [unique().on(t.hotelPriceId, t.month, t.roomType)]
 )
 
 // --- Airline Monthly Prices (per airline option, month 1-12, IDR round-trip per person) ---
