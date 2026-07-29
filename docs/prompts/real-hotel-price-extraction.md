@@ -17,7 +17,9 @@ Template CSV kosong: [`docs/templates/real-hotel-prices-template.csv`](../templa
 
 ## Catatan penting
 
-- **Satuan `*_sar` = SAR untuk satu kamar QUAD (isi 4) per malam** — sebasis dengan `base_sar_per_night` hotel.
+- **Satuan `*_sar` = SAR untuk satu kamar per malam, sesuai kolom `room_type` baris itu.** Baris `QUAD` sebasis dengan `base_sar_per_night` hotel; baris `TRIPLE`/`DOUBLE` wajar lebih murah, `QUINT` lebih mahal.
+- **Satu hotel = beberapa baris**, satu per tipe kamar yang dicantumkan katalog (`QUAD`, `TRIPLE`, `DOUBLE`, `QUINT`). Kolom `room_type` boleh dikosongkan dan otomatis dibaca sebagai `QUAD`, sehingga CSV lama tanpa kolom ini tetap bisa diimpor.
+- **Harga per tipe kamar dipakai apa adanya.** Kalau katalog memuat harga DOUBLE, sistem memakai angka itu langsung — rasio global (Quint 1.15 / Triple 0.85 / Double 0.7) TIDAK ikut dikalikan. Salah menaruh harga per-orang di baris tipe kamar akan langsung merusak kuotasi.
 - **Harga real bersifat musiman (per bulan).** Estimasi hanya memakai harga real bila input menyebut bulan (`travelMonth`). Bulan yang dikosongkan otomatis fallback ke harga estimasi.
 - `sourceLabel` (nama katalog) diisi **saat impor**, bukan di CSV → satu batch impor = satu katalog. Impor tiap katalog terpisah agar provenansnya jelas.
 - Untuk katalog tebal/rumit, proses **satu katalog (atau satu hotel) per sesi** agar AI tidak mencampur harga antar hotel.
@@ -49,7 +51,7 @@ atau MELAPORKAN daripada menebak.
 
 Header CSV untuk Bagian 1 & 2 PERSIS ini (semua 12 kolom bulan, walau sebagian kosong):
 
-city,tier,label,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
+city,tier,label,room_type,jan_sar,feb_sar,mar_sar,apr_sar,may_sar,jun_sar,jul_sar,aug_sar,sep_sar,oct_sar,nov_sar,dec_sar
 
 ### Bagian 1 — Blok CSV "DARI KATALOG" (nilai asli saja)
 Satu blok ```csv. HANYA isi sel bulan yang benar-benar tercantum di katalog. Bulan lain kosong.
@@ -68,12 +70,15 @@ Daftar Hotel, mata uang non-SAR, harga per-paket/per-orang yang tak bisa dikonve
 pembanding), dan bulan/harga acuannya. Kalau tidak ada yang perlu direview, tulis "Tidak ada".
 
 ## ATURAN NILAI (kolom bulan)
-- Satuan WAJIB: SAR untuk sewa SATU KAMAR QUAD (isi 4 orang) per MALAM.
-  Ini harus SEBASIS dengan kolom "base_sar" di Daftar Hotel — pakai itu sebagai
-  patokan sanity-check. Kalau hasilmu meleset jauh (mis. ~4x lebih kecil), kemungkinan
+- Satuan WAJIB: SAR untuk sewa SATU KAMAR per MALAM, sesuai `room_type` baris itu.
+  Untuk baris QUAD, angkanya harus SEBASIS dengan kolom "base_sar" di Daftar Hotel — pakai itu
+  sebagai patokan sanity-check. Kalau hasilmu meleset jauh (mis. ~4x lebih kecil), kemungkinan
   katalog memakai harga PER ORANG → konversi ke per-kamar (×4 untuk quad) DAN catat di
   Bagian 3. Kalau ragu apakah per-orang atau per-kamar, JANGAN tebak — kosongkan sel itu
   dan laporkan.
+- Baris TRIPLE/DOUBLE **sengaja lebih kecil** dari base_sar dan itu BUKAN error — jangan
+  "dikoreksi" naik agar mendekati base_sar. Yang wajib benar: DOUBLE ≤ TRIPLE ≤ QUAD ≤ QUINT
+  untuk hotel dan bulan yang sama. Kalau katalog melanggar urutan itu, laporkan di Bagian 3.
 - Hanya bilangan bulat. Pemisah ribuan boleh ("1,300") tapi JANGAN desimal ("1300.0"),
   notasi ilmiah ("1e3"), simbol mata uang, atau rentang ("2500-3000"). Kalau katalog
   memberi rentang, pilih satu angka wakil dan jelaskan pilihannya di Bagian 3.
@@ -93,13 +98,33 @@ Ambil city & tier dari Daftar Hotel yang cocok, BUKAN menebak dari katalog.
 - Jika hotel di katalog TIDAK ada padanannya di Daftar Hotel: JANGAN buat baris untuknya.
   Tulis di Bagian 3 (sistem hanya menempel harga ke hotel yang sudah terdaftar).
 
+## ATURAN room_type (kolom baru — satu hotel jadi beberapa baris)
+- Nilai pasti, huruf besar: `QUAD` | `TRIPLE` | `DOUBLE` | `QUINT`. Kosong = `QUAD`.
+- Petakan istilah katalog: `DBL`/`Double` → DOUBLE; `TRP`/`TRPL`/`Triple` → TRIPLE;
+  `QUAD`/`Quad` → QUAD; `QUINT`/`Pent` → QUINT. **Jangan tulis singkatan katalog apa adanya** —
+  `DBL` akan ditolak importer sebagai row error.
+- Buat satu baris per tipe kamar yang BENAR-BENAR dicantumkan katalog untuk hotel itu.
+  Kebanyakan katalog hanya memuat DBL/TRPL/QUAD; sebagian (mis. Saif Al Yamani, Al Manara)
+  juga memuat QUINT.
+- **JANGAN menurunkan tipe yang tidak dicetak katalog.** Kalau katalog tak punya kolom QUINT,
+  jangan buat baris QUINT — sistem otomatis memakai harga QUAD × rasio global untuk tipe itu.
+- Suite / Junior Suite / Executive Suite / Royal Suite **diabaikan** — sistem belum punya tipe itu.
+  Sebut di Bagian 3 kalau katalog memuatnya.
+
 ## ATURAN bulan / musim
 - Petakan tanggal/musim katalog ke nomor bulan (Feb=feb_sar, dst).
 - Rentang tanggal dalam satu bulan → isi bulan itu.
+- **Satu bulan dicakup beberapa periode → pilih periode yang menutupi PALING BANYAK HARI di
+  bulan itu.** Ini aturan yang sudah dipakai kolom QUAD di
+  [`real-hotel-prices-2027.csv`](../data/real-hotel-prices-2027.csv); memakai aturan lain
+  (mis. "periode yang memuat tanggal 15") membuat baris TRIPLE/DOUBLE baru tidak sebaris
+  dengan baris QUAD yang sudah ada. Contoh: periode 09/07–16/07 dan 16/07–30/07 sama-sama
+  menyentuh Juli, tapi yang kedua menutupi 14 hari Juli vs 7 hari → pakai yang kedua.
+  Sebutkan alternatifnya di Bagian 3 kalau selisihnya > 10%.
 - Periode yang membentang beberapa bulan (mis. "20 Des–10 Jan") → isi SEMUA bulan yang
   tercakup dengan harga yang sama (des_sar dan jan_sar), dan catat di Bagian 3.
-- Jika satu bulan punya beberapa harga (mis. awal vs akhir bulan) → pilih satu (sebutkan
-  dasar pilihan: puncak/mayoritas hari) dan cantumkan alternatifnya di Bagian 3.
+- **Semua tipe kamar satu hotel wajib memakai pemetaan bulan yang sama.** DOUBLE dan QUAD
+  hotel yang sama harus mengambil dari periode yang sama untuk bulan yang sama.
 
 ## ATURAN FORECAST (hanya untuk Bagian 2 — mengisi bulan kosong dari pola)
 Tujuan: memperkirakan harga bulan yang TIDAK tercantum di katalog, dari pola musiman yang terlihat.
@@ -115,6 +140,21 @@ Ini perkiraan, bukan data katalog — semua sel forecast WAJIB dicatat di Bagian
 - **Jangan forecast bila sinyal kurang:** hotel punya < 2 bulan terisi DAN tidak ada hotel pembanding
   sejenis → biarkan sel itu kosong di Bagian 2 juga.
 - Ikuti semua ATURAN NILAI (satuan, format angka) yang sama seperti nilai katalog.
+
+### Forecast baris TRIPLE / DOUBLE / QUINT
+Jangan forecast tipe kamar memakai rasio global. Pakai **selisih per kasur milik hotel itu sendiri**,
+diambil dari bulan berkatalog yang PALING DEKAT:
+
+    TRIPLE(bulan kosong) = QUAD(bulan itu) − (QUAD − TRIPLE) di bulan berkatalog terdekat
+    DOUBLE(bulan kosong) = QUAD(bulan itu) − (QUAD − DOUBLE) di bulan berkatalog terdekat
+
+Selisih ini **beda tiap hotel dan bisa beda tiap periode** — AZKA Al-Safa naik +50, lalu +75, lalu
++85 sepanjang tiga periodenya, sedangkan Maysan Al Mashaer tetap +80 di keenam periodenya. Karena
+itu ambil selisih dari bulan terdekat, bukan satu angka tetap per hotel.
+
+Jarak bulan dihitung melingkar (Desember bertetangga dengan Januari). **Kalau dua bulan berkatalog
+sama-sama terdekat**, pakai yang bulannya lebih awal, dan sebutkan pilihan itu di Bagian 3 — mis.
+Januari berjarak 5 bulan dari Juni maupun Agustus, dan aturan ini memilih Juni.
 
 ## JANGAN MENEBAK
 - Mata uang selain SAR (USD, IDR, dll) yang tak bisa dikonversi pasti → kosongkan, lapor.
