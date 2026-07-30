@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { CommunityStats } from '@/components/stats/CommunityStats'
+import { WebinarComingSoonBanner } from '@/components/home/WebinarComingSoonBanner'
 
 interface HeroSectionProps {
   isAdmin?: boolean
@@ -15,6 +16,14 @@ interface HeroSectionProps {
 export function HeroSection({ isAdmin = false, visitorCount }: HeroSectionProps) {
   return (
     <section className="py-16 text-center">
+      {/*
+        First child on purpose: the announcement has to be above the fold and
+        ahead of the H1 in reading order. It owns its own bottom margin, so the
+        hero adds no spacing here. Its headline is a <p>, not a heading, so the
+        H1 below stays the first heading in the document.
+      */}
+      <WebinarComingSoonBanner />
+
       {/*
         The H1 carries the search intent, not the brand. The brand name is
         already in the navbar, the logo, and every page title via

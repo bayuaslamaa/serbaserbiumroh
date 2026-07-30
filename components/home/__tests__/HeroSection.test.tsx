@@ -47,6 +47,45 @@ describe("HeroSection", () => {
     expect(heading.textContent?.toLowerCase()).toContain("umroh mandiri")
   })
 
+  it("announces the webinar before the page heading", () => {
+    const { container } = render(<HeroSection visitorCount={8778} />)
+
+    const banner = screen.getByRole("region", { name: "Pengumuman webinar" })
+    const heading = screen.getByRole("heading", { level: 1 })
+
+    expect(container.contains(banner)).toBe(true)
+    // DOCUMENT_POSITION_FOLLOWING: the H1 comes after the banner.
+    expect(banner.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+
+    const text = container.textContent ?? ""
+    expect(text.indexOf("Jangan Nekat Umroh Mandiri")).toBeGreaterThanOrEqual(0)
+    expect(text.indexOf("Panduan Umroh Mandiri")).toBeGreaterThan(
+      text.indexOf("Jangan Nekat Umroh Mandiri"),
+    )
+  })
+
+  it("keeps the page H1 as the first heading even with the announcement above it", () => {
+    // The banner's campaign line is deliberately a <p>. If a later refactor
+    // "tidies" it into an h2, the hero would open on a heading that is not the
+    // page H1 — the accessibility cost this assertion exists to catch.
+    render(<HeroSection visitorCount={8778} />)
+
+    const headings = screen.getAllByRole("heading")
+    expect(headings[0]).toBe(screen.getByRole("heading", { level: 1 }))
+    expect(headings[0].textContent).toContain("Panduan Umroh Mandiri")
+  })
+
+  // The hero is text-center; the banner is text-left, and that only holds while the alignment sits
+  // on the banner's outermost element. Move it to an inner column and the hero's centring inherits
+  // straight through — silently centring the pills, headline, and schedule. jsdom can't compute
+  // that, so pin the class: it's the cheap guard on the one break a className tidy would cause.
+  it("keeps the announcement left-aligned inside the centred hero", () => {
+    render(<HeroSection visitorCount={8778} />)
+
+    const banner = screen.getByRole("region", { name: "Pengumuman webinar" })
+    expect(banner).toHaveClass("text-left")
+  })
+
   it("shows the estimate link only for an admin", () => {
     const { rerender } = render(<HeroSection visitorCount={1} />)
     expect(screen.queryByRole("link", { name: /Buat Estimasi/ })).toBeNull()
