@@ -143,12 +143,12 @@ Two export formats for sharing estimates:
 
 ## 8. Webinar RSVP
 
-- **Public webinar page** (`/webinar-umroh-mandiri`) — shareable event page for the Umroh Mandiri webinar on Ahad, 14 Juni 2026
+- **Public webinar page** (`/webinar-umroh-mandiri`) — shareable event page for the Umroh Mandiri webinar; the schedule lives in `lib/webinar.ts` (`WEBINAR_DATE_LABEL` / `WEBINAR_STARTS_AT`), which every surface reads from
 - **Logged-in RSVP gate** — anonymous visitors can read event details but cannot see the RSVP destination
 - **Callback login CTA** — anonymous visitors are sent to `/login` with a callback back to the webinar page
-- **Server-only RSVP URL** — `WEBINAR_RSVP_URL` is rendered only after `auth()` confirms a session; missing config shows an unavailable state instead of a broken link
+- **Server-only RSVP URL** — `WEBINAR_RSVP_URL` is rendered only after `auth()` confirms a session, and only when it is an `https://` URL; missing or non-https config shows an unavailable state instead of a broken link
 
-**Files:** `app/(public)/webinar-umroh-mandiri/page.tsx`, `middleware.ts`, `components/nav/`, `components/home/HeroSection.tsx`
+**Files:** `lib/webinar.ts`, `app/(public)/webinar-umroh-mandiri/page.tsx`, `middleware.ts`, `components/nav/`, `components/home/HeroSection.tsx`
 
 ---
 

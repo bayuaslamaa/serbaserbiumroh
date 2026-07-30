@@ -18,7 +18,13 @@ export const metadata = pageMetadata({
 
 export default async function WebinarUmrohMandiriPage() {
   const session = await auth()
-  const rsvpUrl = process.env.WEBINAR_RSVP_URL
+  // Deploy config today, but the href guard has to live with the render, not
+  // with whoever sets the env var: the day this value becomes admin- or
+  // DB-editable, an unguarded href is a stored `javascript:` link. A value that
+  // is not plain https falls through to the "belum tersedia" branch below --
+  // no link at all beats a link that is not the one we meant to publish.
+  const configuredRsvpUrl = process.env.WEBINAR_RSVP_URL
+  const rsvpUrl = configuredRsvpUrl?.startsWith("https://") ? configuredRsvpUrl : undefined
   const isLoggedIn = !!session?.user
 
   return (

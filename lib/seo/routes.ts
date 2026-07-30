@@ -18,9 +18,12 @@ export interface StaticRoute {
  * signal working against us.
  *
  * Deliberately absent:
- *   /webinar-umroh-mandiri -- fixed to a past date (16 Juni 2026) and its RSVP
- *   is login-gated. The page stays crawlable; it is just not promoted. Revisit
- *   if it is ever reworked into an evergreen webinar archive.
+ *   /webinar-umroh-mandiri -- a single-date campaign page (see
+ *   WEBINAR_STARTS_AT in lib/webinar.ts). Excluded because it goes stale within
+ *   days of the event, whatever that date happens to be -- not because of any
+ *   particular date, so this entry never needs rescheduling. The page stays
+ *   crawlable and is promoted from the homepage banner instead. Revisit only if
+ *   it is reworked into an evergreen webinar archive.
  */
 export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/", changeFrequency: "weekly", priority: 1.0 },

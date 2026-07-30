@@ -55,6 +55,22 @@ describe("WebinarUmrohMandiriPage", () => {
     expect(screen.queryByText("https://example.com/rsvp")).not.toBeInTheDocument()
   })
 
+  // The env var is deploy config today, but the href guard belongs with the
+  // render: the day this value becomes admin- or DB-editable, an unguarded href
+  // is a stored `javascript:` link on a logged-in page.
+  it.each(["javascript:alert(1)", "http://example.com/rsvp", "/rsvp", "example.com/rsvp"])(
+    "treats a non-https RSVP URL (%s) as unavailable rather than rendering it",
+    async (configured) => {
+      mockAuth.mockResolvedValue({ user: { id: "user-1", email: "user@example.com" } })
+      process.env.WEBINAR_RSVP_URL = configured
+
+      render(await WebinarUmrohMandiriPage())
+
+      expect(screen.getByText(/Link RSVP belum tersedia/)).toBeInTheDocument()
+      expect(screen.queryByRole("link", { name: "RSVP Sekarang" })).not.toBeInTheDocument()
+    }
+  )
+
   it("shows unavailable state for logged-in users when RSVP URL is missing", async () => {
     mockAuth.mockResolvedValue({ user: { id: "user-1", email: "user@example.com" } })
     delete process.env.WEBINAR_RSVP_URL
