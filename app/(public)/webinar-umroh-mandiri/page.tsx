@@ -3,12 +3,16 @@ import { auth } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { Info, Youtube, Tv } from "lucide-react"
 import { pageMetadata } from "@/lib/seo/metadata"
-
-const WEBINAR_PATH = "/webinar-umroh-mandiri"
+import {
+  WEBINAR_ACCESS_NOTE,
+  WEBINAR_DATE_LABEL,
+  WEBINAR_PATH,
+  WEBINAR_TIME_LABEL,
+} from "@/lib/webinar"
 
 export const metadata = pageMetadata({
   title: "Webinar Umroh Mandiri",
-  description: "RSVP webinar Umroh Mandiri Selasa, 16 Juni 2026 untuk user terdaftar.",
+  description: `RSVP webinar Umroh Mandiri ${WEBINAR_DATE_LABEL} untuk user terdaftar.`,
   path: WEBINAR_PATH,
 })
 
@@ -43,7 +47,10 @@ export default async function WebinarUmrohMandiriPage() {
                 Jadwal
               </p>
               <p className="mt-1 text-xl font-bold" style={{ color: "var(--color-text-muted)" }}>
-                Selasa, 16 Juni 2026
+                {WEBINAR_DATE_LABEL}
+              </p>
+              <p className="mt-1 text-sm font-semibold" style={{ color: "var(--color-gold)" }}>
+                {WEBINAR_TIME_LABEL}
               </p>
             </div>
             <div
@@ -54,7 +61,7 @@ export default async function WebinarUmrohMandiriPage() {
                 Akses RSVP
               </p>
               <p className="mt-1" style={{ color: "var(--color-text-muted)" }}>
-                Khusus user yang sudah login
+                {WEBINAR_ACCESS_NOTE}
               </p>
             </div>
           </div>
@@ -71,7 +78,7 @@ export default async function WebinarUmrohMandiriPage() {
                   Informasi Kapasitas Zoom & Akses Masuk
                 </p>
                 <p className="text-xs md:text-sm leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
-                  Kapasitas Zoom <strong className="text-[var(--color-text)]">hanya untuk 300 peserta</strong>. Ruang Zoom akan dibuka 15-30 menit sebelum acara dimulai pukul 13:00 WIB, dan admin akan menyetujui (accept) peserta masuk secara acak.
+                  Kapasitas Zoom <strong className="text-[var(--color-text)]">hanya untuk 300 peserta</strong>. Ruang Zoom akan dibuka 15-30 menit sebelum acara dimulai pukul {WEBINAR_TIME_LABEL}, dan admin akan menyetujui (accept) peserta masuk secara acak.
                 </p>
               </div>
             </div>
