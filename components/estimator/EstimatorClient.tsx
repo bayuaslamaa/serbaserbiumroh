@@ -123,6 +123,16 @@ interface EstimatorClientProps {
   initialParams?: Partial<EstimateParams>
   storySource?: string
   canEditOverrides?: boolean
+  /**
+   * Whether this operator may ask for the catalogue-grounded (enhanced) parse. Defaults to false so
+   * a caller that forgets to pass it does not expose the capped, ADMIN-only path — the route answers
+   * 403 either way, but a control that always 403s is worse than no control.
+   *
+   * Not a re-implementation of a gate: /estimate/new is admin-only for the whole page, while
+   * /estimate/[id] is reachable by the non-admin who owns the estimate and can reopen this panel
+   * with "Tulis ulang dari nol".
+   */
+  canUseEnhancedParse?: boolean
 }
 
 export function EstimatorClient({
@@ -137,6 +147,7 @@ export function EstimatorClient({
   initialParams,
   storySource,
   canEditOverrides = true,
+  canUseEnhancedParse = false,
 }: EstimatorClientProps) {
   // A saved estimate is seeded straight into the reducer and posted back verbatim on save, so the
   // retired service keys its JSONB may still name are rewritten here too — normalising only at the
@@ -164,6 +175,10 @@ export function EstimatorClient({
   const [showStory, setShowStory] = useState(!startState.hasParsed)
   const [showFullForm, setShowFullForm] = useState(false)
   const [waOpen, setWaOpen] = useState(false)
+  // The catalogue-grounded parse is a per-request option, not part of the estimate. Local state, NOT
+  // the reducer: params in there are the saved artefact, and a flag sitting alongside them is a path
+  // for the assistant's request settings to start influencing what gets persisted.
+  const [enhancedParse, setEnhancedParse] = useState(false)
   const isDesktop = useIsDesktop()
 
   function startOver() {
@@ -288,16 +303,34 @@ export function EstimatorClient({
       toast({ title: "Input kosong", description: "Tuliskan deskripsi perjalanan Anda.", variant: "destructive" })
       return
     }
+    // Read once, up front: the request that comes back must be judged against the mode it was sent
+    // in, and the enhanced-only refusals below are only refusals if this was an enhanced request.
+    const wantsEnhanced = canUseEnhancedParse && enhancedParse
     dispatch({ type: "PARSE_START" })
     try {
       const res = await fetch("/api/estimate/parse", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: state.rawInput }),
+        // The flag is omitted entirely when off, so the normal path sends byte-for-byte the body it
+        // sent before this option existed (R4).
+        body: JSON.stringify({ input: state.rawInput, ...(wantsEnhanced ? { enhanced: true } : {}) }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        toast({ title: "Gagal menganalisis", description: (err as any)?.error ?? "Coba lagi.", variant: "destructive" })
+        // 403 and 429 are the enhanced path's two refusals, and neither may land as a silent failure.
+        // The route answers 403 with a bare "Forbidden" — an API contract string, not something an
+        // operator can act on — so it is restated here. Its 429 body is already operator copy and is
+        // passed through so the used/limit numbers survive.
+        const enhancedRefusal = wantsEnhanced && (res.status === 403 || res.status === 429)
+        const description =
+          wantsEnhanced && res.status === 403
+            ? "Mode harga katalog hanya untuk admin. Hilangkan centang harga katalog lalu coba lagi."
+            : ((err as { error?: string })?.error ?? "Coba lagi.")
+        toast({
+          title: enhancedRefusal ? "Mode harga katalog tidak tersedia" : "Gagal menganalisis",
+          description,
+          variant: "destructive",
+        })
         dispatch({ type: "PARSE_ERROR" })
         return
       }
@@ -426,6 +459,10 @@ export function EstimatorClient({
             loading={state.parseStatus === "loading"}
             visible={showStory}
             onCancel={() => setShowStory(false)}
+            enhanced={enhancedParse}
+            // Handler withheld, not merely a false flag: InputPanel renders no toggle at all without
+            // it, so a non-admin never sees a control the route would 403.
+            onEnhancedChange={canUseEnhancedParse ? setEnhancedParse : undefined}
           />
           <SentenceCard
             params={state.params}

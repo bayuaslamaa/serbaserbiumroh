@@ -4,10 +4,17 @@ import type { PricingConfig } from "@/types"
 
 // Shared mock for messages.create — must be defined before vi.mock hoisting
 const mockCreate = vi.fn()
+// `beta.messages.toolRunner` is the enhanced path's entry point. It is stubbed here even though no
+// test in this file uses it: without the stub, the moment parseEstimate so much as reads
+// `client.beta` on that branch these tests would fail on `undefined` instead of telling us the
+// default path changed. Its call count is also the cheapest possible proof that the default path
+// never enters the expensive branch (see the last test in this file).
+const mockToolRunner = vi.fn()
 
 vi.mock("@anthropic-ai/sdk", () => ({
   default: vi.fn().mockImplementation(() => ({
     messages: { create: mockCreate },
+    beta: { messages: { toolRunner: mockToolRunner } },
   })),
 }))
 
@@ -90,6 +97,7 @@ const defaultParams = {
 describe("parseEstimate", () => {
   beforeEach(() => {
     mockCreate.mockReset()
+    mockToolRunner.mockReset()
   })
 
   it("happy path: standard quad 9+4 nights → correct params", async () => {
@@ -99,6 +107,21 @@ describe("parseEstimate", () => {
     expect(result.params.nightsMadinah).toBe(4)
     expect(result.params.hotelTier).toBe("STANDARD")
     expect(result.params.roomType).toBe("QUAD")
+  })
+
+  // The request params are load-bearing and were previously unasserted, so a silent edit to any of
+  // them stayed green. Dropping `thinking: disabled` is the dangerous one: Sonnet 5 then runs
+  // adaptive thinking, which shares the max_tokens budget below, truncating the JSON mid-answer —
+  // every parse would 422 with "Claude returned non-JSON response" and no test would object.
+  it("sends the model, token cap, and disabled thinking the JSON extraction depends on", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh 9 malam makkah 4 malam madinah", mockPricing)
+
+    expect(mockCreate.mock.calls[0][0]).toMatchObject({
+      model: "claude-sonnet-5",
+      max_tokens: 1024,
+      thinking: { type: "disabled" },
+    })
   })
 
   it("happy path: Garuda → airline GARUDA", async () => {
@@ -288,14 +311,18 @@ describe("parseEstimate", () => {
 
   // Clone mockPricing and attach realMonthlyPrices to specific hotel options by id. Takes the
   // flat month -> SAR shape and stores it as a QUAD rate: these tests assert which hotel gets
-  // *picked* when a real price exists for the month, so the room-type dimension is incidental.
+  // *picked* when a real price exists for the month, so the room-type dimension and the catalogue
+  // label are both incidental.
   function withRealPrices(real: Record<string, Record<number, number>>): PricingConfig {
     const clone = structuredClone(mockPricing)
     for (const city of ["MADINAH", "MAKKAH"] as const) {
       for (const h of clone.hotelOptions?.[city] ?? []) {
         if (!real[h.id]) continue
         h.realMonthlyPrices = Object.fromEntries(
-          Object.entries(real[h.id]).map(([month, sar]) => [month, { QUAD: sar }]),
+          Object.entries(real[h.id]).map(([month, sar]) => [
+            month,
+            { QUAD: { sarPerNight: sar, sourceLabel: "Katalog Uji 2027" } },
+          ]),
         )
       }
     }
@@ -533,5 +560,24 @@ describe("parseEstimate", () => {
     )
     const result = await parseEstimate("umroh ke abha", mockPricing)
     expect(result.params.services).toEqual(["VISA"])
+  })
+
+  // The regression gate for the optional real-price path: every test above calls parseEstimate the
+  // way the product calls it today, and none of them may reach the tool runner. If this ever fails,
+  // the expensive branch has become reachable by default — which is a cost and latency change nobody
+  // asked for, on the path that serves ordinary parses.
+  it("never enters the tool-runner branch without the enhanced flag", async () => {
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh 9 malam makkah 4 malam madinah", mockPricing)
+    expect(mockToolRunner).not.toHaveBeenCalled()
+
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh 9 malam makkah 4 malam madinah", mockPricing, {})
+    expect(mockToolRunner).not.toHaveBeenCalled()
+
+    mockCreate.mockResolvedValueOnce(claudeResponse(defaultParams))
+    await parseEstimate("umroh 9 malam makkah 4 malam madinah", mockPricing, { enhanced: false })
+    expect(mockToolRunner).not.toHaveBeenCalled()
+    expect(mockCreate).toHaveBeenCalledTimes(3)
   })
 })

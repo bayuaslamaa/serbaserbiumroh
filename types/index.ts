@@ -134,6 +134,15 @@ export interface RoomMultiplierConfig {
   multiplier: number
 }
 
+// One catalogue rate: the SAR/night AND the catalogue it was transcribed from. The label travels
+// with the rate rather than sitting in a parallel map because every consumer that quotes the
+// number also has to be able to say where it came from — a rate whose provenance got dropped
+// somewhere between the query and the quote is indistinguishable from a guess.
+export interface RealHotelPrice {
+  sarPerNight: number // SAR for one room of this type, per night
+  sourceLabel: string // e.g. "Katalog Emaar 2027"; "" when the row predates the label column
+}
+
 export interface HotelPriceConfig {
   sarPerNight: number
   label: string
@@ -150,7 +159,9 @@ export interface HotelPriceConfig {
   // catalog may cover only some months, and only some room types within a month (QUAD is the
   // common case; QUINT is rare but does occur). Optional: absent means no real price is known,
   // so resolution falls back to the estimate. fetchPricingConfig always sets it.
-  realMonthlyPrices?: Record<number, Partial<Record<RoomType, number>>>
+  // The value is a RealHotelPrice, not a bare number, so the catalogue a rate came from travels
+  // with the rate all the way to whoever quotes it.
+  realMonthlyPrices?: Record<number, Partial<Record<RoomType, RealHotelPrice>>>
 }
 
 export interface HotelOptionConfig extends HotelPriceConfig {
@@ -170,6 +181,9 @@ export interface HotelCostDetail {
   totalPax: number
   roomMultiplier: number
   priceSource?: "real" | "estimate" // which layer priced this hotel; undefined treated as estimate
+  // The catalogue behind a "real" rate, alongside the layer that produced it. Absent on estimate
+  // rates (no catalogue exists) and on catalogue rows transcribed before source_label existed.
+  priceSourceLabel?: string
 }
 
 export interface AirlinePriceConfig {

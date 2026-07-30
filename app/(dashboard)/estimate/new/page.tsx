@@ -116,6 +116,9 @@ export default async function NewEstimatePage({
         pricingConfig={pricingConfig}
         initialParams={hasInitialParams ? initialParams : undefined}
         storySource={storyName}
+        // Passed as `isAdmin` rather than a literal `true`: the gate above already guarantees it, and
+        // reading the same source keeps the two from drifting apart if that gate ever loosens.
+        canUseEnhancedParse={isAdmin}
       />
     </div>
   )

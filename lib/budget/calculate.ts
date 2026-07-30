@@ -11,6 +11,7 @@ import type {
   City,
   HotelTier,
   RoomType,
+  RealHotelPrice,
   AirlinePriceConfig,
 } from "@/types"
 
@@ -170,6 +171,9 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       // total. A bypassed ratio reports 1, which the breakdown and export both omit from display.
       roomMultiplier: madinahMultiplier,
       priceSource: madinahPrice.source,
+      // Empty collapses to undefined: an estimate rate and a pre-label catalogue row both mean
+      // "no catalogue to name", and a "" in the persisted breakdown would read as a real label.
+      priceSourceLabel: madinahPrice.sourceLabel || undefined,
     },
     hotelMakkahDetail: {
       id: makkahHotel.id,
@@ -182,6 +186,7 @@ export function calculateBudget(params: EstimateParams, pricing: PricingConfig):
       totalPax: params.pax,
       roomMultiplier: makkahMultiplier,
       priceSource: makkahPrice.source,
+      priceSourceLabel: makkahPrice.sourceLabel || undefined,
     },
     servicesIdr,
     serviceItems,
@@ -224,7 +229,10 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
     monthlyByHotelId[mp.hotelPriceId][mp.month] = mp.sarPerNight
   }
 
-  const realByHotelId: Record<string, Record<number, Partial<Record<RoomType, number>>>> = {}
+  // The rate carries its source_label rather than being flattened to a bare number: every consumer
+  // that quotes a catalogue rate also has to be able to name the catalogue, and a second query for
+  // the labels would be free to drift from the rates this map publishes.
+  const realByHotelId: Record<string, Record<number, Partial<Record<RoomType, RealHotelPrice>>>> = {}
   for (const rp of realPrices) {
     // real_hotel_prices.room_type is plain text, so a row can carry a value this build does not
     // know (a retired type, or a hand-inserted typo). Skip it rather than publishing a rate under
@@ -233,7 +241,10 @@ export async function fetchPricingConfig(db: import("@/lib/db").DB): Promise<Pri
     if (!ROOM_TYPES.includes(roomType)) continue
     if (!realByHotelId[rp.hotelPriceId]) realByHotelId[rp.hotelPriceId] = {}
     if (!realByHotelId[rp.hotelPriceId][rp.month]) realByHotelId[rp.hotelPriceId][rp.month] = {}
-    realByHotelId[rp.hotelPriceId][rp.month][roomType] = rp.sarPerNight
+    realByHotelId[rp.hotelPriceId][rp.month][roomType] = {
+      sarPerNight: rp.sarPerNight,
+      sourceLabel: rp.sourceLabel,
+    }
   }
 
   const hotelsMap: PricingConfig["hotels"] = {} as PricingConfig["hotels"]

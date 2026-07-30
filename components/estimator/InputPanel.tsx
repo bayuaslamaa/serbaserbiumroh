@@ -12,6 +12,14 @@ const EXAMPLES = [
 const PLACEHOLDER =
   "Contoh: Umroh 12 hari untuk 2 orang bulan November. Madinah 4 malam di Kayan Hotel, Makkah 8 malam di Olayan Ajyad, kamar double, fullboard, Saudia, tambah visa+siskopatuh+transport, tanpa tour."
 
+// D4, verbatim. The "~15-20 detik" is load-bearing copy, not decoration: an operator who does not
+// expect a longer wait reads it as a hang and reloads, which spends one of the capped daily calls
+// for nothing. It names what the path does rather than its mechanism, and it does not imply the
+// default path is wrong — it usually is not.
+export const ENHANCED_TOGGLE_LABEL = "Pakai harga katalog (lebih lambat)"
+export const ENHANCED_TOGGLE_HELP =
+  "Hotel dipilih dari tarif katalog asli untuk bulan yang diminta. Berguna saat ada batas budget atau bulan tertentu. Perlu ~15-20 detik."
+
 interface InputPanelProps {
   value: string
   onChange: (v: string) => void
@@ -21,9 +29,28 @@ interface InputPanelProps {
   visible?: boolean
   /** When provided, renders a "Batal" link that calls this to dismiss the Story panel. */
   onCancel?: () => void
+  /**
+   * The catalogue-grounded parse toggle. A request option, never part of the estimate — the owner of
+   * this state is the caller, and it is deliberately not in the estimator's reducer.
+   *
+   * The toggle renders only when `onEnhancedChange` is supplied, which is how a caller that has no
+   * business offering the path (a non-admin) leaves it out without this component knowing about
+   * roles. Absent handler, absent control: fail closed.
+   */
+  enhanced?: boolean
+  onEnhancedChange?: (v: boolean) => void
 }
 
-export function InputPanel({ value, onChange, onParse, loading, visible = true, onCancel }: InputPanelProps) {
+export function InputPanel({
+  value,
+  onChange,
+  onParse,
+  loading,
+  visible = true,
+  onCancel,
+  enhanced = false,
+  onEnhancedChange,
+}: InputPanelProps) {
   if (!visible) return null
 
   return (
@@ -89,9 +116,36 @@ export function InputPanel({ value, onChange, onParse, loading, visible = true, 
         ))}
       </div>
 
-      <Button onClick={onParse} disabled={loading} className="w-full sm:w-auto">
-        {loading ? "Menganalisis…" : "Hitung Estimasi"}
-      </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+        <Button onClick={onParse} disabled={loading} className="w-full sm:w-auto sm:shrink-0">
+          {loading ? "Menganalisis…" : "Hitung Estimasi"}
+        </Button>
+
+        {onEnhancedChange && (
+          <div className="min-w-0">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={enhanced}
+                onChange={(e) => onEnhancedChange(e.target.checked)}
+                disabled={loading}
+                aria-describedby="enhanced-parse-help"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-gold)]"
+              />
+              <span className="text-sm" style={{ color: "var(--color-text)" }}>
+                {ENHANCED_TOGGLE_LABEL}
+              </span>
+            </label>
+            <p
+              id="enhanced-parse-help"
+              className="mt-1 text-xs leading-snug"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              {ENHANCED_TOGGLE_HELP}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

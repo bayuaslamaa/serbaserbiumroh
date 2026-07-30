@@ -12,7 +12,13 @@ const hotels: HotelOptionConfig[] = [
     label: "Al Ansar Mall Hotel",
     sublabel: "700m dari masjid",
     monthlyPrices: { 11: 700 },
-    realMonthlyPrices: { 7: { QUAD: 720, TRIPLE: 640, DOUBLE: 560 } },
+    realMonthlyPrices: {
+      7: {
+        QUAD: { sarPerNight: 720, sourceLabel: "Katalog Uji 2027" },
+        TRIPLE: { sarPerNight: 640, sourceLabel: "Katalog Uji 2027" },
+        DOUBLE: { sarPerNight: 560, sourceLabel: "Katalog Uji 2027" },
+      },
+    },
   },
   {
     id: "h2",
