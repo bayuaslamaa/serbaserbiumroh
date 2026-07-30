@@ -6,6 +6,7 @@ vi.mock("@/auth", () => ({
 }))
 
 import { auth } from "@/auth"
+import { WEBINAR_DATE_LABEL, WEBINAR_TIME_LABEL } from "@/lib/webinar"
 import WebinarUmrohMandiriPage from "../page"
 
 const mockAuth = auth as ReturnType<typeof vi.fn>
@@ -27,7 +28,10 @@ describe("WebinarUmrohMandiriPage", () => {
 
     render(await WebinarUmrohMandiriPage())
 
-    expect(screen.getByText("Ahad, 14 Juni 2026")).toBeInTheDocument()
+    // Read from lib/webinar, not a copy of the string: the duplicated literal
+    // is exactly what let this assertion drift three event dates behind the page.
+    expect(screen.getByText(WEBINAR_DATE_LABEL)).toBeInTheDocument()
+    expect(screen.getByText(WEBINAR_TIME_LABEL)).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "RSVP Sekarang" })).toHaveAttribute(
       "href",
       "https://example.com/rsvp"
@@ -41,7 +45,8 @@ describe("WebinarUmrohMandiriPage", () => {
 
     render(await WebinarUmrohMandiriPage())
 
-    expect(screen.getByText("Ahad, 14 Juni 2026")).toBeInTheDocument()
+    expect(screen.getByText(WEBINAR_DATE_LABEL)).toBeInTheDocument()
+    expect(screen.getByText(WEBINAR_TIME_LABEL)).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: "RSVP Sekarang" })).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Masuk untuk RSVP" })).toHaveAttribute(
       "href",

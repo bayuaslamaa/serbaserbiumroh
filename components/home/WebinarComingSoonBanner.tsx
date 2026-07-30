@@ -1,25 +1,33 @@
-/**
- * Machine-readable twin of the visible schedule below ("Ahad, 2 Agustus 2026",
- * "09.00 WIB"). The label stays a fixed string — the copy is specified, not
- * computed — so this constant is what a test can assert on to notice the event
- * has passed. Update both together.
- */
-export const WEBINAR_STARTS_AT = new Date("2026-08-02T09:00:00+07:00")
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import {
+  WEBINAR_ACCESS_NOTE_INLINE,
+  WEBINAR_DATE_LABEL,
+  WEBINAR_HEADLINE_HIGHLIGHT,
+  WEBINAR_HEADLINE_LEAD,
+  WEBINAR_PATH,
+  WEBINAR_TIME_LABEL,
+} from '@/lib/webinar'
 
 /**
  * Compact webinar announcement rendered above the homepage hero copy.
  *
- * Deliberately non-interactive: registration is not open yet, so the banner
- * carries no link, button, or form. A disabled-looking control would read as a
- * broken action rather than as information. The state is spelled out in words
- * ("COMING SOON", "Pendaftaran segera dibuka") so it never depends on colour.
+ * Carries exactly one interactive control: a registration CTA to
+ * {@link WEBINAR_PATH}. It deliberately does NOT link to the RSVP destination
+ * directly — that URL is a server-side env var and the webinar page owns the
+ * login / URL-missing branching. The banner's job is to get the visitor there
+ * and to set expectations first, which is what the access note does.
+ *
+ * The design's second pill said "COMING SOON"; it is gone, because registration
+ * is now reachable and a status pill contradicting the button beside it is
+ * worse than no pill. The "WEBINAR GRATIS" pill keeps the idiom.
  *
  * The headline is a <p>, not a heading. This component is the hero's first
  * child, so any heading here would land ahead of the page H1 in document
  * order and demote the homepage's strongest on-page signal.
  *
- * Campaign copy stays local: one fixed event, no scheduling or admin workflow
- * to serve yet.
+ * Event facts come from lib/webinar so the banner, the webinar page, and its
+ * SEO description can never drift apart again.
  */
 export function WebinarComingSoonBanner() {
   return (
@@ -43,7 +51,7 @@ export function WebinarComingSoonBanner() {
         ☾
       </span>
 
-      {/* Left: pills, headline, supporting line */}
+      {/* Left: pill, headline, supporting line */}
       <div className="relative flex min-w-0 flex-1 flex-col gap-2.5">
         <div className="flex flex-wrap items-center gap-2 md:gap-2.5">
           <span
@@ -52,36 +60,26 @@ export function WebinarComingSoonBanner() {
           >
             WEBINAR GRATIS
           </span>
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-[3px] text-[10px] font-bold tracking-[0.16em] md:text-[11px]"
-            style={{ borderColor: 'var(--color-gold-muted)', color: 'var(--color-gold)' }}
-          >
-            <span
-              aria-hidden="true"
-              className="inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--color-gold)]"
-            />
-            COMING SOON
-          </span>
         </div>
 
         <p
           className="font-heading text-[19px] font-extrabold leading-[1.3] md:text-[26px] md:leading-[1.25]"
           style={{ color: 'var(--color-text)' }}
         >
-          Jangan Nekat Umroh Mandiri{' '}
-          <span style={{ color: 'var(--color-gold)' }}>Sebelum Tahu Risiko Ini!</span>
+          {WEBINAR_HEADLINE_LEAD}{' '}
+          <span style={{ color: 'var(--color-gold)' }}>{WEBINAR_HEADLINE_HIGHLIGHT}</span>
         </p>
 
         <p
           className="hidden text-[13px] md:block"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          Pantau informasi pendaftaran selanjutnya di Serba Serbi Umroh.
+          Simak detail acara dan amankan tempat Kakak di halaman webinar.
         </p>
       </div>
 
-      {/* Right: schedule and the passive registration state. Separated by a
-          rule above on mobile, beside on desktop. */}
+      {/* Right: schedule, access note, registration CTA. Separated by a rule
+          above on mobile, beside on desktop. */}
       <div
         className="relative flex flex-col gap-2.5 border-t pt-2.5 md:flex-shrink-0 md:border-l md:border-t-0 md:pl-7 md:pt-0"
         style={{ borderColor: 'var(--color-border)' }}
@@ -97,18 +95,29 @@ export function WebinarComingSoonBanner() {
             className="text-sm font-extrabold md:text-[17px]"
             style={{ color: 'var(--color-text)' }}
           >
-            Ahad, 2 Agustus 2026
+            {WEBINAR_DATE_LABEL}
           </span>
           <span
             className="text-[13px] font-bold md:text-sm"
             style={{ color: 'var(--color-gold)' }}
           >
-            09.00 WIB
+            {WEBINAR_TIME_LABEL}
           </span>
         </div>
 
-        {/* Neutral dot, not gold, and not button-shaped: this is information,
-            not an action waiting to be enabled. */}
+        {/*
+          The CTA goes to the webinar page, never to WEBINAR_RSVP_URL: that is a
+          server-side env var, and the page is what branches on login and on the
+          URL being unset. asChild renders a single <a> rather than an <a> around
+          a <button>, so the banner stays at exactly one interactive element.
+        */}
+        <Button asChild size="sm" className="w-full md:w-auto">
+          <Link href={WEBINAR_PATH}>Daftar Sekarang</Link>
+        </Button>
+
+        {/* Set expectations before the click, in the same words the webinar
+            page uses for its RSVP access row. Neutral dot, not gold: this is
+            information about the link, not a second action. */}
         <p
           className="inline-flex items-center gap-2 text-xs font-semibold"
           style={{ color: 'var(--color-text-muted)' }}
@@ -117,7 +126,7 @@ export function WebinarComingSoonBanner() {
             aria-hidden="true"
             className="inline-block h-[7px] w-[7px] flex-shrink-0 rounded-full bg-[var(--color-text-muted)]"
           />
-          Pendaftaran segera dibuka
+          {WEBINAR_ACCESS_NOTE_INLINE}
         </p>
       </div>
     </div>
