@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
-import { WebinarComingSoonBanner } from "../WebinarComingSoonBanner"
+import { WEBINAR_STARTS_AT, WebinarComingSoonBanner } from "../WebinarComingSoonBanner"
 
 describe("WebinarComingSoonBanner", () => {
   it("announces the free webinar with its schedule and coming-soon state", () => {
@@ -30,14 +30,32 @@ describe("WebinarComingSoonBanner", () => {
   })
 
   it("exposes no interactive control while registration is closed", () => {
-    render(<WebinarComingSoonBanner />)
+    const { container } = render(<WebinarComingSoonBanner />)
 
-    // Querying by role is what actually proves non-interactivity: a disabled
-    // button or a dead link would still surface here.
+    // Two complementary checks. The role queries cover controls that are
+    // exposed to assistive tech — a disabled button or a dead link still
+    // surfaces here — but they only see elements whose accessible name is
+    // computed, so on their own they miss an <a> without href, a bare <form>,
+    // or a click-handler <div>. The selector sweep below is the one that
+    // catches those: it looks for the affordance itself, not the ARIA role.
     expect(screen.queryAllByRole("link")).toHaveLength(0)
     expect(screen.queryAllByRole("button")).toHaveLength(0)
     expect(screen.queryAllByRole("textbox")).toHaveLength(0)
     expect(screen.queryAllByRole("form")).toHaveLength(0)
+
+    expect(
+      container.querySelectorAll(
+        'a, button, form, input, select, textarea, summary, [onclick], [tabindex], [role="button"], [role="link"], .cursor-pointer'
+      )
+    ).toHaveLength(0)
+  })
+
+  it("is still announcing a future event", () => {
+    // Red here means the webinar has passed. The fix is to update or remove the
+    // banner — never to relax this assertion. The homepage's first above-the-fold
+    // content would otherwise keep saying "Pendaftaran segera dibuka" for an event
+    // that already happened.
+    expect(WEBINAR_STARTS_AT.getTime()).toBeGreaterThan(Date.now())
   })
 
   it("renders no heading, so it cannot displace the page H1 it sits above", () => {

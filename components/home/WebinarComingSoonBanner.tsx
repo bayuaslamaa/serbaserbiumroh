@@ -1,4 +1,12 @@
 /**
+ * Machine-readable twin of the visible schedule below ("Ahad, 2 Agustus 2026",
+ * "09.00 WIB"). The label stays a fixed string — the copy is specified, not
+ * computed — so this constant is what a test can assert on to notice the event
+ * has passed. Update both together.
+ */
+export const WEBINAR_STARTS_AT = new Date("2026-08-02T09:00:00+07:00")
+
+/**
  * Compact webinar announcement rendered above the homepage hero copy.
  *
  * Deliberately non-interactive: registration is not open yet, so the banner
@@ -19,11 +27,7 @@ export function WebinarComingSoonBanner() {
       role="region"
       aria-label="Pengumuman webinar"
       className="relative mx-auto mb-7 flex max-w-[880px] flex-col gap-2.5 overflow-hidden rounded-2xl border bg-gradient-to-br from-[#12301d] via-[#0e271a] to-[#0b1c12] px-4 py-[18px] text-left shadow-[0_0_30px_rgba(201,168,76,0.08)] md:mb-10 md:flex-row md:items-center md:gap-7 md:px-7 md:py-[22px] md:shadow-[0_0_40px_rgba(201,168,76,0.08)]"
-      // No token sits at the design's 35% gold, so derive it from the gold token rather than
-      // hardcoding the hex. This is inline because Tailwind cannot apply an opacity modifier to a
-      // `var()`-valued colour — `border-gold/35` would not produce 35% gold. It is NOT about the
-      // global `* { border-color }` rule, which loses to any border-colour utility on specificity.
-      style={{ borderColor: 'color-mix(in srgb, var(--color-gold) 35%, transparent)' }}
+      style={{ borderColor: 'var(--color-gold-muted)' }}
     >
       {/* Decoration is CSS and glyph only — no image asset at runtime. */}
       <div
@@ -84,7 +88,7 @@ export function WebinarComingSoonBanner() {
       >
         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 md:flex-col md:items-start md:gap-0.5">
           <span
-            className="hidden w-full text-[11px] uppercase tracking-[0.12em] md:block"
+            className="sr-only text-[11px] uppercase tracking-[0.12em] md:not-sr-only md:block"
             style={{ color: 'var(--color-text-muted)' }}
           >
             Jadwal

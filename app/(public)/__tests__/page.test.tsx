@@ -54,4 +54,17 @@ describe("HomePage", () => {
     expect(screen.getByText(/3\.500\+ Komunitas/)).toBeDefined()
     expect(screen.queryByText(/Pengunjung/)).toBeNull()
   })
+
+  it("keeps the page H1 as the first heading in the document", async () => {
+    // The subtree tests in HeroSection.test.tsx cannot see a heading added by the
+    // layout or prepended as a sibling of HeroSection. The webinar banner sets the
+    // precedent that announcements go at the top, so that is the likely next change.
+    mockAuth.mockResolvedValue(null)
+    mockCount.mockResolvedValue(8778)
+
+    const { container } = render(await HomePage())
+    const headings = container.querySelectorAll("h1,h2,h3,h4,h5,h6")
+
+    expect(headings[0]?.tagName).toBe("H1")
+  })
 })
