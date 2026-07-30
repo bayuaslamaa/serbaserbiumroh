@@ -2,6 +2,11 @@ import Anthropic from "@anthropic-ai/sdk"
 import { SERVICE_KEYS } from "@/types"
 import type { City, EstimateParams, HotelOptionConfig, HotelPriceConfig, HotelTier, PricingConfig, ServiceKey } from "@/types"
 import { buildSystemPrompt } from "./prompt"
+import { buildEnhancedSystemPrompt } from "./enhanced-prompt"
+import { CARI_HOTEL_TOOL_NAME, cariHotel, type CariHotelInput } from "@/lib/ai/tools/hotel-search"
+import { HARGA_HOTEL_TOOL_NAME, hargaHotel, resolveToolRate, type HargaHotelInput } from "@/lib/ai/tools/hotel-price"
+import { distanceScore } from "@/lib/estimate/hotel-distance"
+import { MONTH_NAMES_FULL } from "@/lib/hotels/pricing"
 import { MIN_TRIP_DAYS, MAX_TRIP_DAYS, totalTripDaysToNights } from "@/lib/estimate/nights"
 import { ARRIVAL_LEG_KEYS, DEPARTURE_LEG_KEYS, expandRetiredServices } from "@/lib/estimate/services"
 
@@ -42,30 +47,6 @@ function hasProximityIntent(input: string, city: City): boolean {
 
   if (makkah || madinah) return city === "MAKKAH" ? makkah : madinah
   return general || normalized.includes("ring 1")
-}
-
-function extractDistanceMeters(value: string): number | undefined {
-  const normalized = value.toLowerCase().replace(/,/g, ".")
-  const km = normalized.match(/(\d+(?:\.\d+)?)\s*(?:km|kilometer)\b/)
-  if (km) return Math.round(Number(km[1]) * 1000)
-
-  const meter = normalized.match(/(\d+(?:\.\d+)?)\s*(?:m|meter|metre)\b/)
-  if (meter) return Math.round(Number(meter[1]))
-
-  const minuteWalk = normalized.match(/(\d+(?:\.\d+)?)\s*(?:min|menit)/)
-  if (minuteWalk) return Math.round(Number(minuteWalk[1]) * 80)
-}
-
-function distanceScore(hotel: HotelOptionConfig): number {
-  const text = `${hotel.distance ?? ""} ${hotel.sublabel} ${hotel.label}`.toLowerCase()
-  const meters = extractDistanceMeters(text)
-  let score = meters ?? 3_000
-
-  if (/\b(pelataran|ring 1|pinggir)\b/.test(text)) score = Math.min(score, 80)
-  if (/\b(jalan kaki|walking|walk|dekat|near)\b/.test(text)) score = Math.min(score, 500)
-  if (/\b(shuttle|bus|bis|thakher|aziziyah)\b/.test(text)) score = Math.max(score, 2_500)
-
-  return score
 }
 
 function rankComparableHotels(
@@ -321,12 +302,171 @@ function applyDeterministicCorrections(
   return corrected
 }
 
-export async function parseEstimate(
+// --- The enhanced (tool-grounded) branch ---------------------------------------------------------
+//
+// Off by default. When on, the model gets no hotel list and two tools instead, so it can compare
+// what hotels actually cost in the requested month before it picks one (KTD2). The answer it
+// returns is the same JSON the normal path returns, and it goes through the same
+// validateParams -> applyDeterministicCorrections pipeline below (KTD1).
+
+/** Same model as the normal path: this is constrained selection over a few tool calls (D1). */
+export const ENHANCED_PARSE_MODEL = "claude-sonnet-5"
+
+/**
+ * 8000, not the normal path's 1024. `max_tokens` caps thinking *plus* response text, so leaving it
+ * at 1024 with adaptive thinking on truncates the answer mid-JSON — and that surfaces as
+ * "Claude returned non-JSON response", which sends the next reader hunting for a prompt bug (D1).
+ */
+export const ENHANCED_PARSE_MAX_TOKENS = 8000
+
+/** `medium` rather than the `high` default: latency is the operator-facing cost here (D1). */
+export const ENHANCED_PARSE_EFFORT = "medium" as const
+
+/**
+ * Ceiling on API round-trips inside the tool loop (KTD6). Two searches plus a couple of price
+ * confirmations plus the final answer fit comfortably; a model that keeps calling tools past this
+ * is looping, and the run ends with `stop_reason: "tool_use"` instead of running unbounded.
+ */
+export const ENHANCED_PARSE_MAX_ITERATIONS = 8
+
+function requireObject(content: unknown, tool: string): Record<string, unknown> {
+  if (typeof content !== "object" || content === null || Array.isArray(content)) {
+    throw new Error(`${tool} expects an object of arguments.`)
+  }
+  return content as Record<string, unknown>
+}
+
+function requireCity(value: unknown, tool: string): City {
+  if (value === "MADINAH" || value === "MAKKAH") return value
+  throw new Error(`${tool} needs city to be "MADINAH" or "MAKKAH".`)
+}
+
+/**
+ * The runnable tools handed to the tool runner. Both close over an already-built `PricingConfig`,
+ * so the whole loop costs zero extra queries — U2's tool functions are pure over that config.
+ *
+ * `parse` is the runner's input gate. It only rejects what the tool functions cannot defend
+ * themselves against: a non-object payload, and an unknown city (which would otherwise read as an
+ * empty city and come back as a truthful-looking `total_matches: 0`). Months, room types, tiers and
+ * limits are already validated inside `cariHotel`/`hargaHotel`, so they are left to it. A throw here
+ * becomes an `is_error` tool result the model can read and correct, not a failed parse.
+ */
+export function buildEnhancedTools(pricing: PricingConfig) {
+  return [
+    {
+      name: CARI_HOTEL_TOOL_NAME,
+      description:
+        "Cari hotel dari katalog untuk satu kota, dengan tarif SAR/malam yang sudah dihitung untuk bulan dan tipe kamar yang diminta. Urut termurah lebih dulu. Pakai ini sebelum memilih hotel.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          city: { type: "string", enum: ["MADINAH", "MAKKAH"], description: "Kota hotel." },
+          month: { type: "integer", description: "Bulan perjalanan 1-12. Tanpa ini tarif memakai estimasi dasar, bukan tarif bulan itu." },
+          room_type: { type: "string", enum: [...ROOM_TYPES], description: "Default QUAD." },
+          tier: { type: "string", enum: [...HOTEL_TIERS], description: "Batasi ke satu level hotel." },
+          max_sar_per_night: { type: "number", description: "Batas atas tarif SAR/malam setelah resolusi bulan." },
+          max_distance_meters: { type: "number", description: "Jarak maksimum ke masjid dalam meter." },
+          require_real_price: { type: "boolean", description: "true = hanya hotel yang punya tarif katalog untuk bulan itu." },
+          limit: { type: "integer", description: "Jumlah baris maksimum." },
+        },
+        required: ["city"],
+      },
+      parse: (content: unknown): CariHotelInput => {
+        const raw = requireObject(content, CARI_HOTEL_TOOL_NAME)
+        return { ...raw, city: requireCity(raw.city, CARI_HOTEL_TOOL_NAME) } as CariHotelInput
+      },
+      run: (input: CariHotelInput) => JSON.stringify(cariHotel(pricing, input)),
+    },
+    {
+      name: HARGA_HOTEL_TOOL_NAME,
+      description:
+        "Ambil tarif SAR/malam satu hotel tertentu untuk beberapa bulan dan tipe kamar. Pakai ini ketika pengguna menyebut nama hotel, atau untuk memastikan tarif hotel yang sudah dipilih.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          hotel: { type: "string", description: "Id hotel dari cari_hotel, atau nama hotel apa adanya." },
+          months: { type: "array", items: { type: "integer" }, description: "Bulan-bulan 1-12." },
+          room_types: { type: "array", items: { type: "string", enum: [...ROOM_TYPES] }, description: "Default QUAD." },
+          city: { type: "string", enum: ["MADINAH", "MAKKAH"], description: "Persempit bila nama hotel ada di dua kota." },
+        },
+        required: ["hotel", "months"],
+      },
+      parse: (content: unknown): HargaHotelInput => {
+        const raw = requireObject(content, HARGA_HOTEL_TOOL_NAME)
+        if (typeof raw.hotel !== "string" || raw.hotel.trim().length === 0) {
+          throw new Error(`${HARGA_HOTEL_TOOL_NAME} needs a non-empty hotel name or id.`)
+        }
+        return {
+          ...raw,
+          hotel: raw.hotel,
+          months: Array.isArray(raw.months) ? (raw.months as number[]) : [],
+          ...(raw.city !== undefined ? { city: requireCity(raw.city, HARGA_HOTEL_TOOL_NAME) } : {}),
+        } as HargaHotelInput
+      },
+      run: (input: HargaHotelInput) => JSON.stringify(hargaHotel(pricing, input)),
+    },
+  ]
+}
+
+async function requestEnhancedText(
+  client: Anthropic,
   input: string,
   pricing: PricingConfig
-): Promise<{ params: EstimateParams; notes: string }> {
-  const client = new Anthropic()
+): Promise<string> {
+  const runner = client.beta.messages.toolRunner({
+    model: ENHANCED_PARSE_MODEL,
+    max_tokens: ENHANCED_PARSE_MAX_TOKENS,
+    // Adaptive, NOT the normal path's `disabled`. Sonnet 5 with thinking off is measurably less
+    // willing to reach for tools, and tool use is the entire value of this branch — inheriting
+    // `disabled` would run the expensive path and return the cheap path's answer (D1).
+    thinking: { type: "adaptive" },
+    output_config: { effort: ENHANCED_PARSE_EFFORT },
+    max_iterations: ENHANCED_PARSE_MAX_ITERATIONS,
+    system: buildEnhancedSystemPrompt(pricing),
+    messages: [{ role: "user", content: input }],
+    tools: buildEnhancedTools(pricing),
+  })
 
+  let final: Anthropic.Beta.Messages.BetaMessage
+  try {
+    final = await runner.runUntilDone()
+  } catch (err) {
+    throw new Error(`Anthropic API error: ${err instanceof Error ? err.message : String(err)}`)
+  }
+
+  // Checked before `content` is read: a refusal comes back as a normal 200 with a stop_details
+  // category and no JSON, so reading content first would report it as a malformed answer.
+  if (final.stop_reason === "refusal") {
+    const category = final.stop_details?.type === "refusal" ? final.stop_details.category : null
+    throw new ParseError(`Claude declined this request${category ? ` (${category})` : ""}.`)
+  }
+
+  // The runner breaks out of its loop when max_iterations is reached, so the last message can still
+  // be asking for another tool call. That is the iteration bound firing, not a bad answer.
+  if (final.stop_reason === "tool_use") {
+    throw new ParseError(
+      `Claude was still calling tools after ${ENHANCED_PARSE_MAX_ITERATIONS} rounds and never returned the estimate JSON.`
+    )
+  }
+
+  // Named rather than left to fail as "non-JSON response". Adaptive thinking spends the same
+  // max_tokens budget as the answer, so a truncation here means the cap is too low for this input —
+  // and D1's trap is precisely that the symptom otherwise looks like a prompt or schema bug.
+  if (final.stop_reason === "max_tokens") {
+    throw new ParseError(
+      `Claude hit the ${ENHANCED_PARSE_MAX_TOKENS}-token cap before finishing the estimate JSON.`
+    )
+  }
+
+  const textBlock = final.content.find((b) => b.type === "text")
+  return textBlock?.type === "text" ? textBlock.text : ""
+}
+
+async function requestNormalText(
+  client: Anthropic,
+  input: string,
+  pricing: PricingConfig
+): Promise<string> {
   let response: Anthropic.Message
   try {
     response = await client.messages.create({
@@ -336,8 +476,9 @@ export async function parseEstimate(
       messages: [{ role: "user", content: input }],
       // Sonnet 5 enables adaptive thinking by default; disable it so this JSON-extraction call
       // stays fast/cheap and the first content block remains the text response (as before).
-      // @ts-expect-error `thinking` is absent from the pinned @anthropic-ai/sdk@0.36.3 types but is
-      // forwarded verbatim in the request body. Drop this directive if the SDK is upgraded.
+      // Needs @anthropic-ai/sdk >= 0.37 for the typed `thinking` param — on 0.36.x this line
+      // required a @ts-expect-error. Dropping `disabled` here is not cosmetic: adaptive thinking
+      // shares the max_tokens budget below, so the JSON answer would truncate.
       thinking: { type: "disabled" },
     })
   } catch (err) {
@@ -347,7 +488,90 @@ export async function parseEstimate(
   // Scan for the first text block rather than assuming content[0]; keeps parsing correct even if
   // a leading non-text block (e.g. thinking) ever appears before the JSON response.
   const textBlock = response.content.find((b) => b.type === "text")
-  const raw = textBlock?.type === "text" ? textBlock.text : ""
+  return textBlock?.type === "text" ? textBlock.text : ""
+}
+
+const CITY_LABEL: Record<City, string> = { MADINAH: "Madinah", MAKKAH: "Makkah" }
+
+/**
+ * R5. The provenance the operator needs to trust an enhanced answer: which SAR/night the hotel the
+ * model picked will actually be charged at, which catalogue that number came from, and — the case
+ * that is easy to miss — whether a QUAD rate stood in for the room type that was asked for (KTD4).
+ *
+ * Derived here rather than asked of the prompt. A note the model writes about its own tool results
+ * is a claim, and the point of this path is that the number is checkable; a model that picked well
+ * and then mis-transcribed the rate would be indistinguishable from one that picked badly.
+ * `resolveToolRate` is the same single derivation `lib/budget/calculate.ts` will charge from
+ * (via `resolveHotelSar`), so the note cannot drift from the quote it explains.
+ *
+ * Runs on the CORRECTED params, so it describes the hotel/room/month actually being quoted — not
+ * the ones the model proposed before `validateParams` substituted an unknown hotel id.
+ */
+export function buildProvenanceNotes(pricing: PricingConfig, params: EstimateParams): string[] {
+  const notes: string[] = []
+
+  for (const city of ["MADINAH", "MAKKAH"] as const) {
+    const hotelId = params[CITY_HOTEL_FIELDS[city].id]
+    if (!hotelId) continue
+    const hotel = (pricing.hotelOptions?.[city] ?? []).find((option) => option.id === hotelId)
+    // No concrete catalogue row means there is no rate to attribute. The tier-fallback path already
+    // explains itself through the model's own empty-search note (D3).
+    if (!hotel) continue
+
+    const rate = resolveToolRate(hotel, params.roomType, params.travelMonth)
+    const where = `${CITY_LABEL[city]} ${hotel.label}`
+    const month = params.travelMonth != null ? MONTH_NAMES_FULL[params.travelMonth - 1] : null
+    const perNight = `${rate.sar_per_night} SAR/malam`
+    // "" on a real rate means the catalogue row predates the source_label column — say nothing
+    // rather than printing an empty attribution.
+    const source = rate.source_label ? ` Sumber: ${rate.source_label}.` : ""
+
+    if (rate.basis === "catalogue_exact") {
+      notes.push(
+        `${where}: ${perNight} — tarif katalog ${rate.room_type}${month ? ` bulan ${month}` : ""}.${source}`
+      )
+    } else if (rate.basis === "catalogue_quad_fallback") {
+      // Spelled out as a substitution, not as a rate. An operator reading a bare number here would
+      // quote it as the asked room type's catalogue price, which is exactly what it is not.
+      notes.push(
+        `${where}: ${perNight} — katalog tidak punya tarif ${rate.room_type}` +
+          `${month ? ` bulan ${month}` : ""}, jadi tarif ${rate.priced_room_type} dipakai sebagai pengganti ` +
+          `lalu disesuaikan ke ${rate.room_type}. Ini bukan tarif ${rate.room_type} asli dari katalog.${source}`
+      )
+    } else {
+      notes.push(
+        `${where}: ${perNight} — tarif estimasi, belum ada tarif katalog` +
+          `${month ? ` untuk bulan ${month}` : ""}.`
+      )
+    }
+  }
+
+  return notes
+}
+
+export interface ParseEstimateOptions {
+  /**
+   * Opt in to the tool-grounded path. Left false (the default), `parseEstimate` takes exactly the
+   * path it took before this option existed — same prompt, same model params, same single-shot call.
+   */
+  enhanced?: boolean
+}
+
+export async function parseEstimate(
+  input: string,
+  pricing: PricingConfig,
+  options: ParseEstimateOptions = {}
+): Promise<{ params: EstimateParams; notes: string }> {
+  const client = new Anthropic()
+
+  const raw = options.enhanced
+    ? await requestEnhancedText(client, input, pricing)
+    : await requestNormalText(client, input, pricing)
+
+  // Everything from here down is shared by both branches on purpose (KTD1). The corrections below
+  // assume one complete params object from one input string, which is exactly what either branch
+  // produces — so the enhanced path inherits the transport-leg pruning, the airline-NONE guard, the
+  // total-days reconciliation and the hotel-id validation without restating any of them.
 
   // Strip markdown code fences if present (e.g. ```json ... ```)
   const text = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim()
@@ -362,6 +586,12 @@ export async function parseEstimate(
   const { params, extraNotes } = validateParams(parsed, pricing, input)
   const notesList = [typeof parsed.notes === "string" ? parsed.notes : "", ...extraNotes]
   const correctedParams = applyDeterministicCorrections(input, params, notesList)
+
+  // R5 rides the notes channel the estimator already renders — no new surface, so no new place for
+  // provenance to be dropped. Enhanced-only: on the normal path the model never saw a catalogue
+  // rate, so attributing its hotel pick to one would explain a decision it did not make.
+  if (options.enhanced) notesList.push(...buildProvenanceNotes(pricing, correctedParams))
+
   const notes = notesList
     .filter((note) => note.trim().length > 0)
     .join(" ")

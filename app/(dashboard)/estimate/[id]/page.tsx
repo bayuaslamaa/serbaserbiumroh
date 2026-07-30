@@ -55,6 +55,9 @@ export default async function EstimateDetailPage({ params }: Props) {
         existingTitle={estimate.title}
         savedAt={estimate.updatedAt.toISOString()}
         canEditOverrides={session.user.role === "ADMIN"}
+        // Unlike /estimate/new this page is reachable by the non-admin who owns the estimate, and
+        // "Tulis ulang dari nol" reopens the parse panel here — so the toggle needs its own check.
+        canUseEnhancedParse={session.user.role === "ADMIN"}
       />
     </div>
   )

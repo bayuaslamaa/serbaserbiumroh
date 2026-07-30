@@ -378,6 +378,26 @@ describe("calculateBudget", () => {
     })
   })
 
+  // Real prices carry the catalogue they came from. These tests are about the rate the ladder
+  // picks, so they keep declaring the flat month -> room type -> SAR shape and this lifts it into
+  // the RealHotelPrice shape the config publishes, tagging every rate with one catalogue.
+  const CATALOG_LABEL = "Katalog Uji 2027"
+  function asCatalog(
+    real: Record<number, Partial<Record<"QUINT" | "QUAD" | "TRIPLE" | "DOUBLE", number>>>,
+  ): NonNullable<PricingConfig["hotels"]["MADINAH"]["STANDARD"]["realMonthlyPrices"]> {
+    return Object.fromEntries(
+      Object.entries(real).map(([month, byRoomType]) => [
+        Number(month),
+        Object.fromEntries(
+          Object.entries(byRoomType).map(([roomType, sarPerNight]) => [
+            roomType,
+            { sarPerNight, sourceLabel: CATALOG_LABEL },
+          ]),
+        ),
+      ]),
+    )
+  }
+
   describe("real price layer (U3)", () => {
     function withReal(
       city: "MADINAH" | "MAKKAH",
@@ -389,7 +409,7 @@ describe("calculateBudget", () => {
           ...mockPricing.hotels,
           [city]: {
             ...mockPricing.hotels[city],
-            STANDARD: { ...mockPricing.hotels[city].STANDARD, realMonthlyPrices: real },
+            STANDARD: { ...mockPricing.hotels[city].STANDARD, realMonthlyPrices: asCatalog(real) },
           },
         },
       }
@@ -427,6 +447,14 @@ describe("calculateBudget", () => {
       const r = calculateBudget({ ...baseParams, travelMonth: 3 }, mockPricing)
       expect(r.hotelMadinahDetail.priceSource).toBe("estimate")
     })
+
+    it("carries the catalogue name through to the detail so the quote can cite its source", () => {
+      const r = calculateBudget({ ...baseParams, travelMonth: 2 }, withReal("MADINAH", { 2: { QUAD: 900 } }))
+      expect(r.hotelMadinahDetail.priceSourceLabel).toBe(CATALOG_LABEL)
+      // Nothing to cite on the city priced off the estimate — an empty label must not surface as one.
+      expect(r.hotelMadinahDetail.priceSource).toBe("real")
+      expect(r.hotelMakkahDetail.priceSourceLabel).toBeUndefined()
+    })
   })
 
   describe("per-room-type real prices", () => {
@@ -453,7 +481,7 @@ describe("calculateBudget", () => {
           ...ratioed.hotels,
           MADINAH: {
             ...ratioed.hotels.MADINAH,
-            STANDARD: { ...ratioed.hotels.MADINAH.STANDARD, realMonthlyPrices: real },
+            STANDARD: { ...ratioed.hotels.MADINAH.STANDARD, realMonthlyPrices: asCatalog(real) },
           },
         },
       }

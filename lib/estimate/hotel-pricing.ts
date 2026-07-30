@@ -10,6 +10,9 @@ import type { HotelPriceConfig, RoomType } from "@/types"
 //   3. the monthly estimate override          -> quad basis
 //   4. the base estimate                      -> quad basis
 //
+// `sourceLabel` names the catalogue behind steps 1-2 and is "" for steps 3-4 — an estimate has no
+// catalogue, and an empty label on a real rate means the row predates the source_label column.
+//
 // `roomTypePriced` is what tells the caller which case it got. Do NOT infer it from `source`: a
 // quad real rate is also "real" but still needs the ratio, and conflating the two under-prices
 // every non-quad quote by the ratio (a double would come out 30% low).
@@ -26,23 +29,31 @@ export function resolveHotelSar(
   config: Pick<HotelPriceConfig, "sarPerNight" | "monthlyPrices" | "realMonthlyPrices">,
   roomType: RoomType,
   travelMonth?: number
-): { sarPerNight: number; source: "real" | "estimate"; roomTypePriced: boolean } {
+): { sarPerNight: number; source: "real" | "estimate"; roomTypePriced: boolean; sourceLabel: string } {
   if (travelMonth != null) {
     const realForMonth = config.realMonthlyPrices?.[travelMonth]
 
     const exact = realForMonth?.[roomType]
-    if (exact != null) return { sarPerNight: exact, source: "real", roomTypePriced: true }
+    if (exact != null) {
+      return { sarPerNight: exact.sarPerNight, source: "real", roomTypePriced: true, sourceLabel: exact.sourceLabel }
+    }
 
     // Any type the catalog omitted lands here. That is usually QUINT — most catalogs quote
     // DBL/TRPL/QUAD only — but a few (Saif Al Yamani, Al Manara) do print a 5-bed rate, and those
     // hit the step above like any other type. QUINT is not special-cased.
     const quad = realForMonth?.[FALLBACK_ROOM_TYPE]
-    if (quad != null) return { sarPerNight: quad, source: "real", roomTypePriced: false }
+    if (quad != null) {
+      return { sarPerNight: quad.sarPerNight, source: "real", roomTypePriced: false, sourceLabel: quad.sourceLabel }
+    }
 
+    // Estimate rates have no catalogue behind them, so the label is empty rather than inherited
+    // from whatever real rate the map happened to hold for another month.
     const monthly = config.monthlyPrices[travelMonth]
-    if (monthly != null) return { sarPerNight: monthly, source: "estimate", roomTypePriced: false }
+    if (monthly != null) {
+      return { sarPerNight: monthly, source: "estimate", roomTypePriced: false, sourceLabel: "" }
+    }
   }
-  return { sarPerNight: config.sarPerNight, source: "estimate", roomTypePriced: false }
+  return { sarPerNight: config.sarPerNight, source: "estimate", roomTypePriced: false, sourceLabel: "" }
 }
 
 // Shared between ParamsPanel and HotelPicker so the "which SAR/night rate to show" resolution

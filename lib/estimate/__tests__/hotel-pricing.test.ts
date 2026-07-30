@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest"
 import { resolveHotelSar, resolveMonthlyHotelSar } from "@/lib/estimate/hotel-pricing"
 
+// One catalogue rate as the real-price layer publishes it: the SAR/night plus the catalogue it was
+// transcribed from. The two months carry different labels so a fallback can be told apart from an
+// exact hit by its provenance alone.
+const rate = (sarPerNight: number, sourceLabel = "Katalog AZKA 2027") => ({ sarPerNight, sourceLabel })
+
 // One hotel priced four ways, so each ladder step can be isolated:
 //   month 7 — the catalog quoted every room type
 //   month 8 — the catalog quoted a quad rate only
@@ -10,8 +15,8 @@ const hotel = {
   sarPerNight: 650,
   monthlyPrices: { 9: 800 },
   realMonthlyPrices: {
-    7: { QUAD: 700, TRIPLE: 625, DOUBLE: 550 },
-    8: { QUAD: 700 },
+    7: { QUAD: rate(700), TRIPLE: rate(625), DOUBLE: rate(550) },
+    8: { QUAD: rate(700, "Katalog Emaar 2027") },
   },
 }
 
@@ -21,6 +26,7 @@ describe("resolveHotelSar", () => {
       sarPerNight: 550,
       source: "real",
       roomTypePriced: true,
+      sourceLabel: "Katalog AZKA 2027",
     })
   })
 
@@ -30,6 +36,7 @@ describe("resolveHotelSar", () => {
       sarPerNight: 700,
       source: "real",
       roomTypePriced: false,
+      sourceLabel: "Katalog Emaar 2027",
     })
   })
 
@@ -38,6 +45,7 @@ describe("resolveHotelSar", () => {
       sarPerNight: 700,
       source: "real",
       roomTypePriced: false,
+      sourceLabel: "Katalog AZKA 2027",
     })
   })
 
@@ -50,6 +58,7 @@ describe("resolveHotelSar", () => {
       sarPerNight: 800,
       source: "estimate",
       roomTypePriced: false,
+      sourceLabel: "",
     })
   })
 
@@ -58,6 +67,7 @@ describe("resolveHotelSar", () => {
       sarPerNight: 650,
       source: "estimate",
       roomTypePriced: false,
+      sourceLabel: "",
     })
   })
 
@@ -66,6 +76,7 @@ describe("resolveHotelSar", () => {
       sarPerNight: 650,
       source: "estimate",
       roomTypePriced: false,
+      sourceLabel: "",
     })
   })
 
@@ -75,6 +86,39 @@ describe("resolveHotelSar", () => {
       sarPerNight: 450,
       source: "estimate",
       roomTypePriced: false,
+      sourceLabel: "",
+    })
+  })
+
+  describe("source label provenance", () => {
+    it("names the catalogue behind an exact room-type hit", () => {
+      expect(resolveHotelSar(hotel, "TRIPLE", 7).sourceLabel).toBe("Katalog AZKA 2027")
+    })
+
+    it("names the catalogue of the quad rate it fell back to, not the one asked for", () => {
+      // A TRIPLE quoted off August's quad rate is attributable to August's catalogue — the label
+      // has to come from the row that actually supplied the number.
+      const r = resolveHotelSar(hotel, "TRIPLE", 8)
+      expect(r).toMatchObject({ sarPerNight: 700, source: "real", roomTypePriced: false })
+      expect(r.sourceLabel).toBe("Katalog Emaar 2027")
+    })
+
+    it("invents no catalogue for an estimate-only rate", () => {
+      // Both estimate steps, and the no-month case: an estimate has no catalogue to cite, and it
+      // must not inherit the label of a real rate the hotel happens to hold for another month.
+      expect(resolveHotelSar(hotel, "DOUBLE", 9).sourceLabel).toBe("")
+      expect(resolveHotelSar(hotel, "DOUBLE", 5).sourceLabel).toBe("")
+      expect(resolveHotelSar(hotel, "DOUBLE").sourceLabel).toBe("")
+    })
+
+    it("reports an empty label for a catalogue row transcribed before source_label existed", () => {
+      const legacy = { sarPerNight: 650, monthlyPrices: {}, realMonthlyPrices: { 7: { QUAD: rate(900, "") } } }
+      expect(resolveHotelSar(legacy, "QUAD", 7)).toEqual({
+        sarPerNight: 900,
+        source: "real",
+        roomTypePriced: true,
+        sourceLabel: "",
+      })
     })
   })
 })
