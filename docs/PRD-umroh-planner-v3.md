@@ -476,7 +476,7 @@ Template & prompt riset ada di `docs/templates/`.
 | `AUTH_SECRET`, `AUTH_URL`, `AUTH_TRUST_HOST` | NextAuth v5 (trust host wajib di balik reverse proxy) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google OAuth |
 | `ANTHROPIC_API_KEY` | AI parsing |
-| `NEXT_PUBLIC_COMMUNITY_WHATSAPP_GROUP_URL`, `NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL` | Link komunitas |
+| `NEXT_PUBLIC_SSU_GROUP_URL_1`..`_5`, `NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL` | Link komunitas |
 | `WEBINAR_RSVP_URL` | **Server-only** RSVP webinar |
 | `NEXT_PUBLIC_SHOW_MONTHLY_HOTEL_PRICE` | Feature flag grid harga bulanan |
 
