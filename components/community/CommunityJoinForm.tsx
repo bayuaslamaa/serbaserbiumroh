@@ -314,7 +314,7 @@ export function CommunityJoinForm({ adminChatUrl }: CommunityJoinFormProps) {
       </div>
 
       <p className="mt-5 text-xs leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
-        Setelah dikirim, Kakak akan mendapatkan tombol pengajuan masuk grup dan hubungi admin. Pastikan nama dan nomor HP sama saat mengajukan lewat WhatsApp.
+        Setelah dikirim, Kakak bisa memilih grup SSU yang ingin dimasuki dan menghubungi admin. Pastikan nama dan nomor HP sama saat mengajukan lewat WhatsApp.
       </p>
 
       <button
