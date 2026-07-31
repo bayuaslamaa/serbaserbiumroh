@@ -29,9 +29,12 @@ function withPrefilledText(url: string, message: string) {
 
 /** "310 member aktif 30 hari terakhir", or why there is no figure to show. */
 function activityLabel(group: SsuGroup) {
-  return group.activeMembers30d === undefined
-    ? "Baru dibuka"
-    : `${group.activeMembers30d} member aktif 30 hari terakhir`
+  if (group.activeMembers30d !== undefined) {
+    return `${group.activeMembers30d} member aktif 30 hari terakhir`
+  }
+  // "Baru dibuka" is a claim about the group, not about our data. Only the
+  // newest group earns it; any other gap is a gap in the snapshot.
+  return group.isNewest ? "Baru dibuka" : "Data aktivitas belum tersedia"
 }
 
 /**
@@ -44,7 +47,9 @@ function activityLabel(group: SsuGroup) {
  */
 function GroupRow({ group }: { group: SsuGroup }) {
   const activity = activityLabel(group)
-  const joinable = group.url.length > 0
+  // Trim before deciding: a whitespace-only env value is a missing link, not a
+  // link to " ".
+  const joinable = group.url.trim().length > 0
   const onGold = group.isNewest && joinable
 
   const rowClass = "flex flex-col gap-1 rounded-md border px-4 py-3 text-left"
@@ -109,7 +114,9 @@ function GroupRow({ group }: { group: SsuGroup }) {
       href={group.url}
       target="_blank"
       rel="noreferrer"
-      aria-label={`Ajukan masuk grup ${group.label}, ${activity}`}
+      aria-label={`Ajukan masuk grup ${group.label}${
+        group.isNewest ? " (grup terbaru)" : ""
+      }, ${activity}`}
       className={rowClass}
       style={rowStyle}
     >
@@ -228,9 +235,17 @@ export function CommunityJoinForm({ adminChatUrl }: CommunityJoinFormProps) {
           </div>
         )}
 
-        {!hasAnyGroupUrl(SSU_GROUPS) && !adminChatUrl && (
+        {/*
+          Two separate questions. "No group is joinable" is the one production
+          actually hits — an admin link is always configured, so gating the
+          note on its absence would leave a jamaah staring at five dead rows
+          with no explanation.
+        */}
+        {!hasAnyGroupUrl(SSU_GROUPS) && (
           <p className="mt-4 text-sm" style={{ color: "var(--color-text-muted)" }}>
-            Link WhatsApp belum tersedia. Admin akan mencocokkan data ini saat link pengajuan dibuka.
+            {adminChatUrl
+              ? "Link grup belum tersedia. Silakan hubungi admin dan sebutkan grup yang Kakak tuju."
+              : "Link WhatsApp belum tersedia. Admin akan mencocokkan data ini saat link pengajuan dibuka."}
           </p>
         )}
       </section>

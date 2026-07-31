@@ -2,13 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { CommunityJoinForm } from "../CommunityJoinForm"
 
-type MockGroup = {
-  id: string
-  label: string
-  url: string
-  isNewest: boolean
-  activeMembers30d?: number
-}
+import type { SsuGroup as MockGroup } from "@/lib/community/groups"
 
 // The real constants read invite links from the environment, so their URLs are
 // empty in CI and would make every link assertion below vacuous. Tests drive
@@ -19,7 +13,9 @@ const { mockGroups } = vi.hoisted(() => ({ mockGroups: [] as MockGroup[] }))
 vi.mock("@/lib/community/groups", () => ({
   SSU_GROUPS: mockGroups,
   STATS_SNAPSHOT_LABEL: "31 Juli 2026",
-  hasAnyGroupUrl: (groups: MockGroup[]) => groups.some((group) => group.url.length > 0),
+  // Mirrors the real helper, trim included — a mock that is more permissive
+  // than the module it stands in for hides exactly the bug it is asked about.
+  hasAnyGroupUrl: (groups: MockGroup[]) => groups.some((group) => group.url.trim().length > 0),
 }))
 
 const DEFAULT_GROUPS: MockGroup[] = [
@@ -195,6 +191,14 @@ describe("CommunityJoinForm group list", () => {
     ).toBeInTheDocument()
   })
 
+  it("carries the newest-group badge into the accessible name", () => {
+    // A screen reader user gets the badge as part of the link name; the visual
+    // chip alone would not reach them in the same breath as the label.
+    expect(
+      screen.getByRole("link", { name: "Ajukan masuk grup SSU V (grup terbaru), Baru dibuka" })
+    ).toBeInTheDocument()
+  })
+
   it("dates the activity snapshot once", () => {
     expect(screen.getAllByText(/31 Juli 2026/)).toHaveLength(1)
   })
@@ -222,5 +226,43 @@ describe("CommunityJoinForm without WhatsApp configuration", () => {
     await submitMinimalForm()
 
     expect(screen.getByText(/Link WhatsApp belum tersedia/)).toBeInTheDocument()
+  })
+
+  it("still explains itself when the admin link is configured", async () => {
+    // The state a first deploy lands in: admin link set, no group link set.
+    // Without this note the jamaah sees five dead rows and no reason why.
+    setGroups(DEFAULT_GROUPS.map((group) => ({ ...group, url: "" })))
+    mockSubmitSuccess()
+    render(<CommunityJoinForm adminChatUrl="https://wa.me/6285172117757" />)
+
+    await submitMinimalForm()
+
+    expect(screen.getByText(/Link grup belum tersedia/)).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Hubungi Admin" })).toBeInTheDocument()
+  })
+
+  it("treats a whitespace-only link as no link", async () => {
+    setGroups(DEFAULT_GROUPS.map((group) => ({ ...group, url: "   " })))
+    mockSubmitSuccess()
+    render(<CommunityJoinForm adminChatUrl="https://wa.me/6285172117757" />)
+
+    await submitMinimalForm()
+
+    expect(screen.queryByRole("link", { name: /Ajukan masuk grup/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/Link grup belum tersedia/)).toBeInTheDocument()
+  })
+
+  it("does not call an established group 'baru dibuka' when its figure is missing", async () => {
+    setGroups([
+      DEFAULT_GROUPS[0],
+      { ...DEFAULT_GROUPS[1], activeMembers30d: undefined },
+    ])
+    mockSubmitSuccess()
+    render(<CommunityJoinForm adminChatUrl="https://wa.me/6285172117757" />)
+
+    await submitMinimalForm()
+
+    expect(screen.getByText("Data aktivitas belum tersedia")).toBeInTheDocument()
+    expect(screen.getAllByText("Baru dibuka")).toHaveLength(1)
   })
 })

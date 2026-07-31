@@ -44,10 +44,15 @@ describe("SSU_GROUPS", () => {
     }
   })
 
-  it("leaves the newest group without an activity figure", () => {
-    // A brand-new group has no 30-day history to report yet. Revisit this
-    // once SSU V accumulates one — the figure is legitimate then.
-    expect(SSU_GROUPS[0].activeMembers30d).toBeUndefined()
+  it("only ever lets the newest group go without an activity figure", () => {
+    // The durable rule: an established group missing its figure means the
+    // snapshot was updated incompletely. The newest group is allowed to lack
+    // one, and is equally allowed to gain one later.
+    for (const group of SSU_GROUPS) {
+      if (group.isNewest) continue
+
+      expect(group.activeMembers30d).toBeDefined()
+    }
   })
 
   it("labels the activity snapshot so a stale figure is visible", () => {
@@ -76,5 +81,11 @@ describe("hasAnyGroupUrl", () => {
 
   it("is false for an empty list", () => {
     expect(hasAnyGroupUrl([])).toBe(false)
+  })
+
+  it("treats a whitespace-only link as missing", () => {
+    expect(
+      hasAnyGroupUrl([{ id: "a", label: "A", url: "   ", isNewest: false }])
+    ).toBe(false)
   })
 })

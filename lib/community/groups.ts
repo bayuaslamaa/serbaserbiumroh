@@ -76,7 +76,12 @@ export const SSU_GROUPS: SsuGroup[] = [
  */
 export const STATS_SNAPSHOT_LABEL = "31 Juli 2026"
 
-/** Whether any group can actually be joined right now. */
+/**
+ * Whether any group can actually be joined right now.
+ *
+ * Trims first: an env var set to whitespace is a missing link, and treating it
+ * as present would suppress the "no link yet" note the page owes the reader.
+ */
 export function hasAnyGroupUrl(groups: SsuGroup[]) {
-  return groups.some((group) => group.url.length > 0)
+  return groups.some((group) => group.url.trim().length > 0)
 }
