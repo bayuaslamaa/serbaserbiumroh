@@ -25,7 +25,31 @@ top of the hero without changing the existing hero content.
 
 **Stop conditions:** Stop and ask if implementation requires an active registration destination, changes to the existing webinar page, or edits to any homepage section beyond the hero insertion point.
 
-**Tail ownership:** Opening registration, linking a registration form, updating the existing webinar page, and replacing the old recording promo are separate follow-up work.
+**Tail ownership:** Opening registration, linking a registration form, and replacing the old recording promo are separate follow-up work.
+
+### Requirement reversal — 30 Juli 2026
+
+**Two stop conditions above fired, were raised, and the operator chose to cross both.** This section
+records that decision. Where it conflicts with R2, R3, R8, AE3, KTD3, or the Scope Boundaries below,
+**this section wins** — those clauses describe the abandoned passive design and are marked as
+superseded in place.
+
+*What changed:* the banner now carries one registration CTA (`Daftar Sekarang` -> `/webinar-umroh-mandiri`)
+plus a note that the RSVP link is for logged-in users only. `/webinar-umroh-mandiri` was updated from
+the June event to August, and its event facts moved into `lib/webinar.ts` so the banner, the page, and
+its SEO description read from one source.
+
+*Why:* the passive state was incoherent in place. The plan itself flagged this under Risks — a
+"pendaftaran segera dibuka" card sitting ~200px above the hero's existing active `RSVP Webinar`
+button, pointing at a stale June page. Shipping the passive banner would have put two contradictory
+registration states in one viewport. The reversal resolves that, at the cost of the deferral this
+plan was written around.
+
+*Consequence for anyone verifying this branch against the plan:* a `Daftar Sekarang` link in the
+banner is **correct**, not a defect. `components/home/__tests__/WebinarComingSoonBanner.test.tsx`
+pins "exactly one interactive control" and is the current authority; AE3's "zero interactive
+elements" is not. The component filename still says `ComingSoon` and no longer describes what it
+renders — renaming it is safe follow-up work.
 
 ## Product Contract
 
@@ -40,13 +64,19 @@ The upcoming webinar is not visible on the homepage, while the poster already co
 ### Requirements
 
 - R1. The homepage displays a webinar announcement as the first content inside the hero, before the existing H1.
-- R2. The announcement includes “Webinar Gratis”, “Coming Soon”, “Jangan Nekat Umroh Mandiri Sebelum Tahu Risiko Ini!”, “Ahad, 2 Agustus 2026”, and “09.00 WIB”.
-- R3. The announcement says that registration will open soon and does not render an active registration link, button, or form.
+- R2. ~~The announcement includes “Webinar Gratis”, “Coming Soon”, …~~ **Superseded by the
+  Requirement reversal.** “Coming Soon” is gone; the pill would contradict the button beside it. The
+  announcement includes “Webinar Gratis”, the headline, “Ahad, 2 Agustus 2026”, and “09.00 WIB”.
+- R3. ~~The announcement … does not render an active registration link, button, or form.~~
+  **Superseded by the Requirement reversal.** The announcement renders exactly one registration
+  control, linking to `WEBINAR_PATH`, plus a note that the RSVP link requires login.
 - R4. The announcement is visible without scrolling on a typical desktop viewport and remains legible as a stacked card on mobile.
 - R5. The announcement uses the site’s dark green, gold, cream, border, typography, and radius tokens so it belongs to the current homepage.
 - R6. The portrait poster is a visual and content reference, not a full-width image embedded in the hero.
 - R7. Existing hero copy, statistics, CTA labels, CTA destinations, admin gating, and ordering after the announcement do not change.
-- R8. The existing `PromoWebinar`, `SectionCards`, `FeaturedStories`, navbar, public layout, and webinar detail route do not change.
+- R8. The existing `PromoWebinar`, `SectionCards`, `FeaturedStories`, navbar, and public layout do
+  not change. ~~webinar detail route~~ — **superseded by the Requirement reversal**: the route was
+  updated to the August event and now reads its facts from `lib/webinar.ts`.
 
 ### Approved Design (supersedes the original brief)
 
@@ -97,16 +127,29 @@ tokens, so the token wins. Gold (`#c9a84c`) and the `PromoWebinar` gradient stop
 
 - AE1. Given a visitor opens `/` on desktop, when the hero appears, then the webinar announcement is visible above the existing homepage H1 and its schedule is readable.
 - AE2. Given a visitor opens `/` on a narrow mobile viewport, when the announcement renders, then its content stacks without clipping or horizontal scrolling.
-- AE3. Given registration has not opened, when a visitor inspects the announcement, then no registration link, button, form, or misleading click affordance is present.
+- AE3. ~~Given registration has not opened … no registration link, button, form, or misleading click
+  affordance is present.~~ **Superseded by the Requirement reversal.** Given a visitor inspects the
+  announcement, then exactly one interactive control is present — a registration link to
+  `WEBINAR_PATH` — and the login requirement is stated before the click, not after it.
 - AE4. Given the announcement is added, when the rest of the homepage renders, then the existing hero content and all later homepage sections retain their current content and order.
 
 ### Scope Boundaries
 
 #### Deferred to follow-up work
 
-- Replace the passive registration state with an active CTA after a destination and launch date are confirmed.
-- Update `/webinar-umroh-mandiri` for the new event and align its stale date-dependent tests.
-- Add registration tracking, reminders, calendar integration, or campaign administration.
+- ~~Replace the passive registration state with an active CTA…~~ **Pulled forward** — see the
+  Requirement reversal.
+- ~~Update `/webinar-umroh-mandiri` for the new event and align its stale tests.~~ **Pulled forward**
+  — the page is on August and the two tests that had been red since before this branch now pass.
+- Add registration tracking, reminders, calendar integration, or campaign administration. **Still
+  deferred, and the reversal raised its cost:** the banner now says "amankan tempat Kakak" and the
+  webinar page states a hard 300-seat Zoom capacity with random admission, but nothing records a
+  registration — there is no RSVP table or column anywhere, and `WEBINAR_RSVP_URL` is a Zoom *join*
+  link, not a registration form. Either the copy stops implying a reserved seat, or seat reservation
+  becomes real work. Do not leave it implied.
+- **Give the banner a runtime expiry.** `WEBINAR_STARTS_AT` is read by tests only, so after 2 Agustus
+  the homepage keeps soliciting registrations for a past event until someone redeploys. A red test is
+  not a guard — this repo carried a red webinar date test for roughly six weeks.
 
 #### Outside this change
 
@@ -121,7 +164,10 @@ tokens, so the token wins. Gold (`#c9a84c`) and the `PromoWebinar` gradient stop
 
 - KTD1. **Use a dedicated presentational component.** The announcement belongs in `components/home/` so its campaign content and styling stay isolated from the existing hero copy and CTA logic.
 - KTD2. **Compose the banner as the hero’s first child.** `HeroSection` keeps its current semantic H1 and all current content in the same order; only the new component is prepended.
-- KTD3. **Render a passive registration state.** The supplied poster says registration information is not available yet, so the banner must not link to the existing dated webinar route or imitate an inactive button.
+- KTD3. ~~**Render a passive registration state.**~~ **Superseded by the Requirement reversal:
+  render an active registration CTA that defers all branching to the webinar page.** The banner links
+  to `WEBINAR_PATH`, never to `WEBINAR_RSVP_URL` — that is a server-side env var, and the page owns
+  the login and URL-missing branches. The access note sets the expectation before the click.
 - KTD4. **Translate the poster into the site design system.** Reusing the poster as a portrait image would dominate the above-the-fold area and perform poorly on mobile. The component extracts its message, gold hierarchy, and small decorative motifs into a responsive card.
 - KTD5. **Keep campaign data local to the component for this iteration.** This is one fixed announcement with no admin or scheduling workflow. A data model or feature-flag abstraction would expand scope without serving the current request.
 
@@ -213,15 +259,17 @@ Manual design checks:
 - At the supplied desktop reference width, the announcement is immediately visible and the start of the existing hero remains visible in the same viewport.
 - At 320px, 375px, and 768px widths, copy does not clip, overflow, or become too small to read.
 - The status reads as information rather than a disabled action.
-- Tab navigation does not stop on any element in the announcement.
+- Tab navigation stops on exactly one element in the announcement: the registration CTA.
 - The navbar, current hero content, recording promo, section cards, and featured stories show no visual or content changes.
 
 ## Definition of Done
 
-- U1 satisfies the exact copy, semantic, non-interactive, and responsive requirements, and matches
-  treatments 1a/1b without carrying the design's inline styles or literal hex values into the code.
+- U1 satisfies the exact copy, semantic, and responsive requirements, carries exactly one interactive
+  control, and matches treatments 1a/1b without carrying the design's inline styles or literal hex
+  values into the code.
 - U2 places the announcement first in the hero and preserves existing hero behavior.
 - Scoped tests and the production build pass.
 - Desktop and mobile visual checks pass against the supplied homepage and poster references.
-- No unrelated homepage, navbar, webinar-route, or campaign code is changed.
+- No unrelated homepage, navbar, or campaign code is changed. The webinar route **is** changed, by the
+  Requirement reversal.
 - No abandoned design experiment or unused asset remains in the diff.

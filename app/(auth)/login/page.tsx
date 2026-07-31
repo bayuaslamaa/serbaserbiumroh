@@ -12,7 +12,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard"
+  // `?callbackUrl=` is attacker-controllable -- anyone can hand a victim a link
+  // to the genuine login page -- and router.push forwards a foreign scheme to
+  // location.assign unchanged, so `javascript:...` would run on our own origin.
+  // Only same-site paths are followed. The `//` exclusion is load-bearing:
+  // `//evil.example` starts with a slash but resolves to a foreign host.
+  //
+  // signIn("google", { callbackUrl }) below needs no such guard -- @auth/core
+  // clamps that value to baseUrl.
+  const requestedCallbackUrl = searchParams.get("callbackUrl") ?? "/dashboard"
+  const callbackUrl =
+    requestedCallbackUrl.startsWith("/") && !requestedCallbackUrl.startsWith("//")
+      ? requestedCallbackUrl
+      : "/dashboard"
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")

@@ -47,7 +47,7 @@ describe("STATIC_ROUTES", () => {
     expect(new Set(paths).size).toBe(paths.length)
   })
 
-  it("excludes the time-boxed webinar campaign page", () => {
+  it("excludes single-date campaign pages from the sitemap", () => {
     expect(STATIC_ROUTES.map((r) => r.path)).not.toContain("/webinar-umroh-mandiri")
   })
 
