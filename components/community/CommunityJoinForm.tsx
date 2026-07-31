@@ -48,18 +48,22 @@ function GroupRow({ group }: { group: SsuGroup }) {
   const onGold = group.isNewest && joinable
 
   const rowClass = "flex flex-col gap-1 rounded-md border px-4 py-3 text-left"
+  // A group with no link is still worth reading — its activity figure is the
+  // reason the list exists. Dimming the whole row would fade that figure too,
+  // so unavailability is carried by the label colour and the chip below.
   const rowStyle = onGold
     ? { background: "var(--color-gold)", borderColor: "var(--color-gold)", color: "#1a1206" }
-    : {
-        borderColor: "var(--color-border)",
-        color: "var(--color-text)",
-        opacity: joinable ? 1 : 0.6,
-      }
+    : { borderColor: "var(--color-border)", color: "var(--color-text)" }
 
   const body = (
     <>
       <span className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold">{group.label}</span>
+        <span
+          className="text-sm font-semibold"
+          style={joinable ? undefined : { color: "var(--color-text-muted)" }}
+        >
+          {group.label}
+        </span>
         {group.isNewest && (
           <span
             className="rounded-full px-2 py-[2px] text-[11px] font-semibold"
