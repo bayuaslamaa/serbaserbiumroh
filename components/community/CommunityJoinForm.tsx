@@ -1,9 +1,14 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
+import {
+  SSU_GROUPS,
+  STATS_SNAPSHOT_LABEL,
+  hasAnyGroupUrl,
+  type SsuGroup,
+} from "@/lib/community/groups"
 
 type CommunityJoinFormProps = {
-  groupRequestUrl?: string
   adminChatUrl?: string
 }
 
@@ -22,7 +27,105 @@ function withPrefilledText(url: string, message: string) {
   }
 }
 
-export function CommunityJoinForm({ groupRequestUrl, adminChatUrl }: CommunityJoinFormProps) {
+/** "310 member aktif 30 hari terakhir", or why there is no figure to show. */
+function activityLabel(group: SsuGroup) {
+  if (group.activeMembers30d !== undefined) {
+    return `${group.activeMembers30d} member aktif 30 hari terakhir`
+  }
+  // "Baru dibuka" is a claim about the group, not about our data. Only the
+  // newest group earns it; any other gap is a gap in the snapshot.
+  return group.isNewest ? "Baru dibuka" : "Data aktivitas belum tersedia"
+}
+
+/**
+ * One row in the group list.
+ *
+ * Two independent axes: whether the group can be joined (an invite link exists)
+ * decides link-vs-span, and whether it has history decides the figure. A group
+ * with no link still shows its activity, so the list stays informative while
+ * links are being filled in.
+ */
+function GroupRow({ group }: { group: SsuGroup }) {
+  const activity = activityLabel(group)
+  // Trim before deciding: a whitespace-only env value is a missing link, not a
+  // link to " ".
+  const joinable = group.url.trim().length > 0
+  const onGold = group.isNewest && joinable
+
+  const rowClass = "flex flex-col gap-1 rounded-md border px-4 py-3 text-left"
+  // A group with no link is still worth reading — its activity figure is the
+  // reason the list exists. Dimming the whole row would fade that figure too,
+  // so unavailability is carried by the label colour and the chip below.
+  const rowStyle = onGold
+    ? { background: "var(--color-gold)", borderColor: "var(--color-gold)", color: "#1a1206" }
+    : { borderColor: "var(--color-border)", color: "var(--color-text)" }
+
+  const body = (
+    <>
+      <span className="flex flex-wrap items-center gap-2">
+        <span
+          className="text-sm font-semibold"
+          style={joinable ? undefined : { color: "var(--color-text-muted)" }}
+        >
+          {group.label}
+        </span>
+        {group.isNewest && (
+          <span
+            className="rounded-full px-2 py-[2px] text-[11px] font-semibold"
+            style={
+              onGold
+                ? { background: "rgba(26,18,6,0.14)", color: "#1a1206" }
+                : { background: "rgba(201,168,76,0.12)", color: "var(--color-gold)" }
+            }
+          >
+            Grup terbaru
+          </span>
+        )}
+        {!joinable && (
+          <span className="text-[11px] font-semibold" style={{ color: "var(--color-text-muted)" }}>
+            Link belum tersedia
+          </span>
+        )}
+        {joinable && (
+          <span aria-hidden className="ml-auto text-sm">
+            →
+          </span>
+        )}
+      </span>
+      <span
+        className="text-xs"
+        style={{ color: onGold ? "rgba(26,18,6,0.75)" : "var(--color-text-muted)" }}
+      >
+        {activity}
+      </span>
+    </>
+  )
+
+  if (!joinable) {
+    return (
+      <span className={rowClass} style={rowStyle}>
+        {body}
+      </span>
+    )
+  }
+
+  return (
+    <a
+      href={group.url}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Ajukan masuk grup ${group.label}${
+        group.isNewest ? " (grup terbaru)" : ""
+      }, ${activity}`}
+      className={rowClass}
+      style={rowStyle}
+    >
+      {body}
+    </a>
+  )
+}
+
+export function CommunityJoinForm({ adminChatUrl }: CommunityJoinFormProps) {
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [socialUsername, setSocialUsername] = useState("")
@@ -101,19 +204,25 @@ export function CommunityJoinForm({ groupRequestUrl, adminChatUrl }: CommunityJo
           Ini membantu admin mencocokkan pengajuan Kakak dengan data form. Persetujuan tetap mengikuti pengecekan admin.
         </p>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          {groupRequestUrl && (
-            <a
-              href={groupRequestUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center rounded-md px-4 py-3 text-sm font-semibold"
-              style={{ background: "var(--color-gold)", color: "#1a1206" }}
-            >
-              Ajukan Masuk Grup
-            </a>
-          )}
-          {adminLink && (
+        <div className="mt-6">
+          <p className={labelClass} style={labelStyle}>
+            Pilih grup
+          </p>
+          <div className="flex flex-col gap-2">
+            {SSU_GROUPS.map((group) => (
+              <GroupRow key={group.id} group={group} />
+            ))}
+          </div>
+          <p className="mt-2 text-xs" style={{ color: "var(--color-text-muted)" }}>
+            Data aktivitas per {STATS_SNAPSHOT_LABEL}.
+          </p>
+        </div>
+
+        {adminLink && (
+          <div
+            className="mt-6 border-t pt-5"
+            style={{ borderColor: "var(--color-border)" }}
+          >
             <a
               href={adminLink}
               target="_blank"
@@ -123,12 +232,20 @@ export function CommunityJoinForm({ groupRequestUrl, adminChatUrl }: CommunityJo
             >
               Hubungi Admin
             </a>
-          )}
-        </div>
+          </div>
+        )}
 
-        {!groupRequestUrl && !adminChatUrl && (
+        {/*
+          Two separate questions. "No group is joinable" is the one production
+          actually hits — an admin link is always configured, so gating the
+          note on its absence would leave a jamaah staring at five dead rows
+          with no explanation.
+        */}
+        {!hasAnyGroupUrl(SSU_GROUPS) && (
           <p className="mt-4 text-sm" style={{ color: "var(--color-text-muted)" }}>
-            Link WhatsApp belum tersedia. Admin akan mencocokkan data ini saat link pengajuan dibuka.
+            {adminChatUrl
+              ? "Link grup belum tersedia. Silakan hubungi admin dan sebutkan grup yang Kakak tuju."
+              : "Link WhatsApp belum tersedia. Admin akan mencocokkan data ini saat link pengajuan dibuka."}
           </p>
         )}
       </section>
@@ -216,7 +333,7 @@ export function CommunityJoinForm({ groupRequestUrl, adminChatUrl }: CommunityJo
       </div>
 
       <p className="mt-5 text-xs leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
-        Setelah dikirim, Kakak akan mendapatkan tombol pengajuan masuk grup dan hubungi admin. Pastikan nama dan nomor HP sama saat mengajukan lewat WhatsApp.
+        Setelah dikirim, Kakak bisa memilih grup SSU yang ingin dimasuki dan menghubungi admin. Pastikan nama dan nomor HP sama saat mengajukan lewat WhatsApp.
       </p>
 
       <button

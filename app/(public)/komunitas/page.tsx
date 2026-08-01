@@ -23,7 +23,7 @@ export default function KomunitasPage() {
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
           Isi data singkat ini dulu supaya admin bisa mencocokkan pengajuan WhatsApp Kakak dengan data yang masuk.
-          Setelah tersimpan, Kakak akan mendapatkan tombol untuk mengajukan masuk grup dan menghubungi admin.
+          Setelah tersimpan, Kakak bisa memilih grup SSU yang ingin dimasuki dan menghubungi admin.
         </p>
         <div
           className="mt-6 rounded-lg border p-4 text-sm leading-relaxed"
@@ -33,10 +33,7 @@ export default function KomunitasPage() {
         </div>
       </section>
 
-      <CommunityJoinForm
-        groupRequestUrl={process.env.NEXT_PUBLIC_COMMUNITY_WHATSAPP_GROUP_URL}
-        adminChatUrl={process.env.NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL}
-      />
+      <CommunityJoinForm adminChatUrl={process.env.NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL} />
     </div>
   )
 }
