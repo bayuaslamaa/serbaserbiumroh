@@ -19,7 +19,7 @@ export const WEBINAR_PATH = "/webinar-umroh-mandiri"
 
 /** Visible schedule, exactly as the campaign specifies it. */
 export const WEBINAR_DATE_LABEL = "Ahad, 2 Agustus 2026"
-export const WEBINAR_TIME_LABEL = "09.00 WIB"
+export const WEBINAR_TIME_LABEL = "13.00 WIB"
 
 /**
  * Machine-readable twin of the two labels above. This is what a test can assert

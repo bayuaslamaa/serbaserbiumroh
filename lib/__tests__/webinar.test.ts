@@ -27,7 +27,7 @@ function jakartaPart(options: Intl.DateTimeFormatOptions) {
  * exists to end, reintroduced one level up.
  *
  * These assertions are containment checks, not equality: the labels are campaign
- * copy ("Ahad, 2 Agustus 2026", "09.00 WIB"), deliberately not formatter output.
+ * copy ("Ahad, 2 Agustus 2026", "13.00 WIB"), deliberately not formatter output.
  * They only pin the facts a formatter can derive.
  */
 describe("webinar labels agree with WEBINAR_STARTS_AT", () => {

@@ -66,7 +66,7 @@ The upcoming webinar is not visible on the homepage, while the poster already co
 - R1. The homepage displays a webinar announcement as the first content inside the hero, before the existing H1.
 - R2. ~~The announcement includes “Webinar Gratis”, “Coming Soon”, …~~ **Superseded by the
   Requirement reversal.** “Coming Soon” is gone; the pill would contradict the button beside it. The
-  announcement includes “Webinar Gratis”, the headline, “Ahad, 2 Agustus 2026”, and “09.00 WIB”.
+  announcement includes “Webinar Gratis”, the headline, “Ahad, 2 Agustus 2026”, and “13.00 WIB”.
 - R3. ~~The announcement … does not render an active registration link, button, or form.~~
   **Superseded by the Requirement reversal.** The announcement renders exactly one registration
   control, linking to `WEBINAR_PATH`, plus a note that the RSVP link requires login.
@@ -119,7 +119,7 @@ tokens, so the token wins. Gold (`#c9a84c`) and the `PromoWebinar` gradient stop
 - Status: `COMING SOON`
 - Headline: `Jangan Nekat Umroh Mandiri Sebelum Tahu Risiko Ini!`
 - Schedule: `Ahad, 2 Agustus 2026`
-- Time: `09.00 WIB`
+- Time: `13.00 WIB`
 - Registration state: `Pendaftaran segera dibuka`
 - Optional supporting line: `Pantau informasi pendaftaran selanjutnya di Serba Serbi Umroh.`
 
