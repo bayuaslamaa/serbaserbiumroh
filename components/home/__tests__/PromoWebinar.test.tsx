@@ -15,7 +15,7 @@ describe("PromoWebinar", () => {
     const links = screen.getAllByRole("link")
     const hrefs = links.map((link) => link.getAttribute("href"))
 
-    expect(hrefs).toContain("https://youtu.be/Cv8flQcwTH4")
+    expect(hrefs).toContain("https://youtu.be/qLuAmsjkH2Y")
     // The two recordings that were already published stay listed — the new one
     // is an addition, not a replacement.
     expect(hrefs.some((href) => href?.includes("qkeENfXQg8I"))).toBe(true)
@@ -30,7 +30,7 @@ describe("PromoWebinar", () => {
     // time, which would make the query throw rather than fail meaningfully.
     const card = screen
       .getAllByRole("link")
-      .find((link) => link.getAttribute("href") === "https://youtu.be/Cv8flQcwTH4")
+      .find((link) => link.getAttribute("href") === "https://youtu.be/qLuAmsjkH2Y")
 
     expect(card).toBeDefined()
     // The visitor arrived from a campaign carrying this exact wording, so the

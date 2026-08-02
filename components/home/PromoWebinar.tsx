@@ -11,8 +11,8 @@ const recordings = [
     // the card a visitor lands on says what the announcement they clicked said.
     title: WEBINAR_HEADLINE,
     description: `Rekaman webinar gratis ${WEBINAR_DATE_LABEL} — risiko umroh mandiri yang paling sering diabaikan, dan cara mengantisipasinya.`,
-    url: 'https://youtu.be/Cv8flQcwTH4',
-    thumbnail: `https://img.youtube.com/vi/Cv8flQcwTH4/maxresdefault.jpg`,
+    url: 'https://youtu.be/qLuAmsjkH2Y',
+    thumbnail: `https://img.youtube.com/vi/qLuAmsjkH2Y/maxresdefault.jpg`,
     badge: 'Webinar',
     narasumber: null,
     narasumberSub: null,
