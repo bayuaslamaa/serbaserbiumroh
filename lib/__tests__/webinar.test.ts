@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 
 import {
   WEBINAR_ACCESS_NOTE,
-  WEBINAR_ACCESS_NOTE_INLINE,
   WEBINAR_DATE_LABEL,
   WEBINAR_HEADLINE,
   WEBINAR_HEADLINE_HIGHLIGHT,
@@ -72,8 +71,7 @@ describe("derived webinar copy", () => {
     expect(WEBINAR_HEADLINE).toBe(`${WEBINAR_HEADLINE_LEAD} ${WEBINAR_HEADLINE_HIGHLIGHT}`)
   })
 
-  it("lower-cases the access note's first word into the inline sentence", () => {
+  it("states the RSVP access rule the webinar page renders", () => {
     expect(WEBINAR_ACCESS_NOTE).toBe("Khusus user yang sudah login")
-    expect(WEBINAR_ACCESS_NOTE_INLINE).toBe("Link RSVP khusus user yang sudah login")
   })
 })

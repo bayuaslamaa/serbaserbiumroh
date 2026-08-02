@@ -1,7 +1,22 @@
 import Link from 'next/link'
 import { Youtube, Play } from 'lucide-react'
+import { WEBINAR_DATE_LABEL, WEBINAR_HEADLINE } from '@/lib/webinar'
 
+// Newest first: the recording a visitor is most likely to have been sent here
+// for is the one from the session that just ran.
 const recordings = [
+  {
+    id: 'webinar-risiko',
+    // Reuses the campaign wording from lib/webinar rather than restating it, so
+    // the card a visitor lands on says what the announcement they clicked said.
+    title: WEBINAR_HEADLINE,
+    description: `Rekaman webinar gratis ${WEBINAR_DATE_LABEL} — risiko umroh mandiri yang paling sering diabaikan, dan cara mengantisipasinya.`,
+    url: 'https://youtu.be/Cv8flQcwTH4',
+    thumbnail: `https://img.youtube.com/vi/Cv8flQcwTH4/maxresdefault.jpg`,
+    badge: 'Webinar',
+    narasumber: null,
+    narasumberSub: null,
+  },
   {
     id: 'webinar',
     title: 'Webinar A-Z Umroh Mandiri',
@@ -61,7 +76,9 @@ export function PromoWebinar() {
           </div>
 
           {/* Recording Cards */}
-          <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-5">
+          {/* Three cards now: two across at tablet width would strand the third
+              on a half-empty row, so the grid opens to three columns at lg. */}
+          <div className="flex flex-col gap-4 md:grid md:grid-cols-2 md:gap-5 lg:grid-cols-3">
             {recordings.map((rec) => (
               <Link
                 key={rec.id}

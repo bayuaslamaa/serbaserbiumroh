@@ -43,13 +43,3 @@ export const WEBINAR_HEADLINE = `${WEBINAR_HEADLINE_LEAD} ${WEBINAR_HEADLINE_HIG
  */
 export const WEBINAR_ACCESS_NOTE = "Khusus user yang sudah login"
 
-/**
- * The same rule as a standalone sentence, for surfaces that show it away from
- * the webinar page's "Akses RSVP" label. Derived, so the wording of the rule
- * only ever has to be edited once.
- *
- * charAt, not [0]: this runs at module evaluation and the banner is a hero
- * child, so an empty note would take the homepage down rather than render an
- * odd sentence.
- */
-export const WEBINAR_ACCESS_NOTE_INLINE = `Link RSVP ${WEBINAR_ACCESS_NOTE.charAt(0).toLowerCase()}${WEBINAR_ACCESS_NOTE.slice(1)}`
