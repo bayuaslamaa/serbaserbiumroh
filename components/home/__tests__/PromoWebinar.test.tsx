@@ -1,7 +1,15 @@
 import { render, screen, within } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 import { PromoWebinar } from "../PromoWebinar"
-import { WEBINAR_HEADLINE } from "@/lib/webinar"
+
+/**
+ * Spelled out, not imported from lib/webinar: this is the wording the 2 Agustus
+ * 2026 session was announced under, and an archive card has to keep saying it
+ * even after the campaign constants move on to the next event. Reading it from
+ * the same module the component reads would also make the assertion tautological.
+ */
+const RECORDING_TITLE = "Jangan Nekat Umroh Mandiri Sebelum Tahu Risiko Ini!"
+const RECORDING_URL = "https://youtu.be/qLuAmsjkH2Y"
 
 /** youtu.be/<id> and img.youtube.com/vi/<id>/... both carry the same video id. */
 function videoIdFrom(url: string): string | null {
@@ -15,7 +23,10 @@ describe("PromoWebinar", () => {
     const links = screen.getAllByRole("link")
     const hrefs = links.map((link) => link.getAttribute("href"))
 
-    expect(hrefs).toContain("https://youtu.be/qLuAmsjkH2Y")
+    // First, not merely present: the component documents newest-first ordering,
+    // and a visitor sent here by the campaign should not have to hunt past older
+    // sessions for the one they were promised.
+    expect(hrefs[0]).toBe(RECORDING_URL)
     // The two recordings that were already published stay listed — the new one
     // is an addition, not a replacement.
     expect(hrefs.some((href) => href?.includes("qkeENfXQg8I"))).toBe(true)
@@ -30,12 +41,12 @@ describe("PromoWebinar", () => {
     // time, which would make the query throw rather than fail meaningfully.
     const card = screen
       .getAllByRole("link")
-      .find((link) => link.getAttribute("href") === "https://youtu.be/qLuAmsjkH2Y")
+      .find((link) => link.getAttribute("href") === RECORDING_URL)
 
     expect(card).toBeDefined()
     // The visitor arrived from a campaign carrying this exact wording, so the
     // card has to repeat it rather than paraphrase.
-    expect(card?.textContent).toContain(WEBINAR_HEADLINE)
+    expect(card?.textContent).toContain(RECORDING_TITLE)
   })
 
   it("opens every recording in a new tab without leaking the opener", () => {

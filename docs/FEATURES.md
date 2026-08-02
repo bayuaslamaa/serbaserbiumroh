@@ -148,7 +148,9 @@ Two export formats for sharing estimates:
 - **Callback login CTA** — anonymous visitors are sent to `/login` with a callback back to the webinar page
 - **Server-only RSVP URL** — `WEBINAR_RSVP_URL` is rendered only after `auth()` confirms a session, and only when it is an `https://` URL; missing or non-https config shows an unavailable state instead of a broken link
 
-**Files:** `lib/webinar.ts`, `app/(public)/webinar-umroh-mandiri/page.tsx`, `middleware.ts`, `components/nav/`, `components/home/HeroSection.tsx`
+**Files:** `lib/webinar.ts`, `app/(public)/webinar-umroh-mandiri/page.tsx`, `middleware.ts`, `components/nav/`
+
+> The 2 Agustus 2026 session has run. The homepage no longer promotes RSVP — its recording is listed in `components/home/PromoWebinar.tsx` — so the page above is reachable from the navbar only, and still renders live RSVP copy.
 
 ---
 

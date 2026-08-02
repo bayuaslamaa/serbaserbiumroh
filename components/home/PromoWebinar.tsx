@@ -1,16 +1,20 @@
 import Link from 'next/link'
 import { Youtube, Play } from 'lucide-react'
-import { WEBINAR_DATE_LABEL, WEBINAR_HEADLINE } from '@/lib/webinar'
 
 // Newest first: the recording a visitor is most likely to have been sent here
 // for is the one from the session that just ran.
+//
+// Every entry states its own copy, deliberately. These are archive records: the
+// title and date describe the session that was recorded, so they must not be
+// read from lib/webinar's campaign constants — scheduling the next webinar edits
+// those, which would relabel this card with the new event while it still opened
+// the old video.
 const recordings = [
   {
     id: 'webinar-risiko',
-    // Reuses the campaign wording from lib/webinar rather than restating it, so
-    // the card a visitor lands on says what the announcement they clicked said.
-    title: WEBINAR_HEADLINE,
-    description: `Rekaman webinar gratis ${WEBINAR_DATE_LABEL} — risiko umroh mandiri yang paling sering diabaikan, dan cara mengantisipasinya.`,
+    title: 'Jangan Nekat Umroh Mandiri Sebelum Tahu Risiko Ini!',
+    description:
+      'Rekaman webinar gratis Ahad, 2 Agustus 2026 — risiko umroh mandiri yang paling sering diabaikan, dan cara mengantisipasinya.',
     url: 'https://youtu.be/qLuAmsjkH2Y',
     thumbnail: `https://img.youtube.com/vi/qLuAmsjkH2Y/maxresdefault.jpg`,
     badge: 'Webinar',
@@ -95,6 +99,11 @@ export function PromoWebinar() {
                   <img
                     src={rec.thumbnail}
                     alt={rec.title}
+                    // Every thumbnail is a full-resolution remote JPEG (~220KB) and the
+                    // whole section sits below the hero, so nothing here is an LCP
+                    // candidate. Deferring the fetch keeps the card count off the
+                    // homepage's initial payload as more recordings are added.
+                    loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105 opacity-80 group-hover/card:opacity-100"
                   />
                   {/* Play button */}

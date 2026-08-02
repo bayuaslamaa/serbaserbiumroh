@@ -25,15 +25,7 @@ export const WEBINAR_TIME_LABEL = "13.00 WIB"
  * Machine-readable twin of the two labels above. This is what a test can assert
  * on to notice the event has passed; the labels themselves are opaque strings.
  */
-export const WEBINAR_STARTS_AT = new Date("2026-08-02T09:00:00+07:00")
-
-/**
- * The campaign headline, split where the banner switches to gold. The full
- * string is derived so the two renderings can never disagree.
- */
-export const WEBINAR_HEADLINE_LEAD = "Jangan Nekat Umroh Mandiri"
-export const WEBINAR_HEADLINE_HIGHLIGHT = "Sebelum Tahu Risiko Ini!"
-export const WEBINAR_HEADLINE = `${WEBINAR_HEADLINE_LEAD} ${WEBINAR_HEADLINE_HIGHLIGHT}`
+export const WEBINAR_STARTS_AT = new Date("2026-08-02T13:00:00+07:00")
 
 /**
  * The RSVP link itself is login-gated and lives behind `WEBINAR_RSVP_URL`, a
