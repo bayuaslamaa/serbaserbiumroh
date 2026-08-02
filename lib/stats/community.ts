@@ -9,8 +9,8 @@
  * The first two figures are hand-maintained — update them here and every
  * surface follows.
  */
-export const COMMUNITY_SIZE = "3.500+"
-export const PILGRIMS_HELPED = "3.000+"
+export const COMMUNITY_SIZE = "4.500+"
+export const PILGRIMS_HELPED = "3.500+"
 
 /**
  * Promotional padding added to the real unique-visitor count before display.
