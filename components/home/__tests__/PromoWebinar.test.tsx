@@ -1,0 +1,78 @@
+import { render, screen, within } from "@testing-library/react"
+import { describe, expect, it } from "vitest"
+import { PromoWebinar } from "../PromoWebinar"
+
+/**
+ * Spelled out, not imported from lib/webinar: this is the wording the 2 Agustus
+ * 2026 session was announced under, and an archive card has to keep saying it
+ * even after the campaign constants move on to the next event. Reading it from
+ * the same module the component reads would also make the assertion tautological.
+ */
+const RECORDING_TITLE = "Jangan Nekat Umroh Mandiri Sebelum Tahu Risiko Ini!"
+const RECORDING_URL = "https://youtu.be/qLuAmsjkH2Y"
+
+/** youtu.be/<id> and img.youtube.com/vi/<id>/... both carry the same video id. */
+function videoIdFrom(url: string): string | null {
+  return url.match(/youtu\.be\/([\w-]+)/)?.[1] ?? url.match(/\/vi\/([\w-]+)\//)?.[1] ?? null
+}
+
+describe("PromoWebinar", () => {
+  it("lists the 2 Agustus 2026 webinar recording alongside the earlier ones", () => {
+    render(<PromoWebinar />)
+
+    const links = screen.getAllByRole("link")
+    const hrefs = links.map((link) => link.getAttribute("href"))
+
+    // First, not merely present: the component documents newest-first ordering,
+    // and a visitor sent here by the campaign should not have to hunt past older
+    // sessions for the one they were promised.
+    expect(hrefs[0]).toBe(RECORDING_URL)
+    // The two recordings that were already published stay listed — the new one
+    // is an addition, not a replacement.
+    expect(hrefs.some((href) => href?.includes("qkeENfXQg8I"))).toBe(true)
+    expect(hrefs.some((href) => href?.includes("zw4s8_KnxKQ"))).toBe(true)
+  })
+
+  it("titles the new recording with the campaign headline it was announced under", () => {
+    render(<PromoWebinar />)
+
+    // Located by href, not by a regex built from the headline: the headline is
+    // campaign copy and may pick up regex metacharacters ("!", "(", "?") at any
+    // time, which would make the query throw rather than fail meaningfully.
+    const card = screen
+      .getAllByRole("link")
+      .find((link) => link.getAttribute("href") === RECORDING_URL)
+
+    expect(card).toBeDefined()
+    // The visitor arrived from a campaign carrying this exact wording, so the
+    // card has to repeat it rather than paraphrase.
+    expect(card?.textContent).toContain(RECORDING_TITLE)
+  })
+
+  it("opens every recording in a new tab without leaking the opener", () => {
+    render(<PromoWebinar />)
+
+    const links = screen.getAllByRole("link")
+    expect(links.length).toBeGreaterThanOrEqual(3)
+    for (const link of links) {
+      expect(link).toHaveAttribute("target", "_blank")
+      expect(link).toHaveAttribute("rel", expect.stringContaining("noopener"))
+      expect(link.getAttribute("rel")).toContain("noreferrer")
+    }
+  })
+
+  it("points each thumbnail at the same video its link opens", () => {
+    // A recording is added by copying the card above it, so the thumbnail keeps
+    // the previous video's id while the href moves on. That mismatch is silent
+    // in review and obvious to a visitor, who sees the wrong preview image.
+    const { container } = render(<PromoWebinar />)
+
+    const cards = container.querySelectorAll("a[href*='youtu.be']")
+    expect(cards.length).toBeGreaterThanOrEqual(3)
+    for (const card of cards) {
+      const href = card.getAttribute("href") ?? ""
+      const thumbnail = within(card as HTMLElement).getByRole("img")
+      expect(videoIdFrom(thumbnail.getAttribute("src") ?? "")).toBe(videoIdFrom(href))
+    }
+  })
+})

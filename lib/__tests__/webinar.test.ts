@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   WEBINAR_ACCESS_NOTE,
-  WEBINAR_ACCESS_NOTE_INLINE,
   WEBINAR_DATE_LABEL,
-  WEBINAR_HEADLINE,
-  WEBINAR_HEADLINE_HIGHLIGHT,
-  WEBINAR_HEADLINE_LEAD,
   WEBINAR_STARTS_AT,
   WEBINAR_TIME_LABEL,
 } from "../webinar"
@@ -21,10 +17,10 @@ function jakartaPart(options: Intl.DateTimeFormatOptions) {
 
 /**
  * The two visible labels and the machine-readable timestamp are independent
- * literals, and nothing in the module relates them. Editing the event date but
- * forgetting a label leaves the banner's "event is still in the future" guard
- * green while the page advertises the wrong day -- the exact drift lib/webinar.ts
- * exists to end, reintroduced one level up.
+ * literals, and nothing in the module relates them. These assertions are the only
+ * thing that relates them: edit the event date and forget a label, and the
+ * webinar page advertises one day while the timestamp says another -- the exact
+ * drift lib/webinar.ts exists to end, reintroduced one level up.
  *
  * These assertions are containment checks, not equality: the labels are campaign
  * copy ("Ahad, 2 Agustus 2026", "13.00 WIB"), deliberately not formatter output.
@@ -63,17 +59,12 @@ describe("webinar labels agree with WEBINAR_STARTS_AT", () => {
   })
 
   it("anchors the timestamp to Jakarta time, so the labels have a fixed meaning", () => {
-    expect(WEBINAR_STARTS_AT.toISOString()).toBe("2026-08-02T02:00:00.000Z")
+    expect(WEBINAR_STARTS_AT.toISOString()).toBe("2026-08-02T06:00:00.000Z")
   })
 })
 
 describe("derived webinar copy", () => {
-  it("joins the headline halves the banner renders separately", () => {
-    expect(WEBINAR_HEADLINE).toBe(`${WEBINAR_HEADLINE_LEAD} ${WEBINAR_HEADLINE_HIGHLIGHT}`)
-  })
-
-  it("lower-cases the access note's first word into the inline sentence", () => {
+  it("states the RSVP access rule the webinar page renders", () => {
     expect(WEBINAR_ACCESS_NOTE).toBe("Khusus user yang sudah login")
-    expect(WEBINAR_ACCESS_NOTE_INLINE).toBe("Link RSVP khusus user yang sudah login")
   })
 })

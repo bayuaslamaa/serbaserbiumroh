@@ -22,8 +22,10 @@ export interface StaticRoute {
  *   WEBINAR_STARTS_AT in lib/webinar.ts). Excluded because it goes stale within
  *   days of the event, whatever that date happens to be -- not because of any
  *   particular date, so this entry never needs rescheduling. The page stays
- *   crawlable and is promoted from the homepage banner instead. Revisit only if
- *   it is reworked into an evergreen webinar archive.
+ *   crawlable and is reachable from the navbar. (It used to be promoted by a
+ *   homepage banner; that banner is gone, and the session's recording is listed
+ *   in components/home/PromoWebinar.tsx instead.) Revisit only if it is reworked
+ *   into an evergreen webinar archive.
  */
 export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
