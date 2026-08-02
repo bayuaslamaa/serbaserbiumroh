@@ -16,11 +16,11 @@ export function HeroSection({ isAdmin = false, visitorCount }: HeroSectionProps)
   return (
     <section className="py-16 text-center">
       {/*
-        The webinar RSVP announcement that used to open the hero is gone: its
-        session has run. The recording is offered further down the page by
-        PromoWebinar, which is where every past session already lives.
+        No webinar announcement opens the hero: the session has run, and its
+        recording is offered further down the page by PromoWebinar, where every
+        past session lives. Anything added back here lands ahead of the H1 in
+        reading order, so it must not carry a heading of its own.
       */}
-
       {/*
         The H1 carries the search intent, not the brand. The brand name is
         already in the navbar, the logo, and every page title via

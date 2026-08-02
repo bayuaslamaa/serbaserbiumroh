@@ -25,11 +25,17 @@ describe("PromoWebinar", () => {
   it("titles the new recording with the campaign headline it was announced under", () => {
     render(<PromoWebinar />)
 
-    const card = screen.getByRole("link", { name: new RegExp(WEBINAR_HEADLINE.slice(0, 24), "i") })
-    expect(card).toHaveAttribute("href", "https://youtu.be/Cv8flQcwTH4")
+    // Located by href, not by a regex built from the headline: the headline is
+    // campaign copy and may pick up regex metacharacters ("!", "(", "?") at any
+    // time, which would make the query throw rather than fail meaningfully.
+    const card = screen
+      .getAllByRole("link")
+      .find((link) => link.getAttribute("href") === "https://youtu.be/Cv8flQcwTH4")
+
+    expect(card).toBeDefined()
     // The visitor arrived from a campaign carrying this exact wording, so the
     // card has to repeat it rather than paraphrase.
-    expect(card.textContent).toContain(WEBINAR_HEADLINE)
+    expect(card?.textContent).toContain(WEBINAR_HEADLINE)
   })
 
   it("opens every recording in a new tab without leaking the opener", () => {
