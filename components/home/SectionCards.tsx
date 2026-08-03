@@ -182,11 +182,15 @@ export function SectionCards({ isAdmin = false }: SectionCardsProps) {
       <div className="mt-[18px] flex flex-col gap-3 rounded-[10px] border border-[var(--color-border)] bg-[linear-gradient(90deg,rgba(201,168,76,0.05),rgba(44,107,66,0.06))] px-5 py-[15px] sm:flex-row sm:items-center sm:justify-between sm:gap-5">
         <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[12.5px] text-[var(--color-text-soft)]">
           <span className="text-[13px] font-bold text-gold">Layanan kami:</span>
-          {services.map((service, index) => {
-            const label = stripLabels[service.id]
-            if (!label) return null
-
-            return (
+          {/* Filter before indexing: keying the separator off the catalog's own
+              index would leave a leading dot if the first service were ever
+              dropped from stripLabels. */}
+          {services
+            .flatMap((service) => {
+              const label = stripLabels[service.id]
+              return label ? [{ service, label }] : []
+            })
+            .map(({ service, label }, index) => (
               <span key={service.id} className="flex items-center gap-2.5">
                 {index > 0 && (
                   <span aria-hidden className="text-[rgba(201,168,76,0.35)]">
@@ -205,8 +209,7 @@ export function SectionCards({ isAdmin = false }: SectionCardsProps) {
                   )}
                 </span>
               </span>
-            )
-          })}
+            ))}
         </span>
         <Link
           href="/layanan"
