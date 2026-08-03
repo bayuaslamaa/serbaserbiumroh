@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { MessageCircle } from "lucide-react"
 import { PageColumn } from "@/components/layout/PageColumn"
-import { SSU_WHATSAPP_NUMBER } from "@/lib/services/catalog"
+import { CONTACT_NUMBERS, SOCIAL_LINKS, displayPhone, whatsappLink } from "@/lib/contact"
 
 /**
  * The public footer.
@@ -11,9 +11,10 @@ import { SSU_WHATSAPP_NUMBER } from "@/lib/services/catalog"
  * public page had no secondary navigation, no contact, and no route to the
  * paid services at all.
  *
- * Only YouTube and TikTok appear under the social links — those are the two
- * accounts the site actually references (see the webinar page). A badge with
- * no destination behind it is worse than an absent one.
+ * Both admin numbers are listed by name. The site already routes people to
+ * Nurul or Bayu by name elsewhere (the transportasi picker, the estimator's
+ * closing line), and a footer that offers only one of them sends everyone to
+ * the same inbox.
  */
 const exploreLinks = [
   { href: "/panduan", label: "Panduan Umroh" },
@@ -29,17 +30,6 @@ const serviceLinks = [
   { href: "/transportasi", label: "Sewa Transportasi" },
   { href: "/hotel-nusuk", label: "Booking Hotel" },
 ]
-
-const socialLinks = [
-  { href: "https://youtube.com/@serbaserbiumroh", label: "YouTube", short: "YT" },
-  { href: "https://www.tiktok.com/@bayuaslama_", label: "TikTok", short: "TT" },
-]
-
-/** "6285161134844" -> "+62 851-6113-4844", the way the number is read aloud. */
-function displayPhone(number: string): string {
-  const national = number.replace(/^62/, "")
-  return `+62 ${national.replace(/^(\d{3})(\d{4})(\d{4})$/, "$1-$2-$3")}`
-}
 
 const columnHeadingClass =
   "text-xs font-bold uppercase tracking-[0.06em] text-[var(--color-green-text)]"
@@ -88,17 +78,23 @@ export function SiteFooter() {
 
         <div className="flex flex-col gap-3">
           <span className={columnHeadingClass}>Kontak</span>
-          <a
-            href={`https://wa.me/${SSU_WHATSAPP_NUMBER}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex items-center gap-2 ${linkClass}`}
-          >
-            <MessageCircle className="h-[15px] w-[15px] shrink-0" aria-hidden />
-            {displayPhone(SSU_WHATSAPP_NUMBER)}
-          </a>
-          <div className="flex gap-2.5">
-            {socialLinks.map((social) => (
+          {CONTACT_NUMBERS.map((contact) => (
+            <a
+              key={contact.number}
+              href={whatsappLink(contact.number)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 ${linkClass}`}
+            >
+              <MessageCircle className="h-[15px] w-[15px] shrink-0" aria-hidden />
+              <span>
+                {displayPhone(contact.number)}
+                <span className="text-[var(--color-text-muted)]"> ({contact.name})</span>
+              </span>
+            </a>
+          ))}
+          <div className="flex flex-wrap gap-2.5">
+            {SOCIAL_LINKS.map((social) => (
               <a
                 key={social.href}
                 href={social.href}
