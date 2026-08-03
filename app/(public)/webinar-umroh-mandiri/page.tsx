@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import { Button } from "@/components/ui/button"
 import { Info, Youtube, Tv } from "lucide-react"
 import { pageMetadata } from "@/lib/seo/metadata"
+import { socialHref } from "@/lib/contact"
 import {
   WEBINAR_ACCESS_NOTE,
   WEBINAR_DATE_LABEL,
@@ -95,7 +96,7 @@ export default async function WebinarUmrohMandiriPage() {
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
                 <a
-                  href="http://youtube.com/@serbaserbiumroh"
+                  href={socialHref("YouTube")}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded bg-red-600/10 border border-red-600/30 text-red-400 hover:bg-red-600/20 transition-all"
@@ -104,7 +105,7 @@ export default async function WebinarUmrohMandiriPage() {
                   <span>Live YouTube</span>
                 </a>
                 <a
-                  href="https://www.tiktok.com/@bayuaslama_"
+                  href={socialHref("TikTok")}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded bg-white/5 border border-white/20 text-white hover:bg-white/10 transition-all"

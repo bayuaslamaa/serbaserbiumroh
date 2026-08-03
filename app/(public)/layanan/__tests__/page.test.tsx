@@ -6,6 +6,7 @@ vi.mock("@/lib/stats/visitor-count", async (importOriginal) => {
   return { ...actual, getPublicVisitorCount: vi.fn() }
 })
 
+import { COMMUNITY_SIZE } from "@/lib/stats/community"
 import { getPublicVisitorCount } from "@/lib/stats/visitor-count"
 import LayananPage from "../page"
 
@@ -21,7 +22,10 @@ describe("LayananPage", () => {
 
     render(await LayananPage())
 
-    expect(screen.getByText(/3\.500\+ Komunitas/)).toBeDefined()
+    // Read from the constant, not spelled out: the figure is hand-maintained
+    // in lib/stats/community.ts, and a literal here goes stale the moment it
+    // is bumped — which is exactly how this test came to be failing.
+    expect(screen.getByText(`${COMMUNITY_SIZE} Komunitas`)).toBeDefined()
     expect(screen.getByText(/8\.878\+ Pengunjung/)).toBeDefined()
   })
 
@@ -33,7 +37,7 @@ describe("LayananPage", () => {
     render(await LayananPage())
 
     expect(screen.getByText("Layanan Serba Serbi Umroh")).toBeDefined()
-    expect(screen.getByText(/3\.500\+ Komunitas/)).toBeDefined()
+    expect(screen.getByText(`${COMMUNITY_SIZE} Komunitas`)).toBeDefined()
     expect(screen.queryByText(/Pengunjung/)).toBeNull()
   })
 })

@@ -42,8 +42,8 @@ interface Vehicle {
 }
 
 export default function TransportasiClient() {
-  // Exchange rate state (default: 4850 IDR per 1 SAR)
-  const [exchangeRate, setExchangeRate] = useState<number>(4850)
+  // Exchange rate state (default: 4950 IDR per 1 SAR)
+  const [exchangeRate, setExchangeRate] = useState<number>(4950)
   // Admin selector state
   const [selectedAdmin, setSelectedAdmin] = useState<'nurul' | 'bayu'>('nurul')
   // Search query
