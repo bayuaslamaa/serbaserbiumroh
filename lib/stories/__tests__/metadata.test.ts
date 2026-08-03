@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest"
 
-import { buildStoryMeta, travelPeriod, type StoryMetaSource } from "../metadata"
+import {
+  buildStoryMeta,
+  formatCompactBudget,
+  storyCardSummary,
+  travelPeriod,
+  type StoryMetaSource,
+} from "../metadata"
 
 function story(overrides: Partial<StoryMetaSource> = {}): StoryMetaSource {
   return {
@@ -28,6 +34,68 @@ describe("travelPeriod", () => {
 
   it("returns null when there is no year, rather than a dangling month", () => {
     expect(travelPeriod(story({ travelYear: null }))).toBeNull()
+  })
+})
+
+describe("formatCompactBudget", () => {
+  it("shortens millions to one decimal with the Indonesian comma", () => {
+    // A period would read as a thousands separator to an id-ID reader, which
+    // is the whole reason this does not reuse formatCompactIdr.
+    expect(formatCompactBudget(27_400_000)).toBe("Rp 27,4 jt")
+  })
+
+  it("drops the decimal when the figure is a whole number of millions", () => {
+    expect(formatCompactBudget(31_000_000)).toBe("Rp 31 jt")
+  })
+
+  it("rounds to one decimal rather than truncating", () => {
+    expect(formatCompactBudget(27_460_000)).toBe("Rp 27,5 jt")
+  })
+
+  it("falls back to thousands below a million", () => {
+    expect(formatCompactBudget(900_000)).toBe("Rp 900 rb")
+  })
+})
+
+describe("storyCardSummary", () => {
+  it("leads with the cost per person, not the group total", () => {
+    const summary = storyCardSummary(story({ totalBudgetIdr: 80_000_000, pax: 4 }))
+
+    expect(summary.pricePerPax).toBe("Rp 20 jt")
+  })
+
+  it("labels the group size, hotel tier, and total nights", () => {
+    const summary = storyCardSummary(story())
+
+    expect(summary.pax).toBe("4 orang")
+    expect(summary.tier).toBe("Ekonomi")
+    expect(summary.nights).toBe("9 malam")
+  })
+
+  it("builds the attribution line from city and travel period", () => {
+    const summary = storyCardSummary(story())
+
+    expect(summary.initial).toBe("Z")
+    expect(summary.meta).toBe("Jakarta · Maret 2026")
+  })
+
+  it("drops the period from the attribution when the story has no year", () => {
+    const summary = storyCardSummary(story({ travelYear: null }))
+
+    expect(summary.meta).toBe("Jakarta")
+  })
+
+  it("returns no price rather than dividing by zero when pax is unrecorded", () => {
+    // An admin-entered story with pax 0 must not put "RpNaN" on the homepage.
+    const summary = storyCardSummary(story({ pax: 0 }))
+
+    expect(summary.pricePerPax).toBeNull()
+  })
+
+  it("omits the duration when neither city recorded a night", () => {
+    const summary = storyCardSummary(story({ makkahNights: 0, madinahNights: 0 }))
+
+    expect(summary.nights).toBeNull()
   })
 })
 

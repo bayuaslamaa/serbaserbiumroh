@@ -1,60 +1,101 @@
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import type { PilgrimStory } from '@/lib/db/schema'
+import { storyCardSummary } from '@/lib/stories/metadata'
 
 interface FeaturedStoriesProps {
   stories: PilgrimStory[]
 }
 
+/**
+ * Featured stories, led by the number a visitor came for.
+ *
+ * The card used to open with the author's name and bury the cost per person at
+ * the bottom in body text. The cost is the site's most distinctive content —
+ * figures from trips that actually happened — so it is now the card, and the
+ * jamaah who reported it is the attribution beneath.
+ *
+ * Renders nothing when no story is featured. The CTA band below closes the page
+ * in that case, so the homepage never ends mid-grid.
+ */
 export function FeaturedStories({ stories }: FeaturedStoriesProps) {
   if (stories.length === 0) return null
 
   return (
-    <section className="py-8">
-      <h2 className="text-2xl font-bold mb-2" style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-gold)' }}>
-        Cerita Jamaah Pilihan
-      </h2>
-      <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-        Pengalaman nyata jamaah umroh mandiri
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stories.map((story) => (
-          <Link key={story.id} href={`/cerita-jamaah/${story.slug}`}>
-            <Card
-              className="h-full hover:border-yellow-600 transition-colors cursor-pointer"
-              style={{ backgroundColor: 'rgba(255,255,255,0.03)', borderColor: 'var(--color-border)' }}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm" style={{ color: 'var(--color-gold)' }}>
-                  {story.authorName}
-                </CardTitle>
-                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                  {story.departureCity}
-                  {story.travelMonth ? ` · ${new Date(2024, story.travelMonth - 1).toLocaleString('id-ID', { month: 'long' })}${story.travelYear ? ` ${story.travelYear}` : ''}` : ''}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant="outline" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)', fontSize: '10px' }}>
-                    {story.pax} orang
-                  </Badge>
-                  <Badge variant="outline" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)', fontSize: '10px' }}>
-                    {story.hotelTier}
-                  </Badge>
-                </div>
-                <p className="text-sm font-semibold mt-2" style={{ color: 'var(--color-gold)' }}>
-                  {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(story.totalBudgetIdr / story.pax)}/orang
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
-      <div className="text-center mt-6">
-        <Link href="/cerita-jamaah" className="text-sm underline" style={{ color: 'var(--color-gold)' }}>
-          Lihat semua cerita →
+    <section className="pb-14 pt-12">
+      <div className="mb-[18px] flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
+        <div>
+          <h2
+            className="mb-1 text-2xl font-bold text-gold"
+            style={{ fontFamily: 'var(--font-heading)' }}
+          >
+            Berapa Biaya Riil Umroh Mandiri?
+          </h2>
+          <p className="text-[13.5px] text-[var(--color-text-muted)]">
+            Angka asli dari jamaah yang sudah berangkat — bukan estimasi.
+          </p>
+        </div>
+        <Link
+          href="/cerita-jamaah"
+          className="shrink-0 text-[13px] font-bold text-gold hover:text-gold-hover"
+        >
+          Lihat semua cerita <span aria-hidden>&rarr;</span>
         </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+        {stories.map((story) => {
+          const summary = storyCardSummary(story)
+          const badges = [summary.pax, summary.tier, summary.nights].filter(Boolean)
+
+          return (
+            <Link
+              key={story.id}
+              href={`/cerita-jamaah/${story.slug}`}
+              className="flex flex-col gap-3 rounded-xl border border-[var(--color-border)] bg-[rgba(255,255,255,0.03)] p-[22px] transition-all hover:border-[var(--color-gold-muted)] hover:shadow-[0_0_24px_rgba(201,168,76,0.10)]"
+            >
+              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-green-text)]">
+                Total per orang
+              </span>
+              <span
+                className="text-3xl font-bold leading-none text-gold"
+                style={{ fontFamily: 'var(--font-heading)' }}
+              >
+                {/* A story with no recorded travellers has no per-person figure
+                    to lead with, so the card says so rather than printing NaN. */}
+                {summary.pricePerPax ?? 'Belum dirinci'}
+              </span>
+              <span className="flex flex-wrap gap-2">
+                {badges.map((badge) => (
+                  <span
+                    key={badge}
+                    className="rounded-full border border-[var(--color-border)] px-2.5 py-[3px] text-[11.5px] text-[var(--color-text-muted)]"
+                  >
+                    {badge}
+                  </span>
+                ))}
+              </span>
+              <span className="mt-1.5 flex items-center gap-2.5 border-t border-[rgba(201,168,76,0.12)] pt-3.5">
+                <span
+                  aria-hidden
+                  className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-[rgba(201,168,76,0.12)] text-xs font-bold text-gold"
+                >
+                  {summary.initial}
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-[13px] font-semibold text-[var(--color-text)]">
+                    {story.authorName}
+                  </span>
+                  <span className="truncate text-[11.5px] text-[var(--color-text-muted)]">
+                    {summary.meta}
+                  </span>
+                </span>
+                <span aria-hidden className="ml-auto text-[13px] text-gold">
+                  &rarr;
+                </span>
+              </span>
+            </Link>
+          )
+        })}
       </div>
     </section>
   )

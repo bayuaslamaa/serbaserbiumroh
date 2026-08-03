@@ -8,30 +8,35 @@ describe("HeroSection", () => {
     render(<HeroSection visitorCount={8778} />)
 
     expect(screen.getByRole("heading", { name: /Panduan Umroh Mandiri/ })).toBeDefined()
-    expect(screen.getByText(`${COMMUNITY_SIZE} Komunitas`)).toBeDefined()
-    expect(screen.getByText(/8\.878\+ Pengunjung/)).toBeDefined()
+    // The figures render as one sentence with each number in its own element,
+    // so match the enclosing text rather than a single node.
+    expect(screen.getByText(COMMUNITY_SIZE).parentElement?.textContent).toContain("Komunitas")
+    expect(screen.getByText("8.878+").parentElement?.textContent).toContain("Pengunjung")
+    expect(screen.getByRole("link", { name: /Pelajari Panduan Umroh/ })).toBeDefined()
     expect(screen.getByRole("link", { name: "Lihat Cerita Jamaah" })).toBeDefined()
-    expect(screen.getByRole("link", { name: "Gabung Komunitas" })).toBeDefined()
   })
 
-  it("places the figures between the descriptive copy and the first button", () => {
+  it("leads with one primary action and keeps the figures beneath it", () => {
+    // The figures are corroboration, not the ask. Sitting between the copy and
+    // the buttons, they pushed the only thing worth clicking below three lines
+    // of numbers.
     const { container } = render(<HeroSection visitorCount={8778} />)
 
     const text = container.textContent ?? ""
     const copyAt = text.indexOf("Rencanakan perjalanan umroh mandiri")
+    const ctaAt = text.indexOf("Pelajari Panduan Umroh")
     const statsAt = text.indexOf(COMMUNITY_SIZE)
-    const ctaAt = text.indexOf("Lihat Cerita Jamaah")
 
     expect(copyAt).toBeGreaterThanOrEqual(0)
-    expect(statsAt).toBeGreaterThan(copyAt)
-    expect(ctaAt).toBeGreaterThan(statsAt)
+    expect(ctaAt).toBeGreaterThan(copyAt)
+    expect(statsAt).toBeGreaterThan(ctaAt)
   })
 
   it("still renders heading and buttons when the visitor count is unavailable", () => {
     render(<HeroSection visitorCount={null} />)
 
     expect(screen.getByRole("heading", { name: /Panduan Umroh Mandiri/ })).toBeDefined()
-    expect(screen.getByRole("link", { name: "Lihat Cerita Jamaah" })).toBeDefined()
+    expect(screen.getByRole("link", { name: /Pelajari Panduan Umroh/ })).toBeDefined()
     expect(screen.queryByText(/Pengunjung/)).toBeNull()
   })
 
@@ -69,11 +74,21 @@ describe("HeroSection", () => {
     expect(headings[0].textContent).toContain("Panduan Umroh Mandiri")
   })
 
-  it("shows the estimate link only for an admin", () => {
-    const { rerender } = render(<HeroSection visitorCount={1} />)
-    expect(screen.queryByRole("link", { name: /Buat Estimasi/ })).toBeNull()
+  it("offers no estimator control, pressable or otherwise", () => {
+    // For everyone but an admin the estimator rendered here as a disabled
+    // button, spending a third of the page's main action row on something
+    // nobody could press. Its home is the navigation grid now, where an
+    // unreleased feature reads as one entry on a map.
+    const { container } = render(<HeroSection visitorCount={1} />)
 
-    rerender(<HeroSection visitorCount={1} isAdmin />)
-    expect(screen.getByRole("link", { name: /Buat Estimasi/ })).toBeDefined()
+    expect(screen.queryByRole("link", { name: /Estimasi/i })).toBeNull()
+    expect(screen.queryByRole("button")).toBeNull()
+    expect(container.textContent).not.toContain("Coming Soon")
+  })
+
+  it("keeps the action row to two links so the primary one stays primary", () => {
+    const { container } = render(<HeroSection visitorCount={8778} />)
+
+    expect(container.querySelectorAll("a")).toHaveLength(2)
   })
 })
