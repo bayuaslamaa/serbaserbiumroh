@@ -82,9 +82,11 @@ export function EmailTemplateCard({ template }: EmailTemplateCardProps) {
 
       <div className="mt-5">
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-[12.5px] text-text-muted">
-            <Languages size={14} aria-hidden="true" />
-            {BODY_LANGUAGE_LABEL[template.bodyLanguage]}
+          {/* min-w-0 on both: without it the note is an unshrinkable flex item
+              and its one long line overflows the card on a phone. */}
+          <span className="flex min-w-0 items-center gap-1.5 text-[12.5px] text-text-muted">
+            <Languages size={14} className="flex-shrink-0" aria-hidden="true" />
+            <span className="min-w-0">{BODY_LANGUAGE_LABEL[template.bodyLanguage]}</span>
           </span>
           <CopyButton text={body} describes="body email" />
         </div>
