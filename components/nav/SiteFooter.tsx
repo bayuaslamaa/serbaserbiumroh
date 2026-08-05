@@ -21,6 +21,7 @@ const exploreLinks = [
   { href: "/cerita-jamaah", label: "Cerita Jamaah" },
   { href: "/komunitas", label: "Komunitas" },
   { href: "/webinar-umroh-mandiri", label: "Webinar Umroh Mandiri" },
+  { href: "/template-email", label: "Template Email" },
   { href: "/faq", label: "FAQ" },
 ]
 
