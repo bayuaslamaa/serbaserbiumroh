@@ -13,6 +13,27 @@ interface EmailTemplateCardProps {
   template: EmailTemplate
 }
 
+interface MetaRowProps {
+  label: string
+  value: string
+  /** What is being copied, e.g. "alamat tujuan". Used for the aria-label. */
+  describes: string
+}
+
+function MetaRow({ label, value, describes }: MetaRowProps) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5">
+      <div className="min-w-0">
+        <dt className="text-[11px] font-bold uppercase tracking-[0.1em] text-text-muted">
+          {label}
+        </dt>
+        <dd className="break-words text-sm font-semibold text-text">{value}</dd>
+      </div>
+      <CopyButton text={value} describes={describes} />
+    </div>
+  )
+}
+
 export function EmailTemplateCard({ template }: EmailTemplateCardProps) {
   const [values, setValues] = useState<Record<string, string>>({})
 
@@ -36,25 +57,8 @@ export function EmailTemplateCard({ template }: EmailTemplateCardProps) {
       <p className="mt-1.5 text-sm leading-relaxed text-text-muted">{template.purpose}</p>
 
       <dl className="mt-5 flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5">
-          <div className="min-w-0">
-            <dt className="text-[11px] font-bold uppercase tracking-[0.1em] text-text-muted">
-              Kirim ke
-            </dt>
-            <dd className="break-all text-sm font-semibold text-text">{template.to}</dd>
-          </div>
-          <CopyButton text={template.to} describes="alamat tujuan" />
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--color-border)] px-3.5 py-2.5">
-          <div className="min-w-0">
-            <dt className="text-[11px] font-bold uppercase tracking-[0.1em] text-text-muted">
-              Subject
-            </dt>
-            <dd className="break-words text-sm font-semibold text-text">{template.subject}</dd>
-          </div>
-          <CopyButton text={template.subject} describes="subject email" />
-        </div>
+        <MetaRow label="Kirim ke" value={template.to} describes="alamat tujuan" />
+        <MetaRow label="Subject" value={template.subject} describes="subject email" />
       </dl>
 
       {template.fields.length > 0 && (
@@ -84,8 +88,8 @@ export function EmailTemplateCard({ template }: EmailTemplateCardProps) {
           </span>
           <CopyButton text={body} describes="body email" />
         </div>
-        {/* whitespace-pre-line, bukan <br> yang disuntik: sebagian isi body
-            berasal dari input user, jadi tidak ada HTML yang dirakit di sini. */}
+        {/* whitespace-pre-line rather than injected <br>: part of this body comes
+            from user input, so no HTML is assembled here. */}
         <div className="max-h-80 overflow-y-auto whitespace-pre-line break-words rounded-xl border border-[var(--color-border)] bg-[rgba(0,0,0,0.15)] px-3.5 py-3 text-[13.5px] leading-[1.7] text-text">
           {body}
         </div>

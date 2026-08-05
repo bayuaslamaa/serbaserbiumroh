@@ -24,7 +24,7 @@ afterEach(() => {
 })
 
 describe("CopyButton", () => {
-  it("menyalin teks yang diberikan dan mengonfirmasi", async () => {
+  it("copies the given text and confirms", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     stubClipboard(writeText)
     render(<CopyButton text="care@haj.gov.sa" describes="alamat tujuan" />)
@@ -35,7 +35,7 @@ describe("CopyButton", () => {
     expect(writeText).toHaveBeenCalledWith("care@haj.gov.sa")
   })
 
-  it("kembali ke label semula setelah konfirmasi lewat", async () => {
+  it("returns to its resting label after the confirmation", async () => {
     stubClipboard(vi.fn().mockResolvedValue(undefined))
     render(<CopyButton text="care@haj.gov.sa" describes="alamat tujuan" />)
 
@@ -47,7 +47,7 @@ describe("CopyButton", () => {
     await waitFor(() => expect(screen.getByText("Salin")).toBeInTheDocument())
   })
 
-  it("melaporkan kegagalan alih-alih terlihat diabaikan", async () => {
+  it("reports failure rather than looking ignored", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error("not allowed")))
     render(<CopyButton text="care@haj.gov.sa" describes="alamat tujuan" />)
 
@@ -56,8 +56,8 @@ describe("CopyButton", () => {
     await waitFor(() => expect(screen.getByText("Gagal salin")).toBeInTheDocument())
   })
 
-  // Di luar secure context navigator.clipboard tidak ada sama sekali.
-  it("bertahan ketika clipboard tidak tersedia", async () => {
+  // Outside a secure context navigator.clipboard is absent entirely.
+  it("survives clipboard being absent", async () => {
     Object.defineProperty(navigator, "clipboard", {
       value: undefined,
       configurable: true,

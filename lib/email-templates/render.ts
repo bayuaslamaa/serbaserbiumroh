@@ -1,36 +1,46 @@
 import type { EmailTemplate } from "./content"
 
 /**
- * Menyusun body email dan draft `mailto:` dari sebuah template.
+ * Turns a template plus field values into a final body and a `mailto:` draft.
  *
- * Semua di sini fungsi murni tanpa React atau akses `window`, supaya perilaku
- * placeholder-kosong, encoding, dan ambang panjang bisa diuji tanpa merender
- * komponen. Komponen yang memanggilnya cuma menampilkan hasilnya.
+ * Everything here is pure -- no React, no `window` -- so the empty-placeholder
+ * behaviour, the encoding, and the length ceiling can be proven without
+ * rendering a component. The calling component only displays the result.
  */
 
 const TOKEN_PATTERN = /\{\{([a-zA-Z0-9_]+)\}\}/g
 
 /**
- * Batas panjang URL `mailto:` yang masih aman.
+ * The longest `mailto:` URL still safe to hand to a client.
  *
- * Browser dan klien email memotong URL yang lebih panjang tanpa memberi tahu,
- * jadi drafnya terkirim dalam keadaan terpotong. Menolak secara eksplisit lebih
- * baik daripada membiarkan jamaah mengirim email setengah jadi.
+ * Browsers and mail clients truncate longer URLs without saying so, which sends
+ * a half-written email. Refusing outright is the better failure.
  */
 export const MAILTO_MAX_LENGTH = 1900
 
+/**
+ * The `{{key}}` tokens a template's body carries, in order of appearance.
+ *
+ * Exported so the data-integrity tests in content.test.ts use the same token
+ * definition renderBody actually applies -- if the token syntax changes, those
+ * tests change with it instead of quietly passing under the old rule.
+ */
+export function templateTokens(template: EmailTemplate): string[] {
+  return Array.from(template.body.matchAll(TOKEN_PATTERN), (match) => match[1])
+}
+
 export interface MailtoDraft {
   href: string
-  /** false ketika `href` melewati MAILTO_MAX_LENGTH. */
+  /** false once `href` exceeds MAILTO_MAX_LENGTH. */
   withinLimit: boolean
 }
 
 /**
- * Mengganti tiap `{{key}}` dengan nilai isian.
+ * Replaces each `{{key}}` with its field value.
  *
- * Isian yang kosong (atau spasi saja) jadi `[Label]`, bukan string kosong --
- * hasil salinannya tetap terbaca dan jelas menandai bagian yang perlu diedit
- * sendiri di aplikasi email, persis seperti template yang beredar di komunitas.
+ * An empty (or whitespace-only) value becomes `[Label]` rather than an empty
+ * string, so the copied text stays readable and marks what still needs editing
+ * in the mail client -- the behaviour the circulated template already had.
  */
 export function renderBody(
   template: EmailTemplate,
@@ -48,10 +58,10 @@ export function renderBody(
 }
 
 /**
- * Menyusun URL draft email berisi tujuan, subject, dan body hasil isian.
+ * Builds the draft URL carrying recipient, subject, and the filled-in body.
  *
- * Pemisah baris dinormalkan ke CRLF sebelum di-encode: sebagian klien email
- * mengabaikan `%0A` tunggal dan menggabungkan seluruh paragraf jadi satu blok.
+ * Line breaks are normalized to CRLF before encoding: some mail clients ignore
+ * a lone `%0A` and collapse every paragraph into one block.
  */
 export function buildMailtoHref(
   template: EmailTemplate,

@@ -36,7 +36,7 @@ function nameInput() {
 }
 
 describe("EmailTemplateCard", () => {
-  it("menampilkan tujuan, subject, dan body dengan placeholder saat isian kosong", () => {
+  it("shows recipient, subject, and a placeholder body while the fields are empty", () => {
     render(<EmailTemplateCard template={template()} />)
 
     expect(screen.getByText("care@haj.gov.sa")).toBeInTheDocument()
@@ -44,7 +44,7 @@ describe("EmailTemplateCard", () => {
     expect(screen.getByText(/\[Nama Lengkap\]/)).toBeInTheDocument()
   })
 
-  it("memperbarui preview body saat isian nama diketik", () => {
+  it("updates the body preview as the name is typed", () => {
     render(<EmailTemplateCard template={template()} />)
 
     fireEvent.change(nameInput(), { target: { value: "Bayu Aslama" } })
@@ -53,7 +53,7 @@ describe("EmailTemplateCard", () => {
     expect(screen.queryByText(/\[Nama Lengkap\]/)).not.toBeInTheDocument()
   })
 
-  it("menyalin body hasil render, bukan body mentah bertoken", async () => {
+  it("copies the rendered body, not the raw tokenized one", async () => {
     const writeText = stubClipboard()
     render(<EmailTemplateCard template={template()} />)
 
@@ -66,7 +66,7 @@ describe("EmailTemplateCard", () => {
     expect(copied).not.toContain("{{nama}}")
   })
 
-  it("menyalin alamat tujuan dan subject masing-masing nilainya sendiri", async () => {
+  it("copies recipient and subject each on their own", async () => {
     const writeText = stubClipboard()
     render(<EmailTemplateCard template={template()} />)
 
@@ -77,7 +77,7 @@ describe("EmailTemplateCard", () => {
     await waitFor(() => expect(writeText).toHaveBeenCalledWith("Reset ID NUSUK"))
   })
 
-  it("menampilkan status gagal ketika clipboard menolak", async () => {
+  it("surfaces a failure state when the clipboard rejects", async () => {
     Object.defineProperty(navigator, "clipboard", {
       value: { writeText: vi.fn().mockRejectedValue(new Error("not allowed")) },
       configurable: true,
@@ -90,7 +90,7 @@ describe("EmailTemplateCard", () => {
     await waitFor(() => expect(screen.getByText("Gagal salin")).toBeInTheDocument())
   })
 
-  it("menautkan tombol buka draft ke alamat tujuan template", () => {
+  it("points the draft button at the template's recipient", () => {
     render(<EmailTemplateCard template={template()} />)
 
     const link = screen.getByRole("link", { name: /Buka di aplikasi email/ })
@@ -98,7 +98,7 @@ describe("EmailTemplateCard", () => {
     expect(link.getAttribute("href")).toMatch(/^mailto:care@haj\.gov\.sa\?/)
   })
 
-  it("menonaktifkan tombol buka draft ketika body melewati ambang panjang", () => {
+  it("disables the draft button once the body passes the length ceiling", () => {
     render(<EmailTemplateCard template={template({ body: "x".repeat(MAILTO_MAX_LENGTH + 1) })} />)
 
     expect(screen.queryByRole("link", { name: /Buka di aplikasi email/ })).not.toBeInTheDocument()
@@ -106,7 +106,7 @@ describe("EmailTemplateCard", () => {
     expect(screen.getByText(/terlalu panjang untuk dibuka sebagai draft/)).toBeInTheDocument()
   })
 
-  it("mendaftar setiap lampiran beserta pengingat melampirkannya sendiri", () => {
+  it("lists every attachment with the reminder to attach them manually", () => {
     render(<EmailTemplateCard template={template()} />)
 
     expect(screen.getByText("Screenshot ID yang dipakai orang lain")).toBeInTheDocument()
@@ -114,13 +114,13 @@ describe("EmailTemplateCard", () => {
     expect(screen.getByText(/tambahkan sendiri di aplikasi email/)).toBeInTheDocument()
   })
 
-  it("menerangkan bahasa body supaya tidak diterjemahkan sendiri", () => {
+  it("names the body language so nobody translates it themselves", () => {
     render(<EmailTemplateCard template={template()} />)
 
     expect(screen.getByText(/Body dalam bahasa Inggris/)).toBeInTheDocument()
   })
 
-  it("memberi setiap tombol salin dalam satu kartu nama yang berbeda", () => {
+  it("gives each copy button in one card a distinct accessible name", () => {
     render(<EmailTemplateCard template={template()} />)
 
     const names = screen

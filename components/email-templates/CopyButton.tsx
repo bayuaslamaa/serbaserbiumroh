@@ -15,7 +15,7 @@ const LABELS: Record<CopyState, string> = {
 
 interface CopyButtonProps {
   text: string
-  /** Apa yang disalin, mis. "alamat tujuan". Dipakai untuk aria-label. */
+  /** What is being copied, e.g. "alamat tujuan". Used for the aria-label. */
   describes: string
   className?: string
 }
@@ -30,9 +30,9 @@ export function CopyButton({ text, describes, className }: CopyButtonProps) {
   }, [state])
 
   async function copy() {
-    // navigator.clipboard undefined di luar secure context, jadi kegagalan harus
-    // terlihat -- klik yang tidak melaporkan apa pun tidak bisa dibedakan dari
-    // tombol yang rusak.
+    // navigator.clipboard is undefined outside a secure context, so failure has
+    // to be visible -- a click that reports nothing is indistinguishable from a
+    // broken button.
     try {
       await navigator.clipboard.writeText(text)
       setState("copied")
@@ -45,8 +45,8 @@ export function CopyButton({ text, describes, className }: CopyButtonProps) {
     <button
       type="button"
       onClick={copy}
-      // Satu kartu memuat tiga tombol "Salin"; tanpa nama yang berbeda, pembaca
-      // layar cuma mendengar "Salin" tiga kali.
+      // One card holds three "Salin" buttons; without distinct names a screen
+      // reader just hears "Salin" three times.
       aria-label={`Salin ${describes}`}
       aria-live="polite"
       className={cn(

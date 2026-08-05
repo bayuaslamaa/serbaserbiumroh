@@ -12,9 +12,9 @@ export const metadata = pageMetadata({
 })
 
 /**
- * Mengelompokkan template per instansi dengan mempertahankan urutan kemunculan
- * pertamanya, supaya urutan di lib/email-templates/content.ts yang menentukan
- * apa yang tampil lebih dulu -- bukan urutan abjad yang tidak bermakna.
+ * Groups templates by institution, keeping first-appearance order so the order
+ * in lib/email-templates/content.ts decides what shows first -- not an
+ * alphabetical sort that carries no meaning.
  */
 function groupByInstitution(templates: EmailTemplate[]) {
   const groups = new Map<string, EmailTemplate[]>()

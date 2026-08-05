@@ -1,46 +1,45 @@
 /**
- * Template email untuk menghubungi support instansi umroh, dipakai /template-email.
+ * Email templates for contacting umroh institutions, rendered at /template-email.
  *
- * Isi `body` di sini bukan copy marketing -- ini kalimat yang jamaah kirim ke
- * instansi Saudi. Mengubahnya berarti mengubah instruksi yang mereka pakai saat
- * sedang bermasalah, jadi setiap perubahan perlu dicek ke sumber prosedurnya
- * dulu, bukan diperhalus begitu saja.
+ * A `body` here is not marketing copy -- it is the message a pilgrim sends to a
+ * Saudi institution. Changing one changes the instructions they act on while
+ * something has already gone wrong for them, so every edit needs checking
+ * against the procedure it came from rather than being smoothed over.
  *
- * `body` memakai token `{{key}}` yang harus cocok dengan salah satu `fields[].key`.
- * Token tanpa field (atau field yang tidak dipakai body) ditangkap oleh
- * __tests__/content.test.ts, karena keduanya menghasilkan isian yang tidak
- * berpengaruh apa pun di layar.
+ * `body` uses `{{key}}` tokens that must match a `fields[].key`. A token with no
+ * field, or a field no body uses, is caught by __tests__/content.test.ts --
+ * both produce an input that changes nothing on screen.
  */
 
 export type BodyLanguage = "id" | "en"
 
-/** Keterangan bahasa body yang ditampilkan di kartu template. */
+/** Body-language note shown on the template card. */
 export const BODY_LANGUAGE_LABEL: Record<BodyLanguage, string> = {
   id: "Body dalam bahasa Indonesia",
   en: "Body dalam bahasa Inggris -- kirim apa adanya, jangan diterjemahkan",
 }
 
 export interface TemplateField {
-  /** Cocok dengan token `{{key}}` di body. */
+  /** Matches a `{{key}}` token in the body. */
   key: string
-  /** Dipakai sebagai label input dan sebagai placeholder `[Label]` saat kosong. */
+  /** Used as the input label and as the `[Label]` placeholder while empty. */
   label: string
   placeholder: string
 }
 
 export interface EmailTemplate {
   id: string
-  /** Nama instansi yang tampil sebagai judul kelompok, mis. "Nusuk Care". */
+  /** Institution name used as the group heading, e.g. "Nusuk Care". */
   institution: string
   title: string
-  /** Satu kalimat: kapan template ini dipakai. */
+  /** One sentence: when this template applies. */
   purpose: string
   to: string
   subject: string
   bodyLanguage: BodyLanguage
   body: string
   fields: TemplateField[]
-  /** Berkas yang harus dilampirkan sendiri oleh pengirim di aplikasi emailnya. */
+  /** Files the sender has to attach themselves in their email client. */
   attachments: string[]
 }
 

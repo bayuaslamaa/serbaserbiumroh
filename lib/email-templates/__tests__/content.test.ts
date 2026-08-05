@@ -1,70 +1,61 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  BODY_LANGUAGE_LABEL,
-  emailTemplates,
-  type EmailTemplate,
-} from "../content"
-
-const TOKEN_PATTERN = /\{\{([a-zA-Z0-9_]+)\}\}/g
-
-function tokensIn(template: EmailTemplate): string[] {
-  return Array.from(template.body.matchAll(TOKEN_PATTERN)).map((m) => m[1])
-}
+import { BODY_LANGUAGE_LABEL, emailTemplates } from "../content"
+import { templateTokens } from "../render"
 
 describe("emailTemplates", () => {
-  it("tidak punya token tanpa field pasangannya", () => {
+  it("carries no token without a matching field", () => {
     for (const template of emailTemplates) {
       const keys = new Set(template.fields.map((f) => f.key))
 
-      for (const token of tokensIn(template)) {
-        expect(keys.has(token), `${template.id}: token {{${token}}} tidak punya field`).toBe(true)
+      for (const token of templateTokens(template)) {
+        expect(keys.has(token), `${template.id}: {{${token}}} has no field`).toBe(true)
       }
     }
   })
 
-  it("tidak punya field yang tidak dipakai body", () => {
+  it("carries no field the body never uses", () => {
     for (const template of emailTemplates) {
-      const tokens = new Set(tokensIn(template))
+      const tokens = new Set(templateTokens(template))
 
       for (const field of template.fields) {
         expect(
           tokens.has(field.key),
-          `${template.id}: field ${field.key} tidak dipakai body mana pun`,
+          `${template.id}: field ${field.key} appears in no body`,
         ).toBe(true)
       }
     }
   })
 
-  it("memberi setiap template id yang unik", () => {
+  it("gives every template a unique id", () => {
     const ids = emailTemplates.map((t) => t.id)
 
     expect(new Set(ids).size).toBe(ids.length)
   })
 
-  it("mengarahkan setiap template ke alamat email yang berbentuk valid", () => {
+  it("points every template at a well-formed address", () => {
     for (const template of emailTemplates) {
-      expect(template.to, `${template.id}: alamat tujuan tidak valid`).toMatch(
+      expect(template.to, `${template.id}: malformed recipient`).toMatch(
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
       )
     }
   })
 
-  it("memberi setiap template subject, tujuan, dan minimal satu lampiran", () => {
+  it("gives every template a subject, a purpose, and at least one attachment", () => {
     for (const template of emailTemplates) {
-      expect(template.subject.trim(), `${template.id}: subject kosong`).not.toBe("")
-      expect(template.purpose.trim(), `${template.id}: purpose kosong`).not.toBe("")
-      expect(template.attachments.length, `${template.id}: tidak punya lampiran`).toBeGreaterThan(0)
+      expect(template.subject.trim(), `${template.id}: empty subject`).not.toBe("")
+      expect(template.purpose.trim(), `${template.id}: empty purpose`).not.toBe("")
+      expect(template.attachments.length, `${template.id}: no attachments`).toBeGreaterThan(0)
     }
   })
 
-  it("memakai bahasa body yang punya keterangan tampilnya", () => {
+  it("uses a body language that has a note to display", () => {
     for (const template of emailTemplates) {
       expect(BODY_LANGUAGE_LABEL[template.bodyLanguage]).toBeTruthy()
     }
   })
 
-  it("membawa template reset ID Nusuk ke Nusuk Care", () => {
+  it("carries the Nusuk ID reset request addressed to Nusuk Care", () => {
     const nusuk = emailTemplates.find((t) => t.id === "nusuk-reset-id")
 
     expect(nusuk).toBeDefined()
