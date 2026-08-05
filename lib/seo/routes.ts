@@ -37,5 +37,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/cerita-jamaah", changeFrequency: "weekly", priority: 0.8 },
   { path: "/badalin", changeFrequency: "monthly", priority: 0.7 },
   { path: "/faq", changeFrequency: "weekly", priority: 0.7 },
+  // Berubah hanya ketika prosedur instansi berubah, bukan mengikuti jadwal.
+  { path: "/template-email", changeFrequency: "monthly", priority: 0.6 },
   { path: "/komunitas", changeFrequency: "monthly", priority: 0.6 },
 ]

@@ -20,7 +20,8 @@ export function isPublicPath(pathname: string) {
     pathname.startsWith("/visa") ||
     pathname.startsWith("/transportasi") ||
     pathname.startsWith("/layanan") ||
-    pathname.startsWith("/badalin")
+    pathname.startsWith("/badalin") ||
+    pathname.startsWith("/template-email")
   )
 }
 

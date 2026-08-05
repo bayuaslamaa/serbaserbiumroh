@@ -54,6 +54,13 @@ describe("middleware public route matching", () => {
     expect(isPublicPath("/badalin/")).toBe(true)
   })
 
+  it("allows the public email template page without login", async () => {
+    const { isPublicPath } = await import("./middleware")
+
+    expect(isPublicPath("/template-email")).toBe(true)
+    expect(isPublicPath("/template-email/")).toBe(true)
+  })
+
   it("keeps dashboard and admin routes protected", async () => {
     const { isPublicPath } = await import("./middleware")
 

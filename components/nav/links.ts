@@ -3,6 +3,7 @@ import {
   Compass,
   HelpCircle,
   Hotel,
+  Mail,
   MessageCircle,
   Users,
   type LucideIcon,
@@ -19,6 +20,7 @@ export const moreLinks: NavLink[] = [
   { href: "/cerita-jamaah", label: "Cerita Jamaah", icon: Users },
   { href: "/hotel-nusuk", label: "Hotel Nusuk", icon: Hotel },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
+  { href: "/template-email", label: "Template Email", icon: Mail },
   { href: "/webinar-umroh-mandiri", label: "Webinar", icon: CalendarDays },
 ]
 
@@ -29,6 +31,7 @@ export const exploreLinks: NavLink[] = [
   { href: "/hotel-nusuk", label: "Hotel Nusuk", icon: Hotel },
   { href: "/komunitas", label: "Komunitas", icon: MessageCircle },
   { href: "/webinar-umroh-mandiri", label: "Webinar", icon: CalendarDays },
+  { href: "/template-email", label: "Template Email", icon: Mail },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
 ]
 
