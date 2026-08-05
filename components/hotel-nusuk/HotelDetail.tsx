@@ -75,7 +75,7 @@ export function HotelDetail({ hotel }: { hotel: HotelDetailData }) {
         )}
       </header>
 
-      <section className="mb-8">
+      <section className="mb-8 hidden">
         <h2 className="mb-1 text-xl font-semibold" style={{ color: "var(--color-gold)" }}>
           Harga per Malam Sepanjang Tahun
         </h2>
