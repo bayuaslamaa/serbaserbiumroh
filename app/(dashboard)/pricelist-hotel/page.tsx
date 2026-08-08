@@ -2,6 +2,7 @@ import { PricelistClient } from "@/components/pricelist-hotel/PricelistClient"
 import { requireAuth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { composePricelist, fetchPricelistRows } from "@/lib/hotels/pricelist"
+import { formatImportDate } from "@/lib/hotels/pricing"
 
 export const metadata = { title: "Pricelist Hotel" }
 
@@ -14,17 +15,7 @@ export const metadata = { title: "Pricelist Hotel" }
  * it is re-queried every visit. `dynamic = "force-dynamic"` is left off for the
  * same reason: the cookie read already opts out, and no other (dashboard) page
  * declares one.
- *
- * The dateFormatter mirrors the "Diperbarui" line in PricelistClient.
- * Duplicated rather than shared: that module is "use client", so a helper
- * pulled out of it is a client reference this server component cannot call.
  */
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-})
-
 export default async function PricelistHotelPage() {
   // Repeated even though app/(dashboard)/layout.tsx already guards the group --
   // that layout's own comment records the convention and the reason. It stays
@@ -67,7 +58,7 @@ export default async function PricelistHotelPage() {
 
       {lastImportedAt && (
         <p className="mt-1 text-xs" style={{ color: "var(--color-text-muted)" }}>
-          Data per {dateFormatter.format(lastImportedAt)}.
+          Data per {formatImportDate(lastImportedAt)}.
         </p>
       )}
 

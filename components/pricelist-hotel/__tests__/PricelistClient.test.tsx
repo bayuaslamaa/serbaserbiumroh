@@ -5,15 +5,49 @@ import { describe, expect, it, vi } from "vitest"
  * Radix's Select never opens under happy-dom -- it needs pointer capture and a
  * portal that jsdom-alikes do not provide -- so the same stub
  * components/hotel-nusuk/__tests__/HotelFilters.test.tsx uses is repeated here,
- * with one addition: an item click actually calls the enclosing Select's
- * onValueChange, which is what lets these tests drive the filters.
+ * with three changes:
+ *
+ *  - an item click actually calls the enclosing Select's onValueChange, which
+ *    is what lets these tests drive the filters;
+ *  - the Select's `value` reaches the DOM. The original destructured it and
+ *    threw it away, so `<Select value={tier} onValueChange={setCity}>` -- a
+ *    control that filters correctly but displays somebody else's state -- was
+ *    invisible to every test here;
+ *  - SelectTrigger forwards aria-label. The component leans on three of them
+ *    for the triggers' accessible names, and a stub that dropped the attribute
+ *    made those names untestable.
  */
 vi.mock("@/components/ui/select", async () => {
   const React = await import("react")
-  const ValueChangeContext = React.createContext<(value: string) => void>(() => {})
+  const ValueContext = React.createContext<{ display?: React.ReactNode; onValueChange: (v: string) => void }>({
+    onValueChange: () => {},
+  })
+
+  /**
+   * What the selected item renders, not its raw value -- the month select is
+   * keyed on "9" and shows "September", so a stub echoing the value would have
+   * tests asserting the stub rather than the component.
+   */
+  function labelFor(children: React.ReactNode, value: string | undefined): React.ReactNode {
+    if (value === undefined) return undefined
+    let found: React.ReactNode
+
+    const visit = (node: React.ReactNode) => {
+      React.Children.forEach(node, (child) => {
+        if (found !== undefined || !React.isValidElement(child)) return
+        const props = child.props as { value?: string; children?: React.ReactNode }
+        if (props.value === value) found = props.children
+        else if (props.children) visit(props.children)
+      })
+    }
+
+    visit(children)
+    return found
+  }
 
   return {
     Select: ({
+      value,
       onValueChange,
       children,
     }: {
@@ -21,15 +55,29 @@ vi.mock("@/components/ui/select", async () => {
       onValueChange: (value: string) => void
       children: React.ReactNode
     }) =>
-      React.createElement(ValueChangeContext.Provider, { value: onValueChange }, children),
-    SelectTrigger: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-    SelectValue: ({ placeholder }: { placeholder?: string }) =>
-      React.createElement("span", null, placeholder),
+      React.createElement(
+        ValueContext.Provider,
+        { value: { display: labelFor(children, value), onValueChange } },
+        children
+      ),
+    SelectTrigger: ({
+      children,
+      ...rest
+    }: {
+      children: React.ReactNode
+      className?: string
+      "aria-label"?: string
+    }) => React.createElement("div", { role: "combobox", ...rest }, children),
+    // The real SelectValue shows the selected item and falls back to the
+    // placeholder only when there is none -- so the stub has to as well.
+    SelectValue: ({ placeholder }: { placeholder?: string }) => {
+      const { display } = React.useContext(ValueContext)
+      return React.createElement("span", null, display ?? placeholder)
+    },
     SelectContent: ({ children }: { children: React.ReactNode }) =>
       React.createElement("div", null, children),
     SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => {
-      const onValueChange = React.useContext(ValueChangeContext)
+      const { onValueChange } = React.useContext(ValueContext)
       return React.createElement(
         "button",
         { type: "button", onClick: () => onValueChange(value) },
@@ -39,7 +87,7 @@ vi.mock("@/components/ui/select", async () => {
   }
 })
 
-import { SOURCE_LABEL_NOT_RECORDED, type PricelistHotel } from "@/lib/hotels/pricelist"
+import { SOURCE_LABEL_NOT_RECORDED, type PricelistHotel } from "@/lib/hotels/pricelist-types"
 import { PricelistClient } from "../PricelistClient"
 
 const CATALOGUE_LABEL = "Katalog 1448H (AZKA + Maysan/MIG)"
@@ -107,6 +155,11 @@ const millennium: PricelistHotel = {
 
 const hotels = [safwa, darAlEiman, millennium]
 
+/** The labels carry parentheses and a plus sign, so they cannot go into a RegExp raw. */
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 /** Opens a hotel's month table and returns it. */
 function expand(label: string): HTMLElement {
   fireEvent.click(screen.getByRole("button", { name: new RegExp(`tarif bulanan ${label}`, "i") }))
@@ -163,7 +216,11 @@ describe("PricelistClient", () => {
     // Accessible name, not props: this is what a screen reader announces.
     expect(within(february).getByRole("cell", { name: /tarif tidak tersedia/i })).toBe(cell)
     expect(cell.textContent).not.toMatch(/[0-9]/)
-    expect(cell.textContent).not.toMatch(/-|NaN/)
+    // Every dash, not just ASCII hyphen-minus. /-/ alone let U+2010 through and
+    // U+2013/2014/2212 with it -- and an en dash in a price column reads as a
+    // rate exactly the way the hyphen R4 forbids does.
+    expect(cell.textContent).not.toMatch(/[-‐-―−]/)
+    expect(cell.textContent).not.toMatch(/NaN/)
   })
 
   it("renders no IDR anywhere -- every figure on this page is catalogue SAR", () => {
@@ -192,9 +249,13 @@ describe("PricelistClient", () => {
 
     const legend = screen.getByRole("region", { name: /keterangan sumber/i })
 
-    expect(within(legend).getByText(CATALOGUE_LABEL)).toBeInTheDocument()
-    expect(within(legend).getByText(FORECAST_LABEL)).toBeInTheDocument()
-    expect(within(legend).getByText(SOURCE_LABEL_NOT_RECORDED)).toBeInTheDocument()
+    // Substring match: with more than one label present the entries carry the
+    // marker the rate cells point at, so the text is "1. Katalog ...".
+    expect(within(legend).getByText(new RegExp(escapeRegExp(CATALOGUE_LABEL)))).toBeInTheDocument()
+    expect(within(legend).getByText(new RegExp(escapeRegExp(FORECAST_LABEL)))).toBeInTheDocument()
+    expect(
+      within(legend).getByText(new RegExp(escapeRegExp(SOURCE_LABEL_NOT_RECORDED))),
+    ).toBeInTheDocument()
   })
 
   it("shows the not-recorded wording for a hotel whose rows carry the sentinel", () => {
@@ -218,6 +279,55 @@ describe("PricelistClient", () => {
     expect(screen.getByRole("region", { name: "Dar Al Eiman" })).toBeInTheDocument()
   })
 
+  it("narrows the list by tier", () => {
+    // The city case above leaves the tier branch entirely uncovered: deleting
+    // `if (tier !== ALL && hotel.tier !== tier) return false` kept the whole
+    // suite green. The fixture already discriminates -- Safwa is STANDARD, Dar
+    // Al Eiman ECONOMY, Millennium PREMIUM.
+    render(<PricelistClient hotels={hotels} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "PREMIUM" }))
+
+    expect(screen.getByText("Menampilkan 1 dari 3 hotel")).toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Millennium Al Aqeeq" })).toBeInTheDocument()
+    expect(screen.queryByRole("region", { name: "Safwa Tower 3" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("region", { name: "Dar Al Eiman" })).not.toBeInTheDocument()
+
+    // Crossed with the city filter, which sits on the same hotel: tier alone
+    // could be passing because PREMIUM happens to select the same row a broken
+    // city filter would.
+    fireEvent.click(screen.getByRole("button", { name: "MAKKAH" }))
+    expect(screen.getByText("Menampilkan 0 dari 3 hotel")).toBeInTheDocument()
+  })
+
+  it("shows each filter's own state on its own trigger", () => {
+    // A control that filters correctly but displays somebody else's state --
+    // `<Select value={tier} onValueChange={setCity}>` -- passes every filtering
+    // assertion in this file. The accessible names come from the aria-labels
+    // the component sets on each trigger.
+    render(<PricelistClient hotels={hotels} />)
+
+    const trigger = (name: string) => screen.getByRole("combobox", { name })
+
+    expect(trigger("Kota")).toHaveTextContent("Semua Kota")
+    expect(trigger("Tier")).toHaveTextContent("Semua Tier")
+    expect(trigger("Bulan")).toHaveTextContent("Semua Bulan")
+
+    fireEvent.click(screen.getByRole("button", { name: "MADINAH" }))
+    expect(trigger("Kota")).toHaveTextContent("MADINAH")
+    expect(trigger("Tier")).toHaveTextContent("Semua Tier")
+    expect(trigger("Bulan")).toHaveTextContent("Semua Bulan")
+
+    fireEvent.click(screen.getByRole("button", { name: "ECONOMY" }))
+    expect(trigger("Kota")).toHaveTextContent("MADINAH")
+    expect(trigger("Tier")).toHaveTextContent("ECONOMY")
+
+    fireEvent.click(screen.getByRole("button", { name: "September" }))
+    expect(trigger("Kota")).toHaveTextContent("MADINAH")
+    expect(trigger("Tier")).toHaveTextContent("ECONOMY")
+    expect(trigger("Bulan")).toHaveTextContent("September")
+  })
+
   it("collapses to one row per hotel carrying only the selected month", () => {
     render(<PricelistClient hotels={hotels} />)
 
@@ -232,6 +342,68 @@ describe("PricelistClient", () => {
     expect(table.textContent).not.toContain("SAR 1.300")
     // A hotel with no September row still appears, with the empty treatment.
     expect(rows[2]).toHaveTextContent("Tarif tidak tersedia")
+  })
+
+  it("keeps the rate columns when no shown hotel has a rate that month", () => {
+    // No fixture hotel covers Oktober. roomTypesAcross returned [] for it, so
+    // the table rendered ['Hotel','Kota','Tier'] and nothing else: no price
+    // columns, and therefore no "Tarif tidak tersedia" anywhere. The
+    // filtered.length === 0 guard does not fire -- three hotels ARE shown --
+    // so the R4 promise failed in the view the feature exists for.
+    render(<PricelistClient hotels={hotels} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Oktober" }))
+
+    const table = screen.getByRole("table", { name: /Oktober/i })
+    const columns = within(table)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent)
+
+    expect(columns).toEqual(["Hotel", "Kota", "Tier", "QUAD", "DOUBLE"])
+
+    const rows = bodyRows(table)
+    expect(rows).toHaveLength(3)
+    for (const row of rows) {
+      expect(row).toHaveTextContent("Tarif tidak tersedia")
+      expect(row.textContent).not.toMatch(/SAR/)
+    }
+  })
+
+  it("marks a comparison-table rate with the source it came from", () => {
+    // markerIndex was hardcoded to null here, so a sighted reader had no way to
+    // tell a catalogue rate from a forecast one in the view built for
+    // comparison -- the sr-only attribution carried the whole load. The
+    // numbering indexes the page-level label list, so the same superscript
+    // means the same source on every row.
+    render(<PricelistClient hotels={hotels} />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Agustus" }))
+
+    const table = screen.getByRole("table", { name: /Agustus/i })
+    const legend = screen.getByRole("region", { name: /keterangan sumber/i })
+
+    // Sorted id-ID and numbered, or the superscripts point at nothing.
+    const legendOrder = within(legend)
+      .getAllByRole("term")
+      .map((term) => term.textContent)
+    expect(legendOrder).toEqual([
+      `1. ${CATALOGUE_LABEL}`,
+      `2. ${FORECAST_LABEL}`,
+      `3. ${SOURCE_LABEL_NOT_RECORDED}`,
+    ])
+
+    const [, darRow] = bodyRows(table)
+    const [, , quad, double] = within(darRow).getAllByRole("cell")
+
+    // Dar Al Eiman's August QUAD is the catalogue, its DOUBLE the forecast.
+    expect(quad.querySelector("sup")?.textContent).toBe("1")
+    expect(double.querySelector("sup")?.textContent).toBe("2")
+
+    // Page-level, not per-hotel: Millennium carries one label of its own, and
+    // a per-hotel index would number it 1 -- the same superscript as the
+    // catalogue rate directly above it, for a different source.
+    const [, , millenniumQuad] = within(bodyRows(table)[2]).getAllByRole("cell")
+    expect(millenniumQuad.querySelector("sup")?.textContent).toBe("3")
   })
 
   it("keeps hotel sections collapsed until their toggle is pressed", () => {

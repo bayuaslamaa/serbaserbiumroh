@@ -13,8 +13,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ROOM_TYPES } from "@/lib/estimate/room-types"
-import { SOURCE_LABEL_NOT_RECORDED, type PricelistHotel } from "@/lib/hotels/pricelist"
-import { MONTH_NAMES_FULL, formatSar } from "@/lib/hotels/pricing"
+// pricelist-types, never pricelist: the latter value-imports `db`, and a
+// "use client" module that reaches it pulls pg into the browser bundle and
+// breaks the build on `fs`/`net`/`dns`. See the docblock on pricelist-types.ts.
+import {
+  CITY_ORDER,
+  SOURCE_LABEL_NOT_RECORDED,
+  TIER_ORDER,
+  type PricelistHotel,
+} from "@/lib/hotels/pricelist-types"
+import { MONTH_NAMES_FULL, formatImportDate, formatSar } from "@/lib/hotels/pricing"
 import type { RoomType } from "@/types"
 
 /**
@@ -31,8 +39,11 @@ interface PricelistClientProps {
   hotels: PricelistHotel[]
 }
 
-const CITIES = ["MAKKAH", "MADINAH"] as const
-const TIERS = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"] as const
+// The composed sort order doubles as the filter's option order: CITY_ORDER and
+// TIER_ORDER are the same lists composePricelist sorts by, so a tier added in
+// one place cannot go missing in the other.
+const CITIES = CITY_ORDER
+const TIERS = TIER_ORDER
 
 const ALL = "Semua"
 
@@ -65,16 +76,6 @@ const SOURCE_LABEL_GLOSSARY: Record<string, string> = {
 const DEFAULT_GLOSS =
   "Label batch impor, ditampilkan apa adanya. Tanyakan admin bila maksudnya belum jelas."
 
-const dateFormatter = new Intl.DateTimeFormat("id-ID", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-})
-
-function formatUpdatedAt(value: Date | string): string {
-  return dateFormatter.format(new Date(value))
-}
-
 /**
  * The room types this hotel actually has a row for, widest occupancy first.
  *
@@ -89,9 +90,42 @@ function roomTypesOf(hotel: PricelistHotel): RoomType[] {
   )
 }
 
-/** Union of room types across the shown hotels, for the month-comparison table. */
+/**
+ * Union of room types across the shown hotels, for the month-comparison table.
+ *
+ * Never empty while there are hotels to show. Filtering to a month none of them
+ * covers used to return [], which collapsed the table to Hotel/Kota/Tier: no
+ * price columns at all, and therefore not one "Tarif tidak tersedia" either.
+ * The `filtered.length === 0` guard cannot catch that -- the hotels ARE there,
+ * it is the columns that vanished -- so R4's promise failed silently in the
+ * view the feature exists for. Falling back to the types those hotels have in
+ * ANY month keeps the shape and lets every cell carry the empty treatment,
+ * which is the honest answer: quoted elsewhere, not quoted here.
+ */
 function roomTypesAcross(hotels: PricelistHotel[], month: number): RoomType[] {
-  return ROOM_TYPES.filter((roomType) => hotels.some((hotel) => hotel.rates[month]?.[roomType]))
+  const inMonth = ROOM_TYPES.filter((roomType) =>
+    hotels.some((hotel) => hotel.rates[month]?.[roomType])
+  )
+  if (inMonth.length > 0) return inMonth
+
+  return ROOM_TYPES.filter((roomType) =>
+    hotels.some((hotel) => roomTypesOf(hotel).includes(roomType))
+  )
+}
+
+/**
+ * The 1-based marker a rate carries, or null when the enclosing list holds a
+ * single label and the prose beneath already names it.
+ *
+ * One helper rather than the same `length > 1` test written at the cell and
+ * again at the numbering beneath it: they are one decision, and two copies are
+ * how a superscript ends up pointing at an entry that was never numbered.
+ */
+function sourceMarker(labels: string[], sourceLabel: string): number | null {
+  if (labels.length <= 1) return null
+
+  const index = labels.indexOf(sourceLabel)
+  return index === -1 ? null : index + 1
 }
 
 /**
@@ -124,18 +158,18 @@ function EmptyRateCell() {
 function RateCell({
   sarPerNight,
   sourceLabel,
-  markerIndex,
+  marker,
 }: {
   sarPerNight: number
   sourceLabel: string
-  markerIndex: number | null
+  marker: number | null
 }) {
   return (
     <td className={`${TD} text-right tabular-nums`}>
       {formatSar(sarPerNight)}
-      {markerIndex !== null && (
+      {marker !== null && (
         <sup aria-hidden="true" className="ml-0.5" style={{ color: "var(--color-text-muted)" }}>
-          {markerIndex + 1}
+          {marker}
         </sup>
       )}
       <span className="sr-only"> (sumber: {sourceLabel})</span>
@@ -167,15 +201,16 @@ function HotelName({ hotel }: { hotel: PricelistHotel }) {
 
 /** The distinct labels under a hotel's table, numbered to match its cell markers. */
 function SourceFooter({ hotel }: { hotel: PricelistHotel }) {
-  const numbered = hotel.sourceLabels.length > 1
-
   return (
     <p className="mt-2 text-xs" style={{ color: "var(--color-text-muted)" }}>
       Sumber:{" "}
       {hotel.sourceLabels
-        .map((label, index) => (numbered ? `${index + 1}. ${label}` : label))
+        .map((label) => {
+          const marker = sourceMarker(hotel.sourceLabels, label)
+          return marker === null ? label : `${marker}. ${label}`
+        })
         .join(" · ")}
-      {" · "}Diperbarui {formatUpdatedAt(hotel.updatedAt)}
+      {" · "}Diperbarui {formatImportDate(hotel.updatedAt)}
     </p>
   )
 }
@@ -225,11 +260,9 @@ function MonthTable({ hotel }: { hotel: PricelistHotel }) {
                       key={roomType}
                       sarPerNight={rate.sarPerNight}
                       sourceLabel={rate.sourceLabel}
-                      markerIndex={
-                        hotel.sourceLabels.length > 1
-                          ? hotel.sourceLabels.indexOf(rate.sourceLabel)
-                          : null
-                      }
+                      // This hotel's own labels, matching the footer directly
+                      // beneath the table.
+                      marker={sourceMarker(hotel.sourceLabels, rate.sourceLabel)}
                     />
                   )
                 })}
@@ -250,8 +283,20 @@ function MonthTable({ hotel }: { hotel: PricelistHotel }) {
  * quad), so a single price sort across mixed columns would rank hotels on
  * whichever basis happened to be present. Filtering to a city and tier and
  * reading one column down is the comparison this view exists for.
+ *
+ * `labels` is the page-level list, not a per-hotel one: each row here belongs
+ * to a different hotel, so a per-hotel index would give the same source
+ * different numbers down the column. The legend is numbered off the same list.
  */
-function MonthComparisonTable({ hotels, month }: { hotels: PricelistHotel[]; month: number }) {
+function MonthComparisonTable({
+  hotels,
+  month,
+  labels,
+}: {
+  hotels: PricelistHotel[]
+  month: number
+  labels: string[]
+}) {
   const roomTypes = roomTypesAcross(hotels, month)
   const monthName = MONTH_NAMES_FULL[month - 1]
 
@@ -307,7 +352,10 @@ function MonthComparisonTable({ hotels, month }: { hotels: PricelistHotel[]; mon
                     key={roomType}
                     sarPerNight={rate.sarPerNight}
                     sourceLabel={rate.sourceLabel}
-                    markerIndex={null}
+                    // Hardcoding null here left a sighted reader no way to tell
+                    // a catalogue rate from a forecast one, in the one view
+                    // built for putting them side by side.
+                    marker={sourceMarker(labels, rate.sourceLabel)}
                   />
                 )
               })}
@@ -389,8 +437,11 @@ function SourceLegend({ labels }: { labels: string[] }) {
       <dl className="mt-2 space-y-1.5 text-xs">
         {labels.map((label) => (
           <div key={label}>
+            {/* Numbered by the same helper the comparison table's superscripts
+                use, so a "2" in a rate cell resolves to an entry a reader can
+                actually find. */}
             <dt className="font-medium" style={{ color: "var(--color-text)" }}>
-              {label}
+              {[sourceMarker(labels, label), label].filter(Boolean).join(". ")}
             </dt>
             <dd style={{ color: "var(--color-text-muted)" }}>
               {SOURCE_LABEL_GLOSSARY[label] ?? DEFAULT_GLOSS}
@@ -522,7 +573,7 @@ export function PricelistClient({ hotels }: PricelistClientProps) {
           Tidak ada hotel yang cocok dengan pencarian dan filter Anda.
         </div>
       ) : selectedMonth ? (
-        <MonthComparisonTable hotels={filtered} month={selectedMonth} />
+        <MonthComparisonTable hotels={filtered} month={selectedMonth} labels={legendLabels} />
       ) : (
         <div className="space-y-3">
           {filtered.map((hotel) => (

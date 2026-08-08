@@ -505,9 +505,18 @@ with the callback preserved; signing in returns to the page.
 | Route invariants | `pnpm test middleware.test.ts app/__tests__ lib/seo/__tests__ components/nav` | U4 |
 | Pricing untouched | `pnpm test lib/budget lib/estimate lib/ai` **and** `git diff --exit-code lib/budget/calculate.ts lib/estimate/hotel-pricing.ts lib/ai/tools` | R9 |
 | Types | `npx tsc --noEmit` | U1-U4 |
+| Bundle boundary | `npx next build` | U2-U3 |
 
 The R9 gate is a git-diff plus the existing suites, not an import check. An import assertion on a new
 file cannot fail for the reason R9 exists — a regression in `resolveHotelSar` would ship green.
+
+The bundle-boundary row is not redundant with the two above it. `pnpm test` mocks `@/lib/db`, and
+`npx tsc --noEmit` only checks types — neither can see a `"use client"` module value-importing a
+server module and dragging `pg` into the browser graph. Only the bundler follows that edge, and it
+fails on `fs`/`net`/`dns` rather than on anything a type or a mock would catch.
+`serverComponentsExternalPackages: ["pg"]` does not cover it: that setting governs the server
+compilation only. The fast local mirror of this gate lives in
+`app/(dashboard)/pricelist-hotel/__tests__/page.test.tsx`.
 
 Manual checks:
 

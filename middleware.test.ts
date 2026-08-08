@@ -160,6 +160,13 @@ describe("middleware matcher", () => {
     expect(await matchesMiddleware("/api/admin/pricing/hotel.txt")).toBe(true)
     expect(await matchesMiddleware("/api/admin/users.xml")).toBe(true)
     expect(await matchesMiddleware("/dashboard/report.webmanifest")).toBe(true)
+    // The pricelist holds only a page today, so these 404 rather than leak --
+    // but an export route under the prefix would be served straight past the
+    // session gate, and a catalogue CSV/PDF export is the obvious next feature.
+    expect(await matchesMiddleware("/pricelist-hotel/export.pdf")).toBe(true)
+    expect(await matchesMiddleware("/pricelist-hotel/export.txt")).toBe(true)
+    expect(await matchesMiddleware("/pricelist-hotel/2027.xml")).toBe(true)
+    expect(await matchesMiddleware("/pricelist-hotel/chart.png")).toBe(true)
   })
 
   it("anchors the protected-prefix guard to whole segments", async () => {
@@ -169,6 +176,17 @@ describe("middleware matcher", () => {
     expect(await matchesMiddleware("/api-diagram.png")).toBe(false)
     expect(await matchesMiddleware("/administrasi.pdf")).toBe(false)
     expect(await matchesMiddleware("/estimated-costs.pdf")).toBe(false)
+    expect(await matchesMiddleware("/pricelist-hotel-2027.pdf")).toBe(false)
+
+    // The cost of that anchor, stated rather than left to be rediscovered: a
+    // top-level path whose WHOLE segment ends in an excluded extension is not
+    // the prefix, so it skips -- uniformly, for every guarded prefix. Nothing
+    // is exposed by it. A Next route cannot be reached at /dashboard.pdf
+    // without a literal `dashboard.pdf` segment in app/, and a file that does
+    // exist at that URL is a public/ asset, which is precisely what must skip.
+    // The gap worth closing is /<prefix>/<segment>.<ext>, above.
+    expect(await matchesMiddleware("/dashboard.pdf")).toBe(false)
+    expect(await matchesMiddleware("/pricelist-hotel.pdf")).toBe(false)
   })
 
   it("agrees with the regex Next actually compiled, on every path asserted here", async () => {
@@ -186,6 +204,9 @@ describe("middleware matcher", () => {
       "/pdf/panduan-umroh-mandiri.pdf", "/transportasi/vehicles/sedan.webp", "/logo.png",
       "/estimate/abc.pdf", "/admin/content/faqs/1.txt", "/api/admin/pricing/hotel.txt",
       "/api/admin/users.xml", "/dashboard/report.webmanifest",
+      "/pricelist-hotel", "/pricelist-hotel/export.pdf", "/pricelist-hotel/export.txt",
+      "/pricelist-hotel/2027.xml", "/pricelist-hotel/chart.png",
+      "/pricelist-hotel-2027.pdf", "/pricelist-hotel.pdf", "/dashboard.pdf",
     ]
 
     for (const pathname of paths) {

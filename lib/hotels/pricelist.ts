@@ -3,79 +3,32 @@ import { asc, eq } from "drizzle-orm"
 import { db, type DB } from "@/lib/db"
 import { hotelPrices, realHotelPrices } from "@/lib/db/schema"
 import { ROOM_TYPES } from "@/lib/estimate/room-types"
-import type { City, HotelTier, RoomType } from "@/types"
+import {
+  CITY_ORDER,
+  SOURCE_LABEL_NOT_RECORDED,
+  TIER_ORDER,
+  type PricelistHotel,
+  type PricelistRow,
+} from "@/lib/hotels/pricelist-types"
+import type { RoomType } from "@/types"
 
 /**
- * Shown in place of a blank source_label. Rows imported before that column
- * existed carry "" -- a live value, not a bug -- and rendering it raw leaves a
- * hole where the provenance should be. The sentinel says "we do not know",
- * which is the honest reading.
- */
-export const SOURCE_LABEL_NOT_RECORDED = "Sumber tidak tercatat"
-
-/**
- * Price-ascending, the canonical sequence used by
- * components/hotel-nusuk/HotelPriceList.tsx. Alphabetical sorting would read
- * ECONOMY, PELATARAN, PREMIUM, STANDARD -- which puts the two dearest tiers in
- * the middle and contradicts every other hotel surface in the app.
- */
-const TIER_ORDER: HotelTier[] = ["ECONOMY", "STANDARD", "PELATARAN", "PREMIUM"]
-
-/** Makkah first, matching HotelFilters and HotelPriceList. */
-const CITY_ORDER: City[] = ["MAKKAH", "MADINAH"]
-
-/** One catalogue rate, verbatim from real_hotel_prices. */
-export interface PricelistRate {
-  sarPerNight: number
-  sourceLabel: string
-}
-
-/**
- * A joined catalogue row: the hotel's identity plus one rate.
+ * The query half of the pricelist, plus the pure pivot over its rows.
  *
- * Deliberately carries no hotel_prices.sarPerNight. That column is the
- * estimate base, and this page promises catalogue figures only (R3) -- keeping
- * it out of the row type means a later widening of the select has to change
- * this contract first.
+ * This module is server-only in effect: `db` is a value import, so anything
+ * that reaches it drags pg into the graph. The shared vocabulary lives in
+ * lib/hotels/pricelist-types.ts precisely so a "use client" module can import
+ * the sentinel and the interfaces without that. The re-export below keeps
+ * server-side importers working against either path.
  */
-export interface PricelistRow {
-  hotelPriceId: string
-  city: City
-  tier: HotelTier
-  label: string
-  sublabel: string
-  distance: string | null
-  slug: string | null
-  month: number
-  roomType: string
-  sarPerNight: number
-  sourceLabel: string
-  updatedAt: Date
-}
-
-export interface PricelistHotel {
-  hotelPriceId: string
-  city: City
-  tier: HotelTier
-  label: string
-  sublabel: string
-  distance: string | null
-  slug: string | null
-  /**
-   * month (1-12) -> room type -> rate. Sparse on purpose: a month or a room
-   * type with no catalogue row is ABSENT, never zero and never an empty
-   * string. The page renders a miss as its empty-cell treatment (R4), so
-   * anything that fabricates a value here defeats that.
-   *
-   * A plain object rather than a Map so the whole structure survives the
-   * server-to-client boundary in U2 without a conversion step.
-   */
-  rates: Record<number, Partial<Record<RoomType, PricelistRate>>>
-  /** Distinct labels present on this hotel's rates, for the legend (R5). */
-  sourceLabels: string[]
-  /** Newest updatedAt across this hotel's rows -- when it was last imported (R7). */
-  updatedAt: Date
-}
+export {
+  CITY_ORDER,
+  SOURCE_LABEL_NOT_RECORDED,
+  TIER_ORDER,
+  type PricelistHotel,
+  type PricelistRate,
+  type PricelistRow,
+} from "@/lib/hotels/pricelist-types"
 
 /**
  * Pivots joined catalogue rows into one entry per hotel.
