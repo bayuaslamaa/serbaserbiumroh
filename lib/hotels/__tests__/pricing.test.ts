@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildMonthlyPrices, formatCompactIdr, formatFullIdr, priceRange } from "../pricing"
+import { buildMonthlyPrices, formatCompactIdr, formatFullIdr, formatSar, priceRange } from "../pricing"
 
 describe("buildMonthlyPrices", () => {
   it("returns twelve months, numbered 1 to 12", () => {
@@ -66,6 +66,27 @@ describe("formatCompactIdr", () => {
 
   it("leaves small amounts alone", () => {
     expect(formatCompactIdr(500)).toBe("Rp 500")
+  })
+})
+
+describe("formatSar", () => {
+  it("separates thousands the id-ID way", () => {
+    expect(formatSar(1300)).toBe("SAR 1.300")
+    expect(formatSar(12500)).toBe("SAR 12.500")
+  })
+
+  it("carries no per-night suffix", () => {
+    // sarLabel bakes "/mlm" in, which is why a pricelist table cannot reuse it:
+    // the column heading already says what the figure is per.
+    expect(formatSar(1300)).not.toContain("/mlm")
+  })
+
+  it("leaves amounts below a thousand unseparated", () => {
+    expect(formatSar(950)).toBe("SAR 950")
+  })
+
+  it("shows no decimals", () => {
+    expect(formatSar(1300.6)).toBe("SAR 1.301")
   })
 })
 

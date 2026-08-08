@@ -57,6 +57,17 @@ export function formatCompactIdr(amount: number): string {
   return `Rp ${amount}`
 }
 
+/**
+ * A bare SAR figure with Indonesian thousands separators.
+ *
+ * Deliberately not sarLabel from lib/estimate/hotel-pricing.ts: that one bakes
+ * in a "/mlm" suffix, which repeats once per cell in a month-by-room-type
+ * table where the heading already says what the figure is per.
+ */
+export function formatSar(amount: number): string {
+  return `SAR ${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(amount)}`
+}
+
 /** Lowest and highest monthly rate, used to summarise a hotel in one line. */
 export function priceRange(monthlyPrices: MonthlyPriceDetail[]) {
   if (monthlyPrices.length === 0) return null
