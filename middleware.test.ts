@@ -40,6 +40,28 @@ describe("middleware public route matching", () => {
     }
   })
 
+  it("keeps every destination in the member-only nav array behind the session gate", async () => {
+    // The mirror of the assertion above, and the reason memberLinks exists as
+    // a fourth array rather than as extra entries in moreLinks. A public href
+    // in here means the array's isLoggedIn gate is hiding a page anyone could
+    // already reach; a gated href in the public arrays means a login-wall dead
+    // end. Both directions now fail loudly.
+    const { isPublicPath } = await import("./middleware")
+    const { memberLinks } = await import("@/components/nav/links")
+
+    expect(memberLinks.length).toBeGreaterThan(0)
+    for (const { href } of memberLinks) {
+      expect(isPublicPath(href), `${href} is rendered only for members`).toBe(false)
+    }
+  })
+
+  it("sends an anonymous visitor from the hotel pricelist to login", async () => {
+    const { isPublicPath } = await import("./middleware")
+
+    expect(isPublicPath("/pricelist-hotel")).toBe(false)
+    expect(isPublicPath("/pricelist-hotel/")).toBe(false)
+  })
+
   it("allows the public service catalog without login", async () => {
     const { isPublicPath } = await import("./middleware")
 

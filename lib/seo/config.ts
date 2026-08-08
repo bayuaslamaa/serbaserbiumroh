@@ -16,8 +16,23 @@ export const SITE_SHORT_NAME = "SSU"
 export const SITE_DESCRIPTION =
   "Panduan lengkap umroh mandiri: estimasi biaya, direktori hotel Makkah & Madinah dengan harga per bulan, pengurusan visa, transportasi, dan cerita nyata jamaah."
 
-/** Route prefixes that must never be crawled or appear in the sitemap. */
-export const PROTECTED_PREFIXES = ["/admin", "/dashboard", "/estimate", "/login", "/api"] as const
+/**
+ * Route prefixes that must never be crawled or appear in the sitemap.
+ *
+ * Mirrors what isPublicPath in middleware.ts refuses, and has to be maintained
+ * by hand -- a gated route whose URL does not start with one of these ships
+ * crawlable. /pricelist-hotel is the case that proved it: it lives under the
+ * (dashboard) route group, which adds no URL segment, so the /dashboard prefix
+ * does not cover it.
+ */
+export const PROTECTED_PREFIXES = [
+  "/admin",
+  "/dashboard",
+  "/estimate",
+  "/login",
+  "/api",
+  "/pricelist-hotel",
+] as const
 
 /** Builds an absolute URL on the canonical host from a repo-relative path. */
 export function absoluteUrl(pathname: string): string {

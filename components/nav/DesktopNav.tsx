@@ -65,6 +65,7 @@ export function DesktopNav({
             </Link>
             <MoreMenu
               isOpen={openId === "more"}
+              isLoggedIn={isLoggedIn}
               onToggle={() => toggle("more")}
               onNavigate={close}
             />

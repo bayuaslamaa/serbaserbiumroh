@@ -26,6 +26,14 @@ export interface StaticRoute {
  *   homepage banner; that banner is gone, and the session's recording is listed
  *   in components/home/PromoWebinar.tsx instead.) Revisit only if it is reworked
  *   into an evergreen webinar archive.
+ *
+ *   /pricelist-hotel -- session-gated (app/(dashboard)/pricelist-hotel), so it
+ *   is not a candidate at all. Unlike the entry above, this one needs no
+ *   judgement to enforce: the route is in PROTECTED_PREFIXES, and the two
+ *   tests in lib/seo/__tests__/routes.test.ts reject any STATIC_ROUTES path
+ *   that starts with a protected prefix or fails isPublicPath. This note
+ *   records why the page is missing, so a reader adding "the pricelist should
+ *   be findable" does not have to discover the reason from a red test.
  */
 export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/", changeFrequency: "weekly", priority: 1.0 },

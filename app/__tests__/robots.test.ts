@@ -22,6 +22,18 @@ describe("robots.txt", () => {
     }
   })
 
+  it("disallows the hotel pricelist", () => {
+    // The (dashboard) route group adds no URL segment, so /pricelist-hotel is
+    // a top-level path that the /dashboard prefix does not cover. Named
+    // explicitly rather than left to the loop above, which only proves robots
+    // echoes whatever the list happens to hold.
+    const rules = robots().rules
+    const rule = Array.isArray(rules) ? rules[0] : rules
+    const disallow = Array.isArray(rule.disallow) ? rule.disallow : [rule.disallow]
+
+    expect(disallow).toContain("/pricelist-hotel")
+  })
+
   it("blocks the bare protected paths, not only what sits under them", () => {
     // "Disallow: /login/" matches /login/anything but not /login, and /login
     // is the actual page. The trailing slash would have left it crawlable.
