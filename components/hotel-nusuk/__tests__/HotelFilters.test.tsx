@@ -2,46 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { HotelPriceList, type HotelWithMonthlyPrices } from '../HotelPriceList'
 
-// Mock the Select components to simple elements for testing
-vi.mock('@/components/ui/select', () => {
-  const React = require('react')
-
-  const Select = ({
-    value,
-    onValueChange,
-    children,
-  }: {
-    value: string
-    onValueChange: (v: string) => void
-    children: React.ReactNode
-  }) => React.createElement('div', { 'data-testid': 'select-wrapper' }, children)
-
-  const SelectTrigger = ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', { 'data-testid': 'select-trigger' }, children)
-
-  const SelectValue = ({ placeholder }: { placeholder?: string }) =>
-    React.createElement('span', {}, placeholder)
-
-  const SelectContent = ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', { 'data-testid': 'select-content' }, children)
-
-  const SelectItem = ({
-    value,
-    children,
-    onClick,
-  }: {
-    value: string
-    children: React.ReactNode
-    onClick?: () => void
-  }) =>
-    React.createElement(
-      'div',
-      { 'data-value': value, 'data-testid': `select-item-${value}`, onClick },
-      children
-    )
-
-  return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
-})
+// Radix's Select never opens under happy-dom, so this suite takes the shared
+// stub in components/ui/__mocks__/select.tsx.
+vi.mock('@/components/ui/select')
 
 function makeHotel(overrides: Partial<HotelWithMonthlyPrices> = {}): HotelWithMonthlyPrices {
   const basePrice = overrides.sarPerNight ?? 200
@@ -122,14 +85,17 @@ describe('HotelFilters (replaced with HotelPriceList tests)', () => {
 
   it('shows city filter dropdown options', () => {
     render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
-    expect(screen.getByText('Semua Kota')).toBeDefined()
+    // getAllByText, like the two lines below it: the shared stub renders the
+    // selected item in the trigger the way the real SelectValue does, so the
+    // default option's text is on the page twice.
+    expect(screen.getAllByText('Semua Kota').length).toBeGreaterThan(0)
     expect(screen.getAllByText('MAKKAH').length).toBeGreaterThan(0)
     expect(screen.getAllByText('MADINAH').length).toBeGreaterThan(0)
   })
 
   it('shows tier filter dropdown options', () => {
     render(<HotelPriceList hotels={hotels} exchangeRate={4700} />)
-    expect(screen.getByText('Semua Tier')).toBeDefined()
+    expect(screen.getAllByText('Semua Tier').length).toBeGreaterThan(0)
     expect(screen.getAllByText('ECONOMY').length).toBeGreaterThan(0)
     expect(screen.getAllByText('PREMIUM').length).toBeGreaterThan(0)
   })
