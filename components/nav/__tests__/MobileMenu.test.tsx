@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({
 }))
 
 import { services } from "@/lib/services/catalog"
+import { memberLinks } from "../links"
 import { MobileMenu } from "../MobileMenu"
 
 const signOutAction = vi.fn(async () => {})
@@ -202,6 +203,37 @@ describe("MobileMenu account section", () => {
       "/login"
     )
     expect(screen.queryByRole("button", { name: "Keluar" })).toBeNull()
+  })
+
+  it("exposes every member-only destination to a signed-in non-admin", () => {
+    renderMenu()
+    openOverlay()
+
+    expect(memberLinks.length).toBeGreaterThan(0)
+    for (const link of memberLinks) {
+      expect(screen.getByRole("link", { name: link.label })).toHaveAttribute(
+        "href",
+        link.href
+      )
+    }
+    expect(screen.getByRole("link", { name: "Pricelist Hotel" })).toHaveAttribute(
+      "href",
+      "/pricelist-hotel"
+    )
+  })
+
+  it("hides the member-only destinations from an anonymous visitor", () => {
+    // Every memberLinks href is outside isPublicPath (see middleware.test.ts),
+    // so showing one here would be a link straight into the login wall.
+    renderMenu({ isLoggedIn: false, userEmail: null })
+    openOverlay()
+
+    for (const link of memberLinks) {
+      expect(
+        screen.queryByRole("link", { name: link.label }),
+        `${link.href} must not be linked without a session`
+      ).toBeNull()
+    }
   })
 
   it("exposes every admin sub-page for an admin", () => {

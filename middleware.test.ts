@@ -40,6 +40,28 @@ describe("middleware public route matching", () => {
     }
   })
 
+  it("keeps every destination in the member-only nav array behind the session gate", async () => {
+    // The mirror of the assertion above, and the reason memberLinks exists as
+    // a fourth array rather than as extra entries in moreLinks. A public href
+    // in here means the array's isLoggedIn gate is hiding a page anyone could
+    // already reach; a gated href in the public arrays means a login-wall dead
+    // end. Both directions now fail loudly.
+    const { isPublicPath } = await import("./middleware")
+    const { memberLinks } = await import("@/components/nav/links")
+
+    expect(memberLinks.length).toBeGreaterThan(0)
+    for (const { href } of memberLinks) {
+      expect(isPublicPath(href), `${href} is rendered only for members`).toBe(false)
+    }
+  })
+
+  it("sends an anonymous visitor from the hotel pricelist to login", async () => {
+    const { isPublicPath } = await import("./middleware")
+
+    expect(isPublicPath("/pricelist-hotel")).toBe(false)
+    expect(isPublicPath("/pricelist-hotel/")).toBe(false)
+  })
+
   it("allows the public service catalog without login", async () => {
     const { isPublicPath } = await import("./middleware")
 
@@ -138,6 +160,13 @@ describe("middleware matcher", () => {
     expect(await matchesMiddleware("/api/admin/pricing/hotel.txt")).toBe(true)
     expect(await matchesMiddleware("/api/admin/users.xml")).toBe(true)
     expect(await matchesMiddleware("/dashboard/report.webmanifest")).toBe(true)
+    // The pricelist holds only a page today, so these 404 rather than leak --
+    // but an export route under the prefix would be served straight past the
+    // session gate, and a catalogue CSV/PDF export is the obvious next feature.
+    expect(await matchesMiddleware("/pricelist-hotel/export.pdf")).toBe(true)
+    expect(await matchesMiddleware("/pricelist-hotel/export.txt")).toBe(true)
+    expect(await matchesMiddleware("/pricelist-hotel/2027.xml")).toBe(true)
+    expect(await matchesMiddleware("/pricelist-hotel/chart.png")).toBe(true)
   })
 
   it("anchors the protected-prefix guard to whole segments", async () => {
@@ -147,15 +176,42 @@ describe("middleware matcher", () => {
     expect(await matchesMiddleware("/api-diagram.png")).toBe(false)
     expect(await matchesMiddleware("/administrasi.pdf")).toBe(false)
     expect(await matchesMiddleware("/estimated-costs.pdf")).toBe(false)
+    expect(await matchesMiddleware("/pricelist-hotel-2027.pdf")).toBe(false)
+
+    // The cost of that anchor, stated rather than left to be rediscovered: a
+    // top-level path whose WHOLE segment ends in an excluded extension is not
+    // the prefix, so it skips -- uniformly, for every guarded prefix. Nothing
+    // is exposed by it. A Next route cannot be reached at /dashboard.pdf
+    // without a literal `dashboard.pdf` segment in app/, and a file that does
+    // exist at that URL is a public/ asset, which is precisely what must skip.
+    // The gap worth closing is /<prefix>/<segment>.<ext>, above.
+    expect(await matchesMiddleware("/dashboard.pdf")).toBe(false)
+    expect(await matchesMiddleware("/pricelist-hotel.pdf")).toBe(false)
   })
 
-  it("agrees with the regex Next actually compiled, on every path asserted here", async () => {
+  it("agrees with the regex Next actually compiled, on every path asserted here", async (ctx) => {
     // Pins compileLikeNext to real build output by BEHAVIOUR, not by string
     // equality -- Next escapes "/" as "\/" and groups differently, which
-    // changes the source text but not what matches. Skips when the app has
-    // not been built; the behavioural tests above still run either way.
+    // changes the source text but not what matches.
+    //
+    // Needs .next/, which is not committed and which this repo has no CI to
+    // produce. Rather than returning early -- reporting a green tick for a test
+    // that asserted nothing, which is how a fresh checkout came to believe the
+    // matcher was pinned -- it marks itself SKIPPED and says why. Throwing
+    // instead would fail `npx vitest run` on a clone that has never built, a
+    // real cost for a check that only `npx next build` can enable; a skip the
+    // runner counts and prints is the honest middle. Every behavioural
+    // assertion above still runs either way -- what is lost is only the
+    // agreement with Next's own compiler.
     const built = builtMatchers()
-    if (built.length === 0) return
+    if (built.length === 0) {
+      console.warn(
+        "middleware.test.ts: no .next/server/middleware-manifest.json, so compileLikeNext " +
+          "is NOT pinned to Next's compiled matcher on this run. Run `npx next build` first.",
+      )
+      ctx.skip()
+      return
+    }
 
     const { config } = await import("./middleware")
     const paths = [
@@ -164,6 +220,9 @@ describe("middleware matcher", () => {
       "/pdf/panduan-umroh-mandiri.pdf", "/transportasi/vehicles/sedan.webp", "/logo.png",
       "/estimate/abc.pdf", "/admin/content/faqs/1.txt", "/api/admin/pricing/hotel.txt",
       "/api/admin/users.xml", "/dashboard/report.webmanifest",
+      "/pricelist-hotel", "/pricelist-hotel/export.pdf", "/pricelist-hotel/export.txt",
+      "/pricelist-hotel/2027.xml", "/pricelist-hotel/chart.png",
+      "/pricelist-hotel-2027.pdf", "/pricelist-hotel.pdf", "/dashboard.pdf",
     ]
 
     for (const pathname of paths) {

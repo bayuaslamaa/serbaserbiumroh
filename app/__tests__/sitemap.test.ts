@@ -49,6 +49,16 @@ describe("sitemap.xml", () => {
     }
   })
 
+  it("omits the session-gated hotel pricelist", async () => {
+    // Redundant with "never exposes a protected route" once /pricelist-hotel
+    // is in PROTECTED_PREFIXES -- kept because it survives that prefix being
+    // dropped, which is the mistake that would put a login redirect in the
+    // sitemap.
+    const urls = (await sitemap()).map((e) => e.url)
+
+    expect(urls).not.toContain(`${SITE_URL}/pricelist-hotel`)
+  })
+
   it("carries a valid lastModified on every entry", async () => {
     const entries = await sitemap()
 

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { buildMonthlyPrices, formatCompactIdr, formatFullIdr, priceRange } from "../pricing"
+import {
+  buildMonthlyPrices,
+  formatCompactIdr,
+  formatFullIdr,
+  formatImportDate,
+  formatSar,
+  priceRange,
+} from "../pricing"
 
 describe("buildMonthlyPrices", () => {
   it("returns twelve months, numbered 1 to 12", () => {
@@ -69,6 +76,27 @@ describe("formatCompactIdr", () => {
   })
 })
 
+describe("formatSar", () => {
+  it("separates thousands the id-ID way", () => {
+    expect(formatSar(1300)).toBe("SAR 1.300")
+    expect(formatSar(12500)).toBe("SAR 12.500")
+  })
+
+  it("carries no per-night suffix", () => {
+    // sarLabel bakes "/mlm" in, which is why a pricelist table cannot reuse it:
+    // the column heading already says what the figure is per.
+    expect(formatSar(1300)).not.toContain("/mlm")
+  })
+
+  it("leaves amounts below a thousand unseparated", () => {
+    expect(formatSar(950)).toBe("SAR 950")
+  })
+
+  it("shows no decimals", () => {
+    expect(formatSar(1300.6)).toBe("SAR 1.301")
+  })
+})
+
 describe("priceRange", () => {
   it("reports the cheapest and most expensive month", () => {
     const prices = buildMonthlyPrices(1000, { 3: 2500, 8: 500 }, 1)
@@ -82,5 +110,23 @@ describe("priceRange", () => {
 
   it("returns null for an empty list rather than Infinity", () => {
     expect(priceRange([])).toBeNull()
+  })
+})
+
+describe("formatImportDate", () => {
+  // Shared by app/(dashboard)/pricelist-hotel/page.tsx and
+  // components/pricelist-hotel/PricelistClient.tsx. It lives in this module
+  // because this one carries no "use client" directive, so a server component
+  // and a client one can each call it -- the duplicate that used to sit in both
+  // files was never forced by the boundary.
+  it("writes an Indonesian short-month calendar date", () => {
+    expect(formatImportDate(new Date("2026-08-05T12:00:00Z"))).toBe("5 Agu 2026")
+  })
+
+  it("agrees on both sides of the server/client boundary for the same instant", () => {
+    const instant = new Date("2026-01-31T12:00:00Z")
+
+    expect(formatImportDate(instant)).toBe(formatImportDate(new Date(instant.getTime())))
+    expect(formatImportDate(instant)).toBe("31 Jan 2026")
   })
 })

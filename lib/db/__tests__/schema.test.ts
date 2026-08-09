@@ -6,6 +6,7 @@ import {
   airlineMonthlyPrices,
   serviceFees,
   roomMultipliers,
+  realHotelPrices,
   users,
   estimates,
   activityLogs,
@@ -59,6 +60,17 @@ describe("schema table definitions", () => {
     expect(cols).toContain("airlinePriceId")
     expect(cols).toContain("month")
     expect(cols).toContain("idr")
+  })
+
+  it("realHotelPrices table has expected columns", () => {
+    const cols = Object.keys(realHotelPrices)
+    expect(cols).toContain("id")
+    expect(cols).toContain("hotelPriceId")
+    expect(cols).toContain("month")
+    expect(cols).toContain("roomType")
+    expect(cols).toContain("sarPerNight")
+    expect(cols).toContain("sourceLabel")
+    expect(cols).toContain("updatedAt")
   })
 
   it("serviceFees table has expected columns including enabled flag", () => {

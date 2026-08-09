@@ -2,28 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import type { PilgrimStory } from '@/lib/db/schema'
 
-// Mock the Select components to simple native selects for testing
-vi.mock('@/components/ui/select', () => {
-  const React = require('react')
-
-  const Select = ({ value, onValueChange, children }: { value: string; onValueChange: (v: string) => void; children: React.ReactNode }) => {
-    return React.createElement('div', { 'data-testid': 'select-wrapper' }, children)
-  }
-
-  const SelectTrigger = ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', { 'data-testid': 'select-trigger' }, children)
-
-  const SelectValue = ({ placeholder }: { placeholder?: string }) =>
-    React.createElement('span', {}, placeholder)
-
-  const SelectContent = ({ children }: { children: React.ReactNode }) =>
-    React.createElement('div', { 'data-testid': 'select-content' }, children)
-
-  const SelectItem = ({ value, children, onClick }: { value: string; children: React.ReactNode; onClick?: () => void }) =>
-    React.createElement('div', { 'data-value': value, 'data-testid': `select-item-${value}`, onClick }, children)
-
-  return { Select, SelectTrigger, SelectValue, SelectContent, SelectItem }
-})
+// Radix's Select never opens under happy-dom, so this suite takes the shared
+// stub in components/ui/__mocks__/select.tsx.
+vi.mock('@/components/ui/select')
 
 function makeStory(overrides: Partial<PilgrimStory> = {}): PilgrimStory {
   return {
@@ -103,9 +84,12 @@ describe('StoryFilters', () => {
 
   it('renders filter dropdowns', () => {
     render(<StoryFilters stories={stories} />)
-    expect(screen.getByText('Semua Kota')).toBeDefined()
-    expect(screen.getByText('Semua Ukuran')).toBeDefined()
-    expect(screen.getByText('Semua Tier')).toBeDefined()
-    expect(screen.getByText('Semua Bulan')).toBeDefined()
+    // getAllByText: the shared stub renders the selected item in the trigger
+    // the way the real SelectValue does, so each default option's text is on
+    // the page twice -- once as the trigger's display, once as the option.
+    expect(screen.getAllByText('Semua Kota').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Semua Ukuran').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Semua Tier').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Semua Bulan').length).toBeGreaterThan(0)
   })
 })

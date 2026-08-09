@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react"
 import { EstimateCta } from "./EstimateCta"
-import { adminLinks, exploreLinks } from "./links"
+import { adminLinks, exploreLinks, memberLinks } from "./links"
 import {
   isExternalHref,
   serviceCardTreatment,
@@ -261,6 +261,25 @@ export function MobileMenu({
                       <LayoutDashboard size={17} className="flex-shrink-0" />
                       Dashboard
                     </Link>
+
+                    {/* Inside the isLoggedIn branch, not under JELAJAHI: every
+                        href here is outside isPublicPath, so an anonymous
+                        visitor tapping one would land on /login. */}
+                    {memberLinks.map((link) => {
+                      const Icon = link.icon
+                      return (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          onClick={close}
+                          className={rowClass}
+                          style={rowBorder}
+                        >
+                          <Icon size={17} className="flex-shrink-0" />
+                          {link.label}
+                        </Link>
+                      )
+                    })}
 
                     {showAdmin && (
                       <div className="flex flex-col">

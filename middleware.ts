@@ -64,13 +64,26 @@ export const config = {
   //    middleware was redirecting anonymous visitors away from the panduan
   //    PDF downloads.
   //
-  // The inner (?!admin|dashboard|estimate|api) on the extension alternative is
-  // load-bearing. Without it, a protected route whose dynamic segment happens
-  // to end in an excluded extension (/estimate/<id>.pdf, /api/admin/x.txt)
-  // skips the middleware entirely. Page bodies and API handlers do guard
-  // themselves, so that is the edge boundary rather than the only lock -- but
-  // losing it silently is how a future unguarded route would ship open.
+  // The inner (?!admin|dashboard|estimate|api|pricelist-hotel) on the extension
+  // alternative is load-bearing. Without it, a protected route whose dynamic
+  // segment happens to end in an excluded extension (/estimate/<id>.pdf,
+  // /api/admin/x.txt) skips the middleware entirely. Page bodies and API
+  // handlers do guard themselves, so that is the edge boundary rather than the
+  // only lock -- but losing it silently is how a future unguarded route would
+  // ship open.
+  //
+  // Every gated prefix has to be listed here, not just the ones with dynamic
+  // segments today. /pricelist-hotel currently holds only page.tsx, so
+  // /pricelist-hotel/export.pdf just 404s -- but a catalogue CSV or PDF export,
+  // the obvious next feature, would be served without ever reaching the session
+  // gate. Adding the prefix when the route is created is cheaper than
+  // remembering to on the day the export lands.
+  //
+  // The (?:/|$) anchor means only /<prefix>/<segment>.<ext> is covered: a
+  // top-level /<prefix>.<ext> is a different segment and still skips, for every
+  // prefix in this list. That is deliberate, and is what keeps public/ assets
+  // like /estimated-costs.pdf out of the auth path.
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|sitemap-.*\\.xml|(?!(?:admin|dashboard|estimate|api)(?:/|$)).*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|txt|xml|webmanifest)$).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|sitemap-.*\\.xml|(?!(?:admin|dashboard|estimate|api|pricelist-hotel)(?:/|$)).*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|txt|xml|webmanifest)$).*)",
   ],
 }

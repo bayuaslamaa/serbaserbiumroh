@@ -57,6 +57,43 @@ export function formatCompactIdr(amount: number): string {
   return `Rp ${amount}`
 }
 
+const sarFormatter = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 })
+
+/**
+ * A bare SAR figure with Indonesian thousands separators.
+ *
+ * Deliberately not sarLabel from lib/estimate/hotel-pricing.ts: that one bakes
+ * in a "/mlm" suffix, which repeats once per cell in a month-by-room-type
+ * table where the heading already says what the figure is per.
+ */
+export function formatSar(amount: number): string {
+  return `SAR ${sarFormatter.format(amount)}`
+}
+
+const importDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+})
+
+/**
+ * The calendar date a catalogue row was last imported (R7).
+ *
+ * Lives here rather than beside either caller because both need it:
+ * app/(dashboard)/pricelist-hotel/page.tsx dates the page from the newest
+ * import, and components/pricelist-hotel/PricelistClient.tsx repeats it per
+ * hotel. This module carries no "use client" directive, so a server component
+ * and a client one can each call it -- which is why the duplicate that used to
+ * sit in both files was never necessary.
+ *
+ * Takes a Date, not `Date | string`: PricelistHotel.updatedAt is a Date, and a
+ * parameter wider than the only thing passed to it invites a caller to hand
+ * over a string this function would silently reformat under a different parse.
+ */
+export function formatImportDate(value: Date): string {
+  return importDateFormatter.format(value)
+}
+
 /** Lowest and highest monthly rate, used to summarise a hotel in one line. */
 export function priceRange(monthlyPrices: MonthlyPriceDetail[]) {
   if (monthlyPrices.length === 0) return null

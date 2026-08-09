@@ -5,6 +5,7 @@ import {
   Hotel,
   Mail,
   MessageCircle,
+  Tags,
   Users,
   type LucideIcon,
 } from "lucide-react"
@@ -33,6 +34,22 @@ export const exploreLinks: NavLink[] = [
   { href: "/webinar-umroh-mandiri", label: "Webinar", icon: CalendarDays },
   { href: "/template-email", label: "Template Email", icon: Mail },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
+]
+
+/**
+ * Destinations that require a session but not the ADMIN role.
+ *
+ * A fourth array rather than extra entries in moreLinks or exploreLinks:
+ * middleware.test.ts asserts every href in those two passes isPublicPath, and
+ * that assertion is right -- a gated href in a nav rendered to anonymous
+ * visitors is a link into the login wall. The mirror assertion covers this
+ * array, so an href that quietly becomes public fails just as loudly.
+ *
+ * Render sites must gate on isLoggedIn: components/nav/MoreMenu.tsx (desktop
+ * "Lainnya") and the AKUN section of components/nav/MobileMenu.tsx.
+ */
+export const memberLinks: NavLink[] = [
+  { href: "/pricelist-hotel", label: "Pricelist Hotel", icon: Tags },
 ]
 
 /**
