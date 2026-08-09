@@ -114,8 +114,13 @@ function roomTypesAcross(hotels: PricelistHotel[], month: number): RoomType[] {
 }
 
 /**
- * The 1-based marker a rate carries, or null when the enclosing list holds a
- * single label and the prose beneath already names it.
+ * The 1-based marker a rate carries, or null when the page holds a single
+ * source label and the prose already names it.
+ *
+ * `labels` is always the page-level list -- every distinct label in the data,
+ * the same one the legend is numbered from -- so a "2" means the same source in
+ * a hotel's month table, in the comparison table, and in the legend. Numbering
+ * per hotel would give one source different numbers on different rows.
  *
  * One helper rather than the same `length > 1` test written at the cell and
  * again at the numbering beneath it: they are one decision, and two copies are
@@ -152,8 +157,11 @@ function EmptyRateCell() {
  * The attribution is per cell, not per table: one hotel can carry a quad rate
  * from the catalogue and a double rate from the per-bed forecast (AE4), and a
  * single footer line would merge the two into something the reader cannot pull
- * apart. The visible marker only appears when the hotel has more than one label
- * -- otherwise the footer already says it once.
+ * apart. The visible marker is numbered off the PAGE-level label list, not the
+ * hotel's own: it appears whenever the page carries more than one source, even
+ * on a hotel that has only one, so the same superscript resolves to the same
+ * legend entry everywhere. A single-source page needs no markers at all --
+ * the legend and the footer already say it once.
  */
 function RateCell({
   sarPerNight,
@@ -200,13 +208,19 @@ function HotelName({ hotel }: { hotel: PricelistHotel }) {
 }
 
 /** The distinct labels under a hotel's table, numbered to match its cell markers. */
-function SourceFooter({ hotel }: { hotel: PricelistHotel }) {
+function SourceFooter({
+  hotel,
+  markerLabels,
+}: {
+  hotel: PricelistHotel
+  markerLabels: string[]
+}) {
   return (
     <p className="mt-2 text-xs" style={{ color: "var(--color-text-muted)" }}>
       Sumber:{" "}
       {hotel.sourceLabels
         .map((label) => {
-          const marker = sourceMarker(hotel.sourceLabels, label)
+          const marker = sourceMarker(markerLabels, label)
           return marker === null ? label : `${marker}. ${label}`
         })
         .join(" · ")}
@@ -216,7 +230,7 @@ function SourceFooter({ hotel }: { hotel: PricelistHotel }) {
 }
 
 /** A hotel's twelve months by its own room types, shown when the section is expanded. */
-function MonthTable({ hotel }: { hotel: PricelistHotel }) {
+function MonthTable({ hotel, markerLabels }: { hotel: PricelistHotel; markerLabels: string[] }) {
   const roomTypes = roomTypesOf(hotel)
 
   return (
@@ -260,9 +274,10 @@ function MonthTable({ hotel }: { hotel: PricelistHotel }) {
                       key={roomType}
                       sarPerNight={rate.sarPerNight}
                       sourceLabel={rate.sourceLabel}
-                      // This hotel's own labels, matching the footer directly
-                      // beneath the table.
-                      marker={sourceMarker(hotel.sourceLabels, rate.sourceLabel)}
+                      // Page-level labels, so a superscript means the same
+                      // source here, in the comparison table, and in the
+                      // legend at the bottom of the page.
+                      marker={sourceMarker(markerLabels, rate.sourceLabel)}
                     />
                   )
                 })}
@@ -367,7 +382,7 @@ function MonthComparisonTable({
   )
 }
 
-function HotelSection({ hotel }: { hotel: PricelistHotel }) {
+function HotelSection({ hotel, markerLabels }: { hotel: PricelistHotel; markerLabels: string[] }) {
   const [expanded, setExpanded] = useState(false)
   const headingId = useId()
   const panelId = useId()
@@ -413,8 +428,8 @@ function HotelSection({ hotel }: { hotel: PricelistHotel }) {
 
       {expanded && (
         <div id={panelId} className="mt-3">
-          <MonthTable hotel={hotel} />
-          <SourceFooter hotel={hotel} />
+          <MonthTable hotel={hotel} markerLabels={markerLabels} />
+          <SourceFooter hotel={hotel} markerLabels={markerLabels} />
         </div>
       )}
     </section>
@@ -577,7 +592,11 @@ export function PricelistClient({ hotels }: PricelistClientProps) {
       ) : (
         <div className="space-y-3">
           {filtered.map((hotel) => (
-            <HotelSection key={hotel.hotelPriceId} hotel={hotel} />
+            <HotelSection
+              key={hotel.hotelPriceId}
+              hotel={hotel}
+              markerLabels={legendLabels}
+            />
           ))}
         </div>
       )}

@@ -57,6 +57,8 @@ export function formatCompactIdr(amount: number): string {
   return `Rp ${amount}`
 }
 
+const sarFormatter = new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 })
+
 /**
  * A bare SAR figure with Indonesian thousands separators.
  *
@@ -65,7 +67,7 @@ export function formatCompactIdr(amount: number): string {
  * table where the heading already says what the figure is per.
  */
 export function formatSar(amount: number): string {
-  return `SAR ${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(amount)}`
+  return `SAR ${sarFormatter.format(amount)}`
 }
 
 const importDateFormatter = new Intl.DateTimeFormat("id-ID", {

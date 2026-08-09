@@ -172,15 +172,20 @@ comment records the gap: *"A dedicated admin UI is deferred — this endpoint is
   places, and `sarLabel()` in `lib/estimate/hotel-pricing.ts` bakes in a `/mlm` suffix this page does
   not want.
 
-- KTD8. **The audience is every signed-in user, wider than the primary reader, and this was chosen
-  with the exposure known.** The cheaper and safer option was admin-only: `/admin` is already in
-  `PROTECTED_PREFIXES`, so robots and sitemap enforcement come free and U4 mostly disappears. The
-  operator chose the wider audience after being shown that Google sign-in is unrestricted — so
-  "signed-in" is not a membership boundary. Two facts made the tradeoff acceptable: signed-in users
-  can already retrieve individual catalogue rates through the `harga_hotel` tool behind
-  `POST /api/estimate/parse` (session-gated only), so this changes the *shape* of access rather than
-  opening a new boundary; and the data is a supplier price list, not user data. Recorded here so a
-  future reader sees a decision, not an oversight.
+- KTD8. **The audience is every signed-in user, and the gate is about presentation rather than
+  confidentiality.** The decision was made twice. First against admin-only, which was cheaper —
+  `/admin` is already in `PROTECTED_PREFIXES`, so robots and sitemap enforcement come free and U4
+  mostly disappears — and the operator chose the wider audience knowing Google sign-in is
+  unrestricted, so "signed-in" bounds nothing.
+
+  Then the premise underneath both options turned out to be false: the source CSV is published on a
+  public GitHub repository (see Risks). Shown that, the operator chose to leave it. So the honest
+  statement of this decision is not "we accepted an exposure" — there is no exposure left to accept.
+  It is that a members-only page is the right *shape* for this content: it keeps supplier figures out
+  of the public IA and out of search, without pretending to guard something a `curl` already reaches.
+
+  Do not reason from this KTD that the login gate protects the data. It does not, and a future change
+  that leans on it for confidentiality would be building on sand.
 
 ### High-Level Technical Design
 
@@ -534,25 +539,23 @@ Manual checks:
 
 ## Risks & Dependencies
 
-- **"Signed in" is not a membership boundary.** `auth.ts` registers Google OAuth with `DrizzleAdapter`
-  and has no `signIn` callback, allowlist, domain restriction, or approval step. Any Google account
-  self-provisions a `USER` row on first sign-in and clears middleware immediately. The audience is
-  therefore unbounded, not the current account count. **The operator was shown this and accepted the
-  exposure.** Recorded as accepted, not mitigated. Trigger for revisiting: restricting sign-in, or
-  evidence that rates are circulating.
+- **The source data is already public, so this page's gate is ergonomics, not protection.**
+  `docs/data/real-hotel-prices-2027.csv` and its per-bed forecast sibling are tracked on `origin/main`
+  of a public GitHub repository — verified 2026-08-09: the API reports `private: false`, and the raw
+  URL returns HTTP 200 with the same figures the page renders, with no session and no account. **The
+  operator was shown this and chose to leave it**, on the basis that a hotel price list is not a
+  competitive secret. Recorded so nobody later reads the login gate as a confidentiality control and
+  builds on that assumption.
 
-- **Members may read a net rate as a quoted price.** Mitigation: the U3 lede. This is the harm copy
-  can actually address.
+  Two consequences follow. The gate still earns its place — it keeps a members-only surface out of the
+  public IA and out of search results — but it protects **presentation**, not data. And the
+  disclosure-shaped risks this section used to carry (an unbounded signed-in audience, bulk
+  extraction in one authenticated request, no access log) are moot for this data: none of them
+  describes anything a reader could not already do with `curl`.
 
-- **The cost base becomes bulk-readable by any signed-in account.** Mitigation: **none.** KTD2's
-  client-side filtering means one authenticated request returns all 804 rows in a scriptable
-  response. Partially pre-existing — `harga_hotel` already serves catalogue rates one hotel at a time
-  to any session — but this page changes retrieval from one-at-a-time to wholesale. Accepted per KTD8.
-
-- **No access record.** The page renders the full corpus with no log entry, so if rates surface
-  externally there is no way to narrow the set of readers. `lib/logging/activity-log.ts` and
-  `logActivity` already exist and are called from the estimate routes for less sensitive reads.
-  Deferred, not rejected — see Open Questions.
+- **Members may read a net rate as a quoted price.** Mitigation: the U3 lede. **This is the one risk
+  the public-repo finding does not touch** — it is about misreading, not disclosure, and it gets
+  worse as the page makes the figures easier to read than the CSV ever was.
 
 - **This resolves an open product decision.** `docs/PRD-umroh-planner-v3.md` §15 risk #2 records
   member access to internal pricing as unresolved. This plan takes the "official user feature" branch
@@ -571,9 +574,10 @@ Manual checks:
   fix is a column on `real_hotel_prices` plus a one-time classification of the existing rows — not a
   substring match. Deferred, not rejected.
 
-- **Should catalogue reads be logged?** One `logActivity` entry per render would make an incident
-  investigable. Left out to keep the page a pure read path; the decision is the operator's, and the
-  answer probably follows whether sign-in gets restricted.
+- ~~**Should catalogue reads be logged?**~~ **Closed by the public-repo finding.** An access log
+  exists to narrow the set of readers after a leak. These figures are downloadable from a public
+  GitHub URL with no session, so a page-level log would record only the readers who took the slower
+  route. Reopen if the source data ever stops being public.
 
 - **Where does the `memberLinks` entry surface?** U4 commits to the same surfaces `adminLinks` uses —
   the account menu and the mobile account section — so the unit is implementable. What remains open is

@@ -25,13 +25,30 @@ export default async function PricelistHotelPage() {
 
   const hotels = composePricelist(await fetchPricelistRows(db))
 
-  // The newest import across every hotel. The database lags the source CSV
-  // between imports, and nothing else on the page tells the reader which import
-  // they are looking at (R7).
-  const lastImportedAt = hotels.reduce<Date | null>(
-    (latest, hotel) => (latest && latest >= hotel.updatedAt ? latest : hotel.updatedAt),
-    null,
-  )
+  // The oldest and newest per-hotel imports. One maximum date across the whole
+  // catalogue overstates freshness after a partial import: a single updated
+  // hotel would make every other hotel look current. The range shows that
+  // unevenness BETWEEN hotels, and only that -- composePricelist already
+  // collapses each hotel's rows to their own maximum updatedAt, so a hotel
+  // where one month was corrected still reports fresh for all twelve. Hence the
+  // rendered wording "per hotel": within a hotel, the uneven state is invisible
+  // here and would need a per-month date to surface (R7).
+  const importRange = hotels.reduce<{ oldest: Date; newest: Date } | null>((range, hotel) => {
+    if (!range) return { oldest: hotel.updatedAt, newest: hotel.updatedAt }
+    return {
+      oldest: hotel.updatedAt < range.oldest ? hotel.updatedAt : range.oldest,
+      newest: hotel.updatedAt > range.newest ? hotel.updatedAt : range.newest,
+    }
+  }, null)
+
+  // Formatted before they are compared, because the comparison has to be about
+  // what the reader sees. Comparing the instants -- getTime() -- printed
+  // "9 Agu 2026–9 Agu 2026" whenever two imports landed on the same calendar
+  // day, which is exactly the partial-correction workflow the range exists for.
+  const importDates = importRange && {
+    oldest: formatImportDate(importRange.oldest),
+    newest: formatImportDate(importRange.newest),
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -56,9 +73,10 @@ export default async function PricelistHotelPage() {
         dan bulan yang sama.
       </p>
 
-      {lastImportedAt && (
+      {importDates && (
         <p className="mt-1 text-xs" style={{ color: "var(--color-text-muted)" }}>
-          Data per {formatImportDate(lastImportedAt)}.
+          Pembaruan data per hotel: {importDates.oldest}
+          {importDates.newest !== importDates.oldest && `–${importDates.newest}`}.
         </p>
       )}
 

@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/db", () => ({ db: {} }))
 
-import { composePricelist, SOURCE_LABEL_NOT_RECORDED, type PricelistRow } from "../pricelist"
+import { composePricelist } from "../pricelist"
+// The vocabulary has one home, and it is not ../pricelist -- that module no
+// longer re-exports it, so a client component cannot reach it through the file
+// that value-imports `db`.
+import { SOURCE_LABEL_NOT_RECORDED, type PricelistRow } from "../pricelist-types"
 
 /**
  * One catalogue row. Every field defaults to the same Makkah hotel so a test

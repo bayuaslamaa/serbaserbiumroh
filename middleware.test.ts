@@ -189,13 +189,29 @@ describe("middleware matcher", () => {
     expect(await matchesMiddleware("/pricelist-hotel.pdf")).toBe(false)
   })
 
-  it("agrees with the regex Next actually compiled, on every path asserted here", async () => {
+  it("agrees with the regex Next actually compiled, on every path asserted here", async (ctx) => {
     // Pins compileLikeNext to real build output by BEHAVIOUR, not by string
     // equality -- Next escapes "/" as "\/" and groups differently, which
-    // changes the source text but not what matches. Skips when the app has
-    // not been built; the behavioural tests above still run either way.
+    // changes the source text but not what matches.
+    //
+    // Needs .next/, which is not committed and which this repo has no CI to
+    // produce. Rather than returning early -- reporting a green tick for a test
+    // that asserted nothing, which is how a fresh checkout came to believe the
+    // matcher was pinned -- it marks itself SKIPPED and says why. Throwing
+    // instead would fail `npx vitest run` on a clone that has never built, a
+    // real cost for a check that only `npx next build` can enable; a skip the
+    // runner counts and prints is the honest middle. Every behavioural
+    // assertion above still runs either way -- what is lost is only the
+    // agreement with Next's own compiler.
     const built = builtMatchers()
-    if (built.length === 0) return
+    if (built.length === 0) {
+      console.warn(
+        "middleware.test.ts: no .next/server/middleware-manifest.json, so compileLikeNext " +
+          "is NOT pinned to Next's compiled matcher on this run. Run `npx next build` first.",
+      )
+      ctx.skip()
+      return
+    }
 
     const { config } = await import("./middleware")
     const paths = [

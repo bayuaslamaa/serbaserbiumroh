@@ -18,17 +18,17 @@ import type { RoomType } from "@/types"
  * This module is server-only in effect: `db` is a value import, so anything
  * that reaches it drags pg into the graph. The shared vocabulary lives in
  * lib/hotels/pricelist-types.ts precisely so a "use client" module can import
- * the sentinel and the interfaces without that. The re-export below keeps
- * server-side importers working against either path.
+ * the sentinel and the interfaces without that.
+ *
+ * Deliberately no re-export of those symbols. This file used to forward them,
+ * which gave every one of them two import paths -- and the hazardous path was
+ * the shorter, more obvious name. The client-boundary scan in
+ * app/(dashboard)/pricelist-hotel/__tests__/page.test.tsx walks one file named
+ * by a string literal, so it would not have caught the next client component
+ * that reached for them here. One home per symbol is what actually holds the
+ * split: pricelist-types.ts for the vocabulary, this file for the query and
+ * the pivot.
  */
-export {
-  CITY_ORDER,
-  SOURCE_LABEL_NOT_RECORDED,
-  TIER_ORDER,
-  type PricelistHotel,
-  type PricelistRate,
-  type PricelistRow,
-} from "@/lib/hotels/pricelist-types"
 
 /**
  * Pivots joined catalogue rows into one entry per hotel.

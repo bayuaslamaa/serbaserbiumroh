@@ -1,91 +1,11 @@
 import { fireEvent, render, screen, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-/**
- * Radix's Select never opens under happy-dom -- it needs pointer capture and a
- * portal that jsdom-alikes do not provide -- so the same stub
- * components/hotel-nusuk/__tests__/HotelFilters.test.tsx uses is repeated here,
- * with three changes:
- *
- *  - an item click actually calls the enclosing Select's onValueChange, which
- *    is what lets these tests drive the filters;
- *  - the Select's `value` reaches the DOM. The original destructured it and
- *    threw it away, so `<Select value={tier} onValueChange={setCity}>` -- a
- *    control that filters correctly but displays somebody else's state -- was
- *    invisible to every test here;
- *  - SelectTrigger forwards aria-label. The component leans on three of them
- *    for the triggers' accessible names, and a stub that dropped the attribute
- *    made those names untestable.
- */
-vi.mock("@/components/ui/select", async () => {
-  const React = await import("react")
-  const ValueContext = React.createContext<{ display?: React.ReactNode; onValueChange: (v: string) => void }>({
-    onValueChange: () => {},
-  })
-
-  /**
-   * What the selected item renders, not its raw value -- the month select is
-   * keyed on "9" and shows "September", so a stub echoing the value would have
-   * tests asserting the stub rather than the component.
-   */
-  function labelFor(children: React.ReactNode, value: string | undefined): React.ReactNode {
-    if (value === undefined) return undefined
-    let found: React.ReactNode
-
-    const visit = (node: React.ReactNode) => {
-      React.Children.forEach(node, (child) => {
-        if (found !== undefined || !React.isValidElement(child)) return
-        const props = child.props as { value?: string; children?: React.ReactNode }
-        if (props.value === value) found = props.children
-        else if (props.children) visit(props.children)
-      })
-    }
-
-    visit(children)
-    return found
-  }
-
-  return {
-    Select: ({
-      value,
-      onValueChange,
-      children,
-    }: {
-      value?: string
-      onValueChange: (value: string) => void
-      children: React.ReactNode
-    }) =>
-      React.createElement(
-        ValueContext.Provider,
-        { value: { display: labelFor(children, value), onValueChange } },
-        children
-      ),
-    SelectTrigger: ({
-      children,
-      ...rest
-    }: {
-      children: React.ReactNode
-      className?: string
-      "aria-label"?: string
-    }) => React.createElement("div", { role: "combobox", ...rest }, children),
-    // The real SelectValue shows the selected item and falls back to the
-    // placeholder only when there is none -- so the stub has to as well.
-    SelectValue: ({ placeholder }: { placeholder?: string }) => {
-      const { display } = React.useContext(ValueContext)
-      return React.createElement("span", null, display ?? placeholder)
-    },
-    SelectContent: ({ children }: { children: React.ReactNode }) =>
-      React.createElement("div", null, children),
-    SelectItem: ({ value, children }: { value: string; children: React.ReactNode }) => {
-      const { onValueChange } = React.useContext(ValueContext)
-      return React.createElement(
-        "button",
-        { type: "button", onClick: () => onValueChange(value) },
-        children
-      )
-    },
-  }
-})
+// Radix's Select never opens under happy-dom, so every suite that renders one
+// takes components/ui/__mocks__/select.tsx instead. Shared rather than inlined:
+// three copies of this stub had drifted, and the two that dropped `value` and
+// `onValueChange` made the filter wiring untestable.
+vi.mock("@/components/ui/select")
 
 import { SOURCE_LABEL_NOT_RECORDED, type PricelistHotel } from "@/lib/hotels/pricelist-types"
 import { PricelistClient } from "../PricelistClient"
@@ -242,6 +162,20 @@ describe("PricelistClient", () => {
     expect(quad).not.toHaveAccessibleName(expect.stringContaining(FORECAST_LABEL))
     expect(double).toHaveAccessibleName(expect.stringContaining(FORECAST_LABEL))
     expect(double).not.toHaveAccessibleName(expect.stringContaining(CATALOGUE_LABEL))
+  })
+
+  it("uses the page legend's source numbers in expanded hotel tables", () => {
+    render(<PricelistClient hotels={hotels} />)
+
+    const august = bodyRows(expand("Millennium Al Aqeeq"))[7]
+    const [quad] = within(august).getAllByRole("cell")
+    const section = screen.getByRole("region", { name: "Millennium Al Aqeeq" })
+
+    // Millennium has only the sentinel label, but it is the third label on
+    // the page. Numbering it locally would either hide the marker or call it
+    // source 1, which points to the catalogue label in the page legend.
+    expect(quad.querySelector("sup")?.textContent).toBe("3")
+    expect(section).toHaveTextContent(`3. ${SOURCE_LABEL_NOT_RECORDED}`)
   })
 
   it("lists every distinct source label in the page-level legend", () => {

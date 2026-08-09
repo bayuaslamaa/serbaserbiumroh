@@ -4,17 +4,24 @@ import path from "node:path"
 import { render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { importGraph, importsOf } from "@/test/import-graph"
+
 /**
  * What this page decides -- who may see it, what it reads, and what it hands
  * the client -- rather than how the list looks. The presentation is covered by
- * components/pricelist-hotel/__tests__/PricelistClient.test.tsx.
+ * components/pricelist-hotel/__tests__/PricelistClient.test.tsx, and the
+ * client's own "use client" boundary by
+ * components/pricelist-hotel/__tests__/client-boundary.test.ts.
+ *
+ * The last describe is the exception, and deliberately so: R9 is a promise
+ * about what this page's module graph may reach, which is a decision the page
+ * makes and not a rendering concern.
  */
 
 vi.mock("@/lib/auth", () => ({ requireAuth: vi.fn() }))
-vi.mock("@/lib/db", () => ({ db: {} }))
 
 /**
- * Hoisted so the vi.mock factory below can write into them -- factories run
+ * Hoisted so the vi.mock factories below can write into them -- factories run
  * before this module's body does.
  *
  * `catalogueCalls` is the point. Binding the assertions to the one name
@@ -25,11 +32,64 @@ vi.mock("@/lib/db", () => ({ db: {} }))
  * the page owes is "no catalogue module function runs before the session is
  * checked, and none runs at all if it is refused" -- so that is what gets
  * recorded.
+ *
+ * `dbTouches` widens that from one module to the whole database. Naming the
+ * catalogue module still leaves the gate porous the other way: a page reading
+ * anything else that talks to Postgres -- lib/stats/visitor-count,
+ * lib/hotels/detail, a dynamic import of @/lib/db -- pays for a query before
+ * the session is checked while `catalogueCalls` stays empty. Every one of them
+ * has to reach the single `db` handle this repo exports, so recording touches
+ * on that handle catches the read whatever module it was written in.
  */
-const { catalogueCalls, fetchRows } = vi.hoisted(() => ({
+const { catalogueCalls, dbTouches, fetchRows } = vi.hoisted(() => ({
   catalogueCalls: [] as string[],
+  dbTouches: [] as string[],
   fetchRows: vi.fn(),
 }))
+
+/**
+ * `db` is a Proxy that records instead of a `{}` that throws.
+ *
+ * `{}` was doing two jobs badly. It could only be noticed by a caller that let
+ * the resulting TypeError propagate, so `void fetchExchangeRate(db).catch(() =>
+ * {})` -- a fire-and-forget warm-up ahead of the gate -- swallowed the throw
+ * and left the redirect test green. And it recorded nothing, so the only
+ * evidence a read had happened was whichever named spy the test remembered to
+ * check. Recording every property access and call means the touch is logged
+ * before anything downstream gets the chance to discard it.
+ */
+vi.mock("@/lib/db", () => {
+  /**
+   * Not a database read: the hooks a test runner, a pretty-printer or `await`
+   * reaches for while inspecting the handle. Answered with something inert and
+   * left out of the log, or `expect(dbTouches).toEqual([])` would be asserting
+   * against vitest's own introspection. `then` in particular must not come back
+   * callable -- a thenable handle makes `await db` hang.
+   */
+  const INSPECTION = new Set(["then", "toString", "valueOf", "toJSON", "inspect", "constructor"])
+
+  const record = (trail: string): unknown =>
+    new Proxy(() => {}, {
+      get(_target, prop) {
+        if (typeof prop === "symbol") {
+          return prop === Symbol.toPrimitive ? () => trail : undefined
+        }
+        if (INSPECTION.has(prop)) return prop === "then" ? undefined : () => trail
+        dbTouches.push(`${trail}.${prop}`)
+        return record(`${trail}.${prop}`)
+      },
+      apply() {
+        dbTouches.push(`${trail}()`)
+        return record(`${trail}()`)
+      },
+      // Keeps a failed assertion's pretty-printer from walking an infinitely
+      // deep object. An arrow function's own keys are all configurable, so
+      // hiding them breaks no Proxy invariant.
+      ownKeys: () => [],
+    })
+
+  return { db: record("db") }
+})
 
 // Every function export is wrapped, not just the query. composePricelist still
 // calls through to the real pivot, so the list the page hands over is the
@@ -63,7 +123,7 @@ vi.mock("@/components/pricelist-hotel/PricelistClient", () => ({
 
 import { requireAuth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import type { PricelistHotel, PricelistRow } from "@/lib/hotels/pricelist"
+import type { PricelistHotel, PricelistRow } from "@/lib/hotels/pricelist-types"
 import PricelistHotelPage from "../page"
 
 const mockRequireAuth = requireAuth as ReturnType<typeof vi.fn>
@@ -131,6 +191,10 @@ describe("/pricelist-hotel gates on a session before it reads the catalogue", ()
   beforeEach(() => {
     vi.clearAllMocks()
     catalogueCalls.length = 0
+    // Static imports link before any test runs, so whatever reading `db` off
+    // the mocked namespace cost is charged to nobody. Cleared here so each test
+    // sees only its own touches.
+    dbTouches.length = 0
     mockFetchPricelistRows.mockResolvedValue(ROWS)
   })
 
@@ -165,6 +229,11 @@ describe("/pricelist-hotel gates on a session before it reads the catalogue", ()
     // Nothing from the catalogue module, not merely nothing from the one
     // function this test used to name.
     expect(catalogueCalls).toEqual([])
+    // And nothing from the database at all. This is the assertion with reach:
+    // catalogueCalls only knows about lib/hotels/pricelist, so a read written
+    // through any other db-touching module -- or a raw db.select() inline --
+    // slips past it and lands here instead.
+    expect(dbTouches).toEqual([])
     expect(pricelistProps).not.toHaveBeenCalled()
   })
 
@@ -182,8 +251,10 @@ describe("/pricelist-hotel gates on a session before it reads the catalogue", ()
 
     if (typeof pageModule.generateMetadata === "function") {
       catalogueCalls.length = 0
+      dbTouches.length = 0
       await pageModule.generateMetadata({ params: {}, searchParams: {} })
       expect(catalogueCalls).toEqual([])
+      expect(dbTouches).toEqual([])
     }
   })
 })
@@ -235,14 +306,50 @@ describe("/pricelist-hotel renders the catalogue for any signed-in user", () => 
     expect(lede).toHaveTextContent(/estimasi/i)
   })
 
-  it("dates the page from the newest import across every hotel (R7)", async () => {
+  it("shows the per-hotel import range when catalogue freshness differs (R7)", async () => {
     signIn("USER")
 
     render(await PricelistHotelPage())
 
-    expect(screen.getByText(new RegExp(`Data per ${NEWEST_IMPORT}`))).toBeInTheDocument()
-    // Not the oldest, and not the first row's date either -- both are 1 Agu.
-    expect(screen.queryByText(new RegExp(OLDER_IMPORT))).toBeNull()
+    expect(
+      screen.getByText(new RegExp(`Pembaruan data per hotel: ${OLDER_IMPORT}–${NEWEST_IMPORT}`)),
+    ).toBeInTheDocument()
+  })
+
+  it("collapses to one date when every hotel was imported on the same run (R7)", async () => {
+    signIn("USER")
+    // One instant across every row: the range has nothing to say, so it must
+    // not say it twice.
+    const sameInstant = new Date("2026-08-05T12:00:00Z")
+    mockFetchPricelistRows.mockResolvedValue(
+      ROWS.map((r) => ({ ...r, updatedAt: sameInstant })),
+    )
+
+    render(await PricelistHotelPage())
+
+    const line = screen.getByText(/Pembaruan data per hotel:/)
+    expect(line).toHaveTextContent(`Pembaruan data per hotel: ${NEWEST_IMPORT}.`)
+    expect(line.textContent).not.toContain("–")
+  })
+
+  it("collapses to one date for two imports on the same calendar day (R7)", async () => {
+    signIn("USER")
+    // The partial-correction workflow: a second import corrects a few hotels
+    // a few hours after the first. Two distinct instants, one calendar date.
+    // Guarding on getTime() rendered "5 Agu 2026–5 Agu 2026" here -- a range
+    // claiming freshness differs when the two displayed dates are identical.
+    // Straddling midday UTC, like ROWS, so the pair stays on one calendar day
+    // in every timezone this suite plausibly runs in.
+    mockFetchPricelistRows.mockResolvedValue([
+      { ...ROWS[0], updatedAt: new Date("2026-08-05T11:45:00Z") },
+      { ...ROWS[2], updatedAt: new Date("2026-08-05T12:15:00Z") },
+    ])
+
+    render(await PricelistHotelPage())
+
+    const line = screen.getByText(/Pembaruan data per hotel:/)
+    expect(line).toHaveTextContent(`Pembaruan data per hotel: ${NEWEST_IMPORT}.`)
+    expect(line.textContent).not.toContain("–")
   })
 
   it("renders the shell and an empty state when the catalogue is empty", async () => {
@@ -256,93 +363,15 @@ describe("/pricelist-hotel renders the catalogue for any signed-in user", () => 
     ).toBeInTheDocument()
     expect(screen.getByText(/belum ada tarif katalog/i)).toBeInTheDocument()
     expect(pricelistProps).not.toHaveBeenCalled()
-    // No rows means no import date to state; a "Data per" line here would be
-    // stating something the page does not know.
-    expect(screen.queryByText(/Data per/)).toBeNull()
+    // No rows means no import date to state; a "Pembaruan data" line here would be
+    // stating something the page does not know. Matched case-insensitively
+    // against the words the page actually renders: the earlier /Data per/
+    // matched no production file at all, so it could not have failed in any
+    // state -- seeding the importRange reduce with a non-null accumulator would
+    // have dated an empty catalogue and left this green.
+    expect(screen.queryByText(/Pembaruan data/i)).toBeNull()
   })
 })
-
-/**
- * Every way this codebase names another module, as {statement, module} pairs.
- *
- * Read from disk rather than imported, the way middleware.test.ts reads the
- * build manifest: what is being asserted is the source text of the import
- * statements, which a module import has already erased.
- *
- * One pattern per form, because a single regex misses most of them. An earlier
- * version matched only `import ... from "m"` with a lazy `[\s\S]*?` in the
- * middle, and six shapes walked straight through it: `await import("m")`,
- * `export ... from "m"`, `require("m")`, a bare `import "m"` -- and, worst,
- * a bare `import "m"` sitting ABOVE another import, because `[\s\S]*?` ran past
- * it and reported the NEXT module in its place. `[^"';]*?` is what stops that
- * one: the clause between `import` and `from` may wrap across lines but can
- * never cross a quote.
- */
-const IMPORT_PATTERNS = [
-  // import x / {x} / * as x / type {x} from "m", and export ... from "m"
-  /\b(?:import|export)\s[^"';]*?\bfrom\s*["']([^"']+)["']/g,
-  // import "m" -- side-effect only, no bindings
-  /\bimport\s*["']([^"']+)["']/g,
-  // import("m") -- dynamic, with or without await
-  /\bimport\s*\(\s*["']([^"']+)["']/g,
-  // require("m")
-  /\brequire\s*\(\s*["']([^"']+)["']/g,
-]
-
-function importsOf(source: string): Array<{ statement: string; module: string }> {
-  const found: Array<{ statement: string; module: string }> = []
-
-  for (const pattern of IMPORT_PATTERNS) {
-    for (const match of source.matchAll(pattern)) {
-      found.push({ statement: match[0], module: match[1] })
-    }
-  }
-
-  return found
-}
-
-/**
- * A repo-local module specifier resolved to the file it names, or null for a
- * package (`react`, `drizzle-orm`) this scan does not follow.
- */
-function resolveLocal(specifier: string, fromFile: string): string | null {
-  let base: string
-  if (specifier.startsWith("@/")) base = path.join(process.cwd(), specifier.slice(2))
-  else if (specifier.startsWith(".")) base = path.resolve(path.dirname(fromFile), specifier)
-  else return null
-
-  for (const candidate of [
-    `${base}.ts`,
-    `${base}.tsx`,
-    path.join(base, "index.ts"),
-    path.join(base, "index.tsx"),
-  ]) {
-    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate
-  }
-
-  return null
-}
-
-/** Every {file, module} edge reachable from an entry file, following repo-local imports. */
-function importGraph(entry: string): Array<{ file: string; module: string }> {
-  const edges: Array<{ file: string; module: string }> = []
-  const seen = new Set<string>()
-  const queue = [path.join(process.cwd(), entry)]
-
-  while (queue.length > 0) {
-    const file = queue.shift() as string
-    if (seen.has(file) || !fs.existsSync(file)) continue
-    seen.add(file)
-
-    for (const { module } of importsOf(fs.readFileSync(file, "utf8"))) {
-      edges.push({ file: path.relative(process.cwd(), file), module })
-      const next = resolveLocal(module, file)
-      if (next) queue.push(next)
-    }
-  }
-
-  return edges
-}
 
 describe("the pricelist stays clear of the estimate pricing path (R9)", () => {
   /**
@@ -402,44 +431,5 @@ describe("the pricelist stays clear of the estimate pricing path (R9)", () => {
         expect(module, `${file} imports from ${module}`).not.toContain(forbidden)
       }
     }
-  })
-})
-
-describe("the pricelist client stays out of the database module graph", () => {
-  const CLIENT = "components/pricelist-hotel/PricelistClient.tsx"
-
-  /**
-   * The gate `pnpm test` and `npx tsc --noEmit` both structurally cannot be.
-   *
-   * This suite mocks @/lib/db, and tsc only checks types, so neither notices a
-   * "use client" module value-importing a server module. The bundler does: it
-   * follows the import into lib/db, into pg, and fails on `fs`/`net`/`dns` --
-   * which is exactly how this branch shipped a build that did not compile.
-   *
-   * `npx next build` is the real check and is now a row in the plan's
-   * Verification Contract. This test is the fast, local one that names the
-   * cause rather than a webpack trace.
-   */
-  it('declares "use client" and reaches @/lib/db from nothing it imports', () => {
-    const source = fs.readFileSync(path.join(process.cwd(), CLIENT), "utf8")
-
-    expect(source.trimStart().startsWith('"use client"')).toBe(true)
-
-    const edges = importGraph(CLIENT)
-    expect(edges.length).toBeGreaterThan(0)
-
-    for (const { file, module } of edges) {
-      // lib/db and lib/db/schema, however they are spelled. Matching the
-      // module rather than the resolved file keeps the failure message naming
-      // the import the author wrote.
-      expect(
-        /(^|\/)lib\/db($|\/)/.test(module),
-        `${file} imports ${module}, which puts pg in the browser bundle`,
-      ).toBe(false)
-    }
-
-    // The specific regression: lib/hotels/pricelist value-imports db, so the
-    // client must take its types from pricelist-types instead.
-    expect(edges.map((edge) => edge.module)).not.toContain("@/lib/hotels/pricelist")
   })
 })
