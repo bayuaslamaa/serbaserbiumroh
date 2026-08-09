@@ -10,7 +10,8 @@ import {
   MessageCircle,
   HelpCircle,
   ShieldCheck,
-  Users
+  Users,
+  SearchCheck
 } from "lucide-react"
 import Link from "next/link"
 import { pageMetadata } from "@/lib/seo/metadata"
@@ -29,6 +30,8 @@ const whatsappLayanan1Href =
 const whatsappLayanan2Href =
   "https://wa.me/6285161134844?text=Assalamu%27alaikum%2C%20saya%20ingin%20mengajukan%20visa%20umroh%20Layanan%202%20reguler%20dengan%20BRN."
 const visaAppHref = "https://visa.serbaserbiumroh.id"
+// Portal resmi Kementerian Luar Negeri Arab Saudi untuk mengecek status/keaslian visa.
+const cekVisaMofaHref = "https://visa.mofa.gov.sa/VISASERVICES/SEARCHVISA"
 
 export default function VisaPage() {
   return (
@@ -62,6 +65,29 @@ export default function VisaPage() {
             <Button variant="outline" size="lg" className="w-full sm:w-auto flex items-center justify-center gap-2 border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-surface)]">
               <MessageCircle className="w-4 h-4" />
               <span>Ajukan via WhatsApp</span>
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Cek Visa Resmi (MOFA) */}
+      <section className="mb-12">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 p-5 md:p-6 rounded-xl border-2 border-[var(--color-gold)] bg-gradient-to-r from-[rgba(201,168,76,0.12)] to-transparent">
+          <div className="flex items-start gap-3 flex-grow">
+            <SearchCheck className="w-6 h-6 md:w-7 md:h-7 text-[var(--color-gold)] shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-base md:text-lg font-bold mb-1" style={{ color: "var(--color-gold)", fontFamily: "var(--font-heading)" }}>
+                Cek Keaslian Visa Anda di Situs Resmi Saudi
+              </h3>
+              <p className="text-xs md:text-sm leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
+                Setelah visa terbit, pastikan status dan keasliannya lewat portal resmi Kementerian Luar Negeri Arab Saudi (MOFA). Siapkan nomor paspor dan nomor visa Anda.
+              </p>
+            </div>
+          </div>
+          <Link href={cekVisaMofaHref} target="_blank" rel="noopener noreferrer" className="w-full md:w-auto shrink-0">
+            <Button size="lg" className="w-full md:w-auto font-bold flex items-center justify-center gap-2 group transition-all duration-300 hover:shadow-lg hover:shadow-[rgba(201,168,76,0.2)]">
+              <span>Cek Visa di MOFA</span>
+              <ExternalLink className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Button>
           </Link>
         </div>
