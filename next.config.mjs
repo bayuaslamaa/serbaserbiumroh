@@ -7,6 +7,9 @@ const nextConfig = {
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
   experimental: {
     serverComponentsExternalPackages: ["pg", "@react-pdf/renderer"],
+    outputFileTracingIncludes: {
+      "/**": ["./content/**/*"],
+    },
   },
   // Config redirects run ahead of middleware, so /hotel no longer bounces
   // anonymous visitors to /login on its way to the directory. permanent:true

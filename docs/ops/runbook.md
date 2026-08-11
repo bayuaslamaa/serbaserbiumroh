@@ -1,161 +1,226 @@
-# Operations Runbook
+# Operations Runbook — Coolify
 
-> **STALE — does not describe production.** This runbook covers a self-hosted
-> Dokploy/Docker/Traefik topology. Production now runs on **Vercel**
-> (`www.serbaserbiumroh.id`), so the reverse-proxy, container, and migration
-> steps below do not apply. Nothing in the repo records when the move happened.
->
-> For current operational procedures see [`seo-go-live.md`](./seo-go-live.md).
-> Retire or rewrite this file before following any of it.
+Deployment target: **Coolify** (self-hosted, Docker + Traefik).
+Database: **Neon** (unchanged by the migration off Vercel).
+Canonical host: `https://www.serbaserbiumroh.id` — see `SITE_URL` in `lib/seo/config.ts`.
 
-## Service Inventory
-
-Fill in after provisioning in Dokploy:
-
-| Service | Dokploy Name | Internal Hostname | Notes |
-|---|---|---|---|
-| Next.js app | `umroh-planner` | — | Port 3000, auto-deploy from `main` |
-| PostgreSQL | `umroh-planner-db` | `<fill in>` | Port 5432, internal only |
-| Volume | `<fill in>` | — | Mounted at `/var/lib/postgresql/data` |
+> Replaces the Dokploy runbook that previously lived here, and the Vercel setup
+> it described in passing. The topologies are close enough that the Dokploy
+> notes were mostly right; the steps below are the current ones.
 
 ---
 
-## First-Time Deploy (U3–U5)
+## 1. What changes when leaving Vercel
 
-### Step 1: Provision PostgreSQL in Dokploy
+Four things Vercel did implicitly that Coolify does not:
 
-1. Dokploy → New Service → Docker Compose or Manual Docker
-2. Image: `postgres:16-alpine`
-3. Environment variables:
-   ```
-   POSTGRES_DB=umroh_planner
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=<strong random password>
-   ```
-4. Attach a **named persistent volume** at `/var/lib/postgresql/data`
-5. Note the internal service hostname (shown in Dokploy network settings) → this is `<postgres-hostname>`
+| Vercel did it | On Coolify you must |
+|---|---|
+| Injected env vars into the build | Pass every `NEXT_PUBLIC_*` as a **build argument** (§3) |
+| Redirected apex → www | Configure the redirect yourself (§6) |
+| Ran `next build` on its own toolchain | Build the `Dockerfile` in this repo |
+| Managed TLS | Let Traefik/Let's Encrypt issue it (§5) |
 
-### Step 2: Provision Next.js App in Dokploy
+Nothing in the application code is Vercel-specific — no code reads `VERCEL_URL`.
 
-1. Dokploy → New Service → GitHub
-2. Connect repo, branch: `main`, build method: Dockerfile
-3. Set environment variables (see `.env.example` for reference):
-   ```
-   DATABASE_URL=postgresql://postgres:<password>@<postgres-hostname>:5432/umroh_planner
-   AUTH_SECRET=<openssl rand -base64 32>
-   AUTH_URL=https://<your-domain>
-   AUTH_TRUST_HOST=1
-   GOOGLE_CLIENT_ID=<from GCP Console>
-   GOOGLE_CLIENT_SECRET=<from GCP Console>
-   ANTHROPIC_API_KEY=<from Anthropic Console>
-   NODE_ENV=production
-   ```
-4. Domain: configure your domain → enable Let's Encrypt SSL
-5. Enable GitHub webhook → copy the generated webhook URL
+### The one that fails silently
 
-### Step 3: Configure GitHub Webhook
+`NEXT_PUBLIC_*` values are **inlined into the client bundle at build time**, not
+read at runtime. If they are absent during `next build`, the build still
+succeeds and the values ship as `undefined`. Verified on this repo:
 
-1. GitHub repo → Settings → Webhooks → Add webhook
-2. Payload URL: `<Dokploy webhook URL from above>`
-3. Content type: `application/json`
-4. Events: `push` only
-5. Save
+- build without them → the bundle contains the string `Link belum tersedia`
+- build with them → the values appear in the client chunk
 
-### Step 4: Update Google Cloud Console
-
-1. GCP Console → APIs & Services → Credentials → your OAuth 2.0 app
-2. Add authorized redirect URI: `https://<your-domain>/api/auth/callback/google`
-3. Save
+So a missing `NEXT_PUBLIC_SSU_GROUP_URL_*` does not break the deploy. It ships
+five dead WhatsApp group links and a dead admin chat link, quietly. Setting them
+as *runtime* environment variables in Coolify is **not** enough — they must be
+build arguments. This is why the `Dockerfile` declares an `ARG` for each.
 
 ---
 
-## Running Database Migrations
+## 2. Prerequisites
 
-Run from the Dokploy Next.js container console (or via `docker exec`):
+- Coolify instance reachable, with a server attached
+- Neon connection string for the production branch
+- DNS for `serbaserbiumroh.id` administered at **Hostinger** (nameservers:
+  `solar.dns-parking.com`, `lunar.dns-parking.com`) — not at Vercel, and not at
+  Coolify
+- Repo access for Coolify (GitHub App or deploy key)
+
+---
+
+## 3. Environment variables
+
+Coolify distinguishes build-time from runtime. Both lists are required.
+
+### Build arguments (must be marked "Build Variable" in Coolify)
+
+| Variable | Notes |
+|---|---|
+| `NEXT_PUBLIC_SSU_GROUP_URL_1` … `_5` | One WhatsApp invite per SSU group. A blank one renders "Link belum tersedia" rather than a dead link |
+| `NEXT_PUBLIC_COMMUNITY_ADMIN_WHATSAPP_URL` | `https://wa.me/<number>` |
+| `NEXT_PUBLIC_SHOW_MONTHLY_HOTEL_PRICE` | `true` or `false`. Currently `false` |
+| `DATABASE_URL` | Optional at build. Present → hotel and story pages prerender. Absent → they render on demand, which works but is slower on first hit |
+
+### Runtime variables
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Neon connection string, `?sslmode=require` |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `AUTH_URL` | `https://www.serbaserbiumroh.id` — the **www** host. An apex value sends every auth redirect off the canonical host and back via the apex→www hop |
+| `AUTH_TRUST_HOST` | `1` — required behind Traefik |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | From GCP Console |
+| `ANTHROPIC_API_KEY` | From Anthropic Console |
+| `WEBINAR_RSVP_URL` | Only rendered to signed-in users, and only if `https://` |
+| `NODE_ENV` | `production` |
+
+`NEXT_PUBLIC_*` should be set in **both** lists: build args for the bundle,
+runtime for any server-side read.
+
+### Google OAuth
+
+Add the redirect URI before the first login attempt:
+
+```
+https://www.serbaserbiumroh.id/api/auth/callback/google
+```
+
+---
+
+## 4. Create the application in Coolify
+
+1. **New Resource → Application → Public/Private Repository**
+2. Repository: this repo. Branch: `main`
+3. **Build Pack: Dockerfile** (not Nixpacks — the repo ships its own)
+4. Port: `3000`
+5. Add the variables from §3, marking the build ones as build variables
+6. Deploy
+
+The image is a three-stage build: dependency install, `next build`, then a
+runner carrying only `.next/standalone`, `.next/static` and `public/`. It runs
+as the non-root `nextjs` user and listens on `0.0.0.0:3000`.
+
+`pnpm` is pinned by the `packageManager` field in `package.json` and enabled
+through corepack. This matters: pnpm 9 **fails outright** on this repo, because
+`pnpm-workspace.yaml` carries only `allowBuilds` and no `packages:` field. An
+unpinned `npm install -g pnpm` is a build that breaks on someone else's release
+schedule.
+
+---
+
+## 5. Domain and TLS
+
+1. In Hostinger DNS, point both records at the Coolify server:
+   - `A  @    <server-ip>`
+   - `A  www  <server-ip>` (or `CNAME www` → the Coolify FQDN)
+2. In Coolify, set the application domain to `https://www.serbaserbiumroh.id`
+3. Let Coolify request the Let's Encrypt certificate
+
+Keep the old Vercel deployment live until DNS has propagated and §7 passes.
+
+---
+
+## 6. Apex → www redirect
+
+**Do not skip this.** `www` is canonical across the sitemap, every canonical
+tag, OpenGraph, and JSON-LD. Vercel served the apex→www 307 for free. Without an
+equivalent on Coolify, the apex either fails to resolve or serves the whole site
+a second time under a non-canonical host — duplicate content, and split ranking
+signals.
+
+In Coolify, add `serbaserbiumroh.id` as a second domain on the same application
+and enable its redirect-to-primary setting, or add a Traefik redirect label:
+
+```
+traefik.http.middlewares.apex-to-www.redirectregex.regex=^https?://serbaserbiumroh\.id/(.*)
+traefik.http.middlewares.apex-to-www.redirectregex.replacement=https://www.serbaserbiumroh.id/$${1}
+traefik.http.middlewares.apex-to-www.redirectregex.permanent=true
+```
+
+`permanent=true` emits a 301 rather than Vercel's 307, which is the better
+signal for a redirect that is never going to change.
+
+---
+
+## 7. Database migrations
+
+Migrations are **not** run by the image. Drizzle Kit is a dev dependency and is
+not traced into the standalone output, and a migration inside the container
+would race across replicas on every redeploy.
+
+Run them from a machine with the production `DATABASE_URL` before deploying a
+release that changes the schema:
 
 ```bash
-# DATABASE_URL is already in the container environment from Dokploy
-npx drizzle-kit migrate
+DATABASE_URL='<neon-production-url>' pnpm db:migrate
 ```
 
-Do NOT use `pnpm db:migrate` — it tries to load `.env.local` which doesn't exist in the container.
+Neon is unchanged by this migration, so nothing needs to run for the move itself
+— only for future schema changes.
 
-Verify all 9 migrations applied:
-```sql
-SELECT * FROM drizzle.__drizzle_migrations ORDER BY created_at;
-```
+> If this is forgotten often enough to hurt, the upgrade path is a Coolify
+> pre-deployment command against an image that carries `drizzle/` and
+> `drizzle-kit`. That costs image weight; do it when the manual step actually
+> fails, not before.
 
 ---
 
-## Running the Seed Script
+## 8. Post-deploy verification
 
-Run from the Dokploy Next.js container console after migrations:
+Run against the live host. Every line below is a check that has caught a real
+regression in this repo.
 
 ```bash
-node -e "
-const { drizzle } = require('drizzle-orm/node-postgres');
-const { Pool } = require('pg');
-" 
-# Or use the built-in seed:
-npx tsx lib/db/seed.ts
+BASE=https://www.serbaserbiumroh.id
+
+# Unrouted URLs must 404, not redirect to /login
+curl -sI $BASE/halaman-tidak-ada | head -1          # HTTP/2 404
+
+# Public pages
+curl -sI $BASE/panduan/panduan-umroh-mandiri | head -1   # 200
+curl -sI $BASE/visa | head -1                            # 200
+
+# Private pages still gated
+curl -sI $BASE/dashboard | head -1                  # 307 → /login
+
+# The guides are in the sitemap (needs outputFileTracingIncludes)
+curl -s $BASE/sitemap.xml | grep -c 'panduan/'      # ≥ 1
+
+# Social cards render
+curl -sI $BASE/opengraph-image | grep -i content-type   # image/png
+
+# Apex redirects to www, permanently
+curl -sI https://serbaserbiumroh.id/ | head -1      # 301
+
+# The WhatsApp group links survived the build
+curl -s $BASE/komunitas | grep -c 'chat.whatsapp.com'   # > 0
 ```
 
-Safe to re-run — uses `onConflictDoNothing`.
+That last one is the check for §1's silent failure. If it returns `0`, the
+`NEXT_PUBLIC_SSU_GROUP_URL_*` build arguments did not reach `next build`.
 
 ---
 
-## Promoting the First Admin User
+## 9. Known limits
 
-1. Sign in once at `https://<your-domain>` via Google OAuth (creates the user row)
-2. In the Postgres container console:
-   ```sql
-   UPDATE users SET role = 'ADMIN' WHERE email = 'bayuaslamaa@gmail.com';
-   SELECT email, role FROM users;
-   ```
-
----
-
-## Manual Database Backup
-
-```bash
-# From your local machine or the VPS
-pg_dump "postgresql://postgres:<password>@<your-domain or VPS IP>:5432/umroh_planner" \
-  --no-acl --no-owner -Fc \
-  -f backup_$(date +%Y%m%d_%H%M%S).dump
-
-# Verify the dump is non-empty
-ls -lh backup_*.dump
-```
-
-To restore from backup:
-```bash
-pg_restore --no-acl --no-owner \
-  -d "postgresql://postgres:<password>@<host>:5432/umroh_planner" \
-  backup_YYYYMMDD_HHMMSS.dump
-```
+- **ISR cache is ephemeral.** `revalidate = 3600` on `app/sitemap.ts`,
+  `/hotel-nusuk` and `/hotel-nusuk/[slug]` writes to the container filesystem.
+  It is wiped on every redeploy and is not shared between replicas. Fine at one
+  instance; needs a shared cache handler if the app is ever scaled out.
+- **No health check is configured.** Coolify's default TCP check on port 3000
+  will pass before the app can serve a request.
+- **Search Console** verification is an HTML tag in `lib/seo/metadata.ts` and is
+  host-based, so it survives the move. The property covers
+  `https://www.serbaserbiumroh.id` only — not the apex, not
+  `visa.serbaserbiumroh.id`.
 
 ---
 
-## Future Schema Changes
+## 10. Rollback
 
-1. Add the new Drizzle migration file under `drizzle/migrations/`
-2. Commit and push to `main` (Dokploy auto-deploys)
-3. After deploy completes, run migrations manually:
-   ```bash
-   # In the Dokploy Next.js container console
-   npx drizzle-kit migrate
-   ```
-
----
-
-## Smoke Test Checklist
-
-Run after every major deploy:
-
-- [ ] `https://<domain>/` — landing page loads without auth
-- [ ] `https://<domain>/login` — login page renders
-- [ ] Google Sign-In → redirects to `/dashboard`
-- [ ] Create new estimate at `/estimate/new`
-- [ ] Export estimate as PDF
-- [ ] Access `/admin/pricing` as admin user
-- [ ] Push a trivial commit to `main` → new build appears in Dokploy within ~1 minute
+Coolify keeps previous deployments. Roll back from the application's Deployments
+tab. If the whole migration needs reverting, repoint the Hostinger DNS records
+at Vercel — keep that project un-deleted until the Coolify deployment has been
+stable for a full crawl cycle.

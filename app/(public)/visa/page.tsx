@@ -153,12 +153,12 @@ export default function VisaPage() {
                   <span>
                     Booking hotel Mekkah & Madinah yang terdaftar di Nusuk Masar. Bisa cek rekomendasi kami di{" "}
                     <Link
-                      href="https://serbaserbiumroh.id/hotel-nusuk"
+                      href="/hotel-nusuk"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold text-[var(--color-gold)] underline underline-offset-4 hover:text-[var(--color-gold-muted)]"
                     >
-                      serbaserbiumroh.id/hotel-nusuk
+                      www.serbaserbiumroh.id/hotel-nusuk
                     </Link>
                   </span>
                 </li>

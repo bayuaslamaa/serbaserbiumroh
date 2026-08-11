@@ -7,3 +7,4 @@ docs/
 .git
 .gitignore
 README.md
+/*.pdf

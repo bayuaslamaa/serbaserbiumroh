@@ -2,7 +2,7 @@ import { asc, eq } from "drizzle-orm"
 
 import { db } from "@/lib/db"
 import { hotelPrices, pilgrimStories } from "@/lib/db/schema"
-import { getAllGuides } from "@/lib/panduan"
+import { getAllGuides, HTML_PUBLISHED_SLUGS } from "@/lib/panduan"
 
 export interface DynamicRoute {
   path: string
@@ -26,7 +26,9 @@ async function safely<T>(label: string, load: () => Promise<T[]>): Promise<T[]> 
 
 export function guideRoutes(): DynamicRoute[] {
   try {
-    return getAllGuides().map((guide) => ({ path: `/panduan/${guide.slug}` }))
+    return getAllGuides()
+      .filter((guide) => HTML_PUBLISHED_SLUGS.has(guide.slug))
+      .map((guide) => ({ path: `/panduan/${guide.slug}` }))
   } catch (error) {
     console.error("Sitemap: could not read the panduan directory.", error)
     return []

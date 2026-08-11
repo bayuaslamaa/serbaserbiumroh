@@ -38,6 +38,9 @@ export const rootMetadata: Metadata = {
     index: true,
     follow: true,
   },
+  verification: {
+    google: "RJgJ580cHLirhyNStiNauBjofs_kUb2RMuKmLYy1qtM",
+  },
 }
 
 interface PageMetadataInput {

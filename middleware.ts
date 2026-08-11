@@ -4,49 +4,48 @@ import { authConfig } from "@/auth.config"
 
 const { auth } = NextAuth(authConfig)
 
-export function isPublicPath(pathname: string) {
-  return (
-    pathname === "/" ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/community") ||
-    pathname.startsWith("/api/visitor") ||
-    pathname.startsWith("/panduan") ||
-    pathname.startsWith("/cerita-jamaah") ||
-    pathname.startsWith("/hotel-nusuk") ||
-    pathname.startsWith("/faq") ||
-    pathname.startsWith("/komunitas") ||
-    pathname.startsWith("/webinar-umroh-mandiri") ||
-    pathname.startsWith("/visa") ||
-    pathname.startsWith("/transportasi") ||
-    pathname.startsWith("/layanan") ||
-    pathname.startsWith("/badalin") ||
-    pathname.startsWith("/template-email")
+export const PRIVATE_PREFIXES = [
+  "/dashboard",
+  "/estimate",
+  "/pricelist-hotel",
+  "/admin",
+  "/api/estimate",
+  "/api/admin",
+] as const
+
+export function isPrivatePath(pathname: string) {
+  return PRIVATE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   )
+}
+
+export function isPublicPath(pathname: string) {
+  return !isPrivatePath(pathname)
 }
 
 export default auth((req) => {
   const { nextUrl, auth: session } = req
+  const { pathname } = nextUrl
   const isLoggedIn = !!session?.user
 
-  const isAuthRoute = nextUrl.pathname.startsWith("/login")
-  const isAdminRoute = nextUrl.pathname.startsWith("/admin")
-  const isPublicRoute = isPublicPath(nextUrl.pathname)
+  if (pathname === "/login" || pathname.startsWith("/login/")) {
+    return isLoggedIn
+      ? NextResponse.redirect(new URL("/dashboard", nextUrl))
+      : NextResponse.next()
+  }
 
-  if (isPublicRoute) {
-    if (isLoggedIn && isAuthRoute) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl))
-    }
+  if (!isPrivatePath(pathname)) {
     return NextResponse.next()
   }
 
   if (!isLoggedIn) {
     const loginUrl = new URL("/login", nextUrl)
-    loginUrl.searchParams.set("callbackUrl", nextUrl.pathname)
+    loginUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  if (isAdminRoute && session.user.role !== "ADMIN") {
+  const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/")
+  if (isAdminPage && session.user.role !== "ADMIN") {
     return NextResponse.redirect(new URL("/dashboard", nextUrl))
   }
 
@@ -54,36 +53,13 @@ export default auth((req) => {
 })
 
 export const config = {
-  // Everything this pattern matches runs the auth middleware. Two kinds of
-  // request must skip it entirely:
-  //
-  // 1. Crawler metadata routes. robots.txt and sitemap.xml are Next metadata
-  //    routes, and middleware intercepting them stops the route handler from
-  //    running at all -- so Google was served a login redirect instead.
-  // 2. Public static files under public/. They carry no session, and the
-  //    middleware was redirecting anonymous visitors away from the panduan
-  //    PDF downloads.
-  //
-  // The inner (?!admin|dashboard|estimate|api|pricelist-hotel) on the extension
-  // alternative is load-bearing. Without it, a protected route whose dynamic
-  // segment happens to end in an excluded extension (/estimate/<id>.pdf,
-  // /api/admin/x.txt) skips the middleware entirely. Page bodies and API
-  // handlers do guard themselves, so that is the edge boundary rather than the
-  // only lock -- but losing it silently is how a future unguarded route would
-  // ship open.
-  //
-  // Every gated prefix has to be listed here, not just the ones with dynamic
-  // segments today. /pricelist-hotel currently holds only page.tsx, so
-  // /pricelist-hotel/export.pdf just 404s -- but a catalogue CSV or PDF export,
-  // the obvious next feature, would be served without ever reaching the session
-  // gate. Adding the prefix when the route is created is cheaper than
-  // remembering to on the day the export lands.
-  //
-  // The (?:/|$) anchor means only /<prefix>/<segment>.<ext> is covered: a
-  // top-level /<prefix>.<ext> is a different segment and still skips, for every
-  // prefix in this list. That is deliberate, and is what keeps public/ assets
-  // like /estimated-costs.pdf out of the auth path.
   matcher: [
-    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|sitemap-.*\\.xml|(?!(?:admin|dashboard|estimate|api|pricelist-hotel)(?:/|$)).*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|pdf|txt|xml|webmanifest)$).*)",
+    "/dashboard(/.*)?",
+    "/estimate(/.*)?",
+    "/pricelist-hotel(/.*)?",
+    "/admin(/.*)?",
+    "/api/estimate(/.*)?",
+    "/api/admin(/.*)?",
+    "/login",
   ],
 }
