@@ -1,6 +1,7 @@
 import { MessageCircle } from 'lucide-react'
 import { layananConsultHref } from '@/lib/services/catalog'
-import { ANALYTICS_EVENTS, TrackedLink } from '@/components/analytics/TrackedLink'
+import { ANALYTICS_EVENTS } from '@/lib/analytics'
+import { TrackedLink } from '@/components/analytics/TrackedLink'
 import { FullBleed } from '@/components/layout/FullBleed'
 import { PageColumn } from '@/components/layout/PageColumn'
 

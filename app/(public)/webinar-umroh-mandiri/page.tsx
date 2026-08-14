@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { auth } from "@/auth"
-import { ANALYTICS_EVENTS, TrackedLink } from "@/components/analytics/TrackedLink"
+import { ANALYTICS_EVENTS } from "@/lib/analytics"
+import { TrackedLink } from "@/components/analytics/TrackedLink"
 import { Button } from "@/components/ui/button"
 import { Info, Youtube, Tv } from "lucide-react"
 import { pageMetadata } from "@/lib/seo/metadata"

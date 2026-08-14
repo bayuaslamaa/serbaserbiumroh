@@ -1,6 +1,6 @@
 "use client"
 
-import { ANALYTICS_EVENTS, track } from "@/lib/analytics"
+import { track } from "@/lib/analytics"
 
 type TrackedLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
   event: string
@@ -16,6 +16,10 @@ type TrackedLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
  *
  * Only for links GA cannot infer — outbound and cross-app ones. Internal
  * navigation is already covered by pageviews, so it needs no event.
+ *
+ * Import ANALYTICS_EVENTS from "@/lib/analytics", never from here: re-exporting
+ * it through this file makes it a client-module reference, and a server
+ * component reading `.CONTACT.CONSULT_CLICK` off that throws at render.
  */
 export function TrackedLink({ event, params, onClick, children, ...rest }: TrackedLinkProps) {
   return (
@@ -30,5 +34,3 @@ export function TrackedLink({ event, params, onClick, children, ...rest }: Track
     </a>
   )
 }
-
-export { ANALYTICS_EVENTS }
