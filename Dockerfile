@@ -1,4 +1,8 @@
-FROM node:20-alpine AS base
+# Node 20 lacks worker_threads.markAsUncloneable, which undici 8 calls at import
+# time — so jsdom, pulled in by isomorphic-dompurify on /artikel/[slug], threw
+# during "Collecting page data". Node 22 has it; local builds passed only because
+# this machine already runs 22.
+FROM node:22-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -32,7 +36,7 @@ ENV NEXT_PUBLIC_SSU_GROUP_URL_1=$NEXT_PUBLIC_SSU_GROUP_URL_1 \
 
 RUN pnpm run build
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000
 
