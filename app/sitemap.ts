@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 
 import { absoluteUrl } from "@/lib/seo/config"
-import { guideRoutes, hotelRoutes, storyRoutes } from "@/lib/seo/dynamic-routes"
+import { articleRoutes, guideRoutes, hotelRoutes, storyRoutes } from "@/lib/seo/dynamic-routes"
 import { STATIC_ROUTES } from "@/lib/seo/routes"
 
 // Matches the hotel pages' revalidate window, so a hotel or story added
@@ -19,7 +19,11 @@ export const revalidate = 3600
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const generatedAt = new Date()
 
-  const [hotels, stories] = await Promise.all([hotelRoutes(), storyRoutes()])
+  const [hotels, stories, articles] = await Promise.all([
+    hotelRoutes(),
+    storyRoutes(),
+    articleRoutes(),
+  ])
   const guides = guideRoutes()
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((route) => ({
@@ -50,5 +54,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticEntries, ...guideEntries, ...hotelEntries, ...storyEntries]
+  const articleEntries: MetadataRoute.Sitemap = articles.map((route) => ({
+    url: absoluteUrl(route.path),
+    lastModified: route.lastModified ?? generatedAt,
+    changeFrequency: "monthly",
+    priority: 0.8,
+  }))
+
+  return [
+    ...staticEntries,
+    ...guideEntries,
+    ...hotelEntries,
+    ...storyEntries,
+    ...articleEntries,
+  ]
 }

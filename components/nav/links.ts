@@ -5,6 +5,7 @@ import {
   Hotel,
   Mail,
   MessageCircle,
+  Newspaper,
   Tags,
   Users,
   type LucideIcon,
@@ -18,6 +19,7 @@ export interface NavLink {
 
 /** Secondary destinations behind the desktop "Lainnya" dropdown. */
 export const moreLinks: NavLink[] = [
+  { href: "/artikel", label: "Artikel", icon: Newspaper },
   { href: "/cerita-jamaah", label: "Cerita Jamaah", icon: Users },
   { href: "/hotel-nusuk", label: "Hotel Nusuk", icon: Hotel },
   { href: "/faq", label: "FAQ", icon: HelpCircle },
@@ -28,6 +30,7 @@ export const moreLinks: NavLink[] = [
 /** The mobile overlay's JELAJAHI section — every non-service destination. */
 export const exploreLinks: NavLink[] = [
   { href: "/panduan", label: "Panduan", icon: Compass },
+  { href: "/artikel", label: "Artikel", icon: Newspaper },
   { href: "/cerita-jamaah", label: "Cerita Jamaah", icon: Users },
   { href: "/hotel-nusuk", label: "Hotel Nusuk", icon: Hotel },
   { href: "/komunitas", label: "Komunitas", icon: MessageCircle },

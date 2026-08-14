@@ -1,5 +1,6 @@
 import { asc, eq } from "drizzle-orm"
 
+import { getArticles } from "@/lib/articles"
 import { db } from "@/lib/db"
 import { hotelPrices, pilgrimStories } from "@/lib/db/schema"
 import { getAllGuides, HTML_PUBLISHED_SLUGS } from "@/lib/panduan"
@@ -33,6 +34,15 @@ export function guideRoutes(): DynamicRoute[] {
     console.error("Sitemap: could not read the panduan directory.", error)
     return []
   }
+}
+
+export function articleRoutes(): Promise<DynamicRoute[]> {
+  return getArticles({ limit: 200 }).then(({ items }) =>
+    items.map((article) => ({
+      path: `/artikel/${article.slug}`,
+      lastModified: new Date(article.updatedAt),
+    })),
+  )
 }
 
 export function hotelRoutes(): Promise<DynamicRoute[]> {

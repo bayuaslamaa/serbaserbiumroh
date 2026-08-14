@@ -39,6 +39,7 @@ export const STATIC_ROUTES: StaticRoute[] = [
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
   { path: "/hotel-nusuk", changeFrequency: "daily", priority: 0.9 },
   { path: "/panduan", changeFrequency: "weekly", priority: 0.9 },
+  { path: "/artikel", changeFrequency: "daily", priority: 0.9 },
   { path: "/layanan", changeFrequency: "weekly", priority: 0.8 },
   { path: "/visa", changeFrequency: "weekly", priority: 0.8 },
   { path: "/transportasi", changeFrequency: "weekly", priority: 0.8 },
