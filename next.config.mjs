@@ -21,6 +21,16 @@ const nextConfig = {
         destination: '/hotel-nusuk',
         permanent: true,
       },
+      // Apex -> www lived in the Vercel dashboard, not in this repo, so it
+      // disappears the moment DNS points at Coolify. Owning it here keeps the
+      // canonical host correct on any host. permanent:true = 308, replacing
+      // Vercel's 307 so the redirect is cacheable and passes link equity.
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'serbaserbiumroh.id' }],
+        destination: 'https://www.serbaserbiumroh.id/:path*',
+        permanent: true,
+      },
     ]
   },
 }
