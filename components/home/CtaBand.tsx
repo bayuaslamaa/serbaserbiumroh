@@ -1,5 +1,6 @@
 import { MessageCircle } from 'lucide-react'
 import { layananConsultHref } from '@/lib/services/catalog'
+import { ANALYTICS_EVENTS, TrackedLink } from '@/components/analytics/TrackedLink'
 import { FullBleed } from '@/components/layout/FullBleed'
 import { PageColumn } from '@/components/layout/PageColumn'
 
@@ -32,7 +33,9 @@ export function CtaBand() {
               Tanya langsung ke admin — gratis, dijawab manusia, bukan bot.
             </p>
           </div>
-          <a
+          <TrackedLink
+            event={ANALYTICS_EVENTS.CONTACT.CONSULT_CLICK}
+            params={{ placement: 'home_cta_band' }}
             href={layananConsultHref}
             target="_blank"
             rel="noopener noreferrer"
@@ -40,7 +43,7 @@ export function CtaBand() {
           >
             <MessageCircle className="h-[17px] w-[17px]" aria-hidden />
             Chat Admin WhatsApp
-          </a>
+          </TrackedLink>
         </section>
       </PageColumn>
     </FullBleed>

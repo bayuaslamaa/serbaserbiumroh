@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { auth } from "@/auth"
+import { ANALYTICS_EVENTS, TrackedLink } from "@/components/analytics/TrackedLink"
 import { Button } from "@/components/ui/button"
 import { Info, Youtube, Tv } from "lucide-react"
 import { pageMetadata } from "@/lib/seo/metadata"
@@ -95,7 +96,9 @@ export default async function WebinarUmrohMandiriPage() {
                 Jika ruang Zoom sudah penuh, silakan tonton siaran langsung di:
               </p>
               <div className="flex flex-wrap gap-3 pt-1">
-                <a
+                <TrackedLink
+                  event={ANALYTICS_EVENTS.WEBINAR.SOCIAL_CLICK}
+                  params={{ channel: "youtube" }}
                   href={socialHref("YouTube")}
                   target="_blank"
                   rel="noreferrer"
@@ -103,8 +106,10 @@ export default async function WebinarUmrohMandiriPage() {
                 >
                   <Youtube className="w-4 h-4" />
                   <span>Live YouTube</span>
-                </a>
-                <a
+                </TrackedLink>
+                <TrackedLink
+                  event={ANALYTICS_EVENTS.WEBINAR.SOCIAL_CLICK}
+                  params={{ channel: "tiktok" }}
                   href={socialHref("TikTok")}
                   target="_blank"
                   rel="noreferrer"
@@ -112,7 +117,7 @@ export default async function WebinarUmrohMandiriPage() {
                 >
                   <Tv className="w-4 h-4" />
                   <span>Live TikTok</span>
-                </a>
+                </TrackedLink>
               </div>
             </div>
           </div>
@@ -134,7 +139,8 @@ export default async function WebinarUmrohMandiriPage() {
               <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-muted)" }}>
                 Kakak sudah login. Silakan lanjut RSVP lewat tombol di bawah ini.
               </p>
-              <a
+              <TrackedLink
+                event={ANALYTICS_EVENTS.WEBINAR.RSVP_CLICK}
                 href={rsvpUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -142,7 +148,7 @@ export default async function WebinarUmrohMandiriPage() {
                 style={{ background: "var(--color-gold)", color: "#1a1206" }}
               >
                 RSVP Sekarang
-              </a>
+              </TrackedLink>
             </>
           ) : isLoggedIn ? (
             <p className="mt-3 text-sm leading-relaxed" style={{ color: "var(--color-text-muted)" }}>

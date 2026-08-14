@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import ReactMarkdown from "react-markdown"
+import DOMPurify from "isomorphic-dompurify"
 
 import { ARTICLE_REVALIDATE_SECONDS, getArticle } from "@/lib/articles"
 import { absoluteUrl } from "@/lib/seo/config"
@@ -104,9 +104,10 @@ export default async function ArtikelDetailPage({ params }: ArtikelDetailProps) 
           .join(" · ")}
       </p>
 
-      <div className="prose prose-invert max-w-none">
-        <ReactMarkdown>{article.content}</ReactMarkdown>
-      </div>
+      <div
+        className="prose prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(article.content) }}
+      />
 
       {article.tags.length > 0 && (
         <p className="text-xs mt-10" style={{ color: "var(--color-text-muted)" }}>

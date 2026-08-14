@@ -6,7 +6,7 @@ const nextConfig = {
   output: 'standalone',
   pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'mdx'],
   experimental: {
-    serverComponentsExternalPackages: ["pg", "@react-pdf/renderer"],
+    serverComponentsExternalPackages: ["pg", "@react-pdf/renderer", "isomorphic-dompurify"],
     outputFileTracingIncludes: {
       "/**": ["./content/**/*"],
     },

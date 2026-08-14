@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics"
 import {
   SSU_GROUPS,
   STATS_SNAPSHOT_LABEL,
@@ -114,6 +115,7 @@ function GroupRow({ group }: { group: SsuGroup }) {
       href={group.url}
       target="_blank"
       rel="noreferrer"
+      onClick={() => track(ANALYTICS_EVENTS.COMMUNITY.GROUP_CLICK, { group_id: group.id })}
       aria-label={`Ajukan masuk grup ${group.label}${
         group.isNewest ? " (grup terbaru)" : ""
       }, ${activity}`}
@@ -154,6 +156,8 @@ export function CommunityJoinForm({ adminChatUrl }: CommunityJoinFormProps) {
       intent,
     }
 
+    track(ANALYTICS_EVENTS.COMMUNITY.SUBMIT)
+
     startTransition(async () => {
       try {
         const res = await fetch("/api/community/join", {
@@ -165,12 +169,17 @@ export function CommunityJoinForm({ adminChatUrl }: CommunityJoinFormProps) {
         if (!res.ok) {
           const data = await res.json()
           setError(data.error ?? "Data belum bisa disimpan. Coba lagi.")
+          // reason, not the jamaah's message: the API's own error string is the
+          // thing worth grouping by in GA.
+          track(ANALYTICS_EVENTS.COMMUNITY.FAILED, { reason: data.error ?? `http_${res.status}` })
           return
         }
 
         setSubmitted({ fullName: fullName.trim(), phone: phone.trim() })
+        track(ANALYTICS_EVENTS.COMMUNITY.SUCCESS)
       } catch {
         setError("Terjadi kesalahan jaringan. Coba lagi sebentar lagi.")
+        track(ANALYTICS_EVENTS.COMMUNITY.FAILED, { reason: "network" })
       }
     })
   }
@@ -227,6 +236,7 @@ export function CommunityJoinForm({ adminChatUrl }: CommunityJoinFormProps) {
               href={adminLink}
               target="_blank"
               rel="noreferrer"
+              onClick={() => track(ANALYTICS_EVENTS.COMMUNITY.ADMIN_CLICK)}
               className="inline-flex items-center justify-center rounded-md border px-4 py-3 text-sm font-semibold"
               style={{ borderColor: "var(--color-border)", color: "var(--color-text)" }}
             >

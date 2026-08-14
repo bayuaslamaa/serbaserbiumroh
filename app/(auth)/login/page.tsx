@@ -4,6 +4,7 @@ import { Suspense } from "react"
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { ANALYTICS_EVENTS, track } from "@/lib/analytics"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,6 +35,7 @@ function LoginForm() {
     e.preventDefault()
     setError("")
     setLoading(true)
+    track(ANALYTICS_EVENTS.AUTH.LOGIN_SUBMIT, { method: "credentials" })
     try {
       const result = await signIn("credentials", {
         email,
@@ -42,12 +44,17 @@ function LoginForm() {
       })
       if (result?.error) {
         setError("Email atau password salah. Silakan coba lagi.")
+        // Auth.js collapses "no such user", "no password set" and "wrong
+        // password" into one code, so this counts attempts, not causes.
+        track(ANALYTICS_EVENTS.AUTH.LOGIN_FAILED, { method: "credentials", reason: result.error })
       } else {
+        track(ANALYTICS_EVENTS.AUTH.LOGIN_SUCCESS, { method: "credentials" })
         router.push(callbackUrl)
         router.refresh()
       }
     } catch {
       setError("Terjadi kesalahan. Silakan coba lagi.")
+      track(ANALYTICS_EVENTS.AUTH.LOGIN_FAILED, { method: "credentials", reason: "exception" })
     } finally {
       setLoading(false)
     }
@@ -55,6 +62,9 @@ function LoginForm() {
 
   async function handleGoogle() {
     setLoading(true)
+    // Google redirects away, so there is no success event to pair with this —
+    // the landing page's own pageview is the other half.
+    track(ANALYTICS_EVENTS.AUTH.GOOGLE_CLICK)
     await signIn("google", { callbackUrl })
   }
 
