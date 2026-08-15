@@ -30,8 +30,14 @@ yarn-error.log*
 # vercel
 .vercel
 
-# claude code — local machine settings, not shared config
-.claude/
+# claude code — local machine settings, not shared config.
+# `.claude/*` and not `.claude/`: git never descends into an excluded
+# directory, so the negations below would be dead lines under the latter.
+.claude/*
+# Shared on purpose — the gstack hook only enforces anything if every clone
+# has it. settings.local.json stays ignored: that one is per-developer.
+!.claude/settings.json
+!.claude/hooks/
 
 # tests
 **/__tests__/
