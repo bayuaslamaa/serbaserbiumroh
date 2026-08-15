@@ -14,9 +14,9 @@
  */
 import { eq } from "drizzle-orm"
 
-import { db } from "../lib/db"
-import { hotelPrices } from "../lib/db/schema"
-import { assignHotelSlugs } from "../lib/hotels/slug"
+import { db } from "../src/shared/db"
+import { hotelPrices } from "../src/shared/db/schema"
+import { assignHotelSlugs } from "../src/shared/hotels/slug"
 
 async function main() {
   const apply = process.argv.includes("--apply")

@@ -44,12 +44,12 @@ export default defineConfig({
     globals: true,
     environmentMatchGlobs: [
       ["**/*.test.tsx", "happy-dom"],
-      ["components/**/*.test.ts", "happy-dom"],
+      ["src/components/**/*.test.ts", "happy-dom"],
     ],
   },
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL(".", import.meta.url)),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
 })

@@ -7,10 +7,10 @@
  *   pnpm sync:room-multipliers            # show what the table holds now, change nothing
  *   pnpm sync:room-multipliers --apply    # upsert the rows, delete retired types, read back
  */
-import { db } from "../lib/db"
-import { roomMultipliers } from "../lib/db/schema"
-import { syncRoomMultipliers } from "../lib/db/sync-room-multipliers"
-import { ROOM_MULTIPLIER_ROWS } from "../lib/estimate/room-types"
+import { db } from "../src/shared/db"
+import { roomMultipliers } from "../src/shared/db/schema"
+import { syncRoomMultipliers } from "../src/shared/db/sync-room-multipliers"
+import { ROOM_MULTIPLIER_ROWS } from "../src/shared/estimate/room-types"
 
 async function main() {
   const apply = process.argv.includes("--apply")

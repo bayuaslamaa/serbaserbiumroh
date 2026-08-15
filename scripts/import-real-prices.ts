@@ -15,9 +15,9 @@
  * Re-running is safe: writes upsert per (hotel, month).
  */
 import { readFileSync } from "node:fs"
-import { db } from "../lib/db"
-import { hotelPrices } from "../lib/db/schema"
-import { parseRealHotelPricingCsv, applyRealHotelPricing } from "../lib/admin/real-hotel-pricing-import"
+import { db } from "../src/shared/db"
+import { hotelPrices } from "../src/shared/db/schema"
+import { parseRealHotelPricingCsv, applyRealHotelPricing } from "../src/shared/admin/real-hotel-pricing-import"
 
 const DEFAULT_CSV = "docs/data/real-hotel-prices-2027.csv"
 

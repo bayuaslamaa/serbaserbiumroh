@@ -21,7 +21,7 @@ function loadEnvFile(path: string) {
 loadEnvFile(".env.local")
 
 export default defineConfig({
-  schema: "./lib/db/schema.ts",
+  schema: "./src/shared/db/schema.ts",
   out: "./drizzle/migrations",
   dialect: "postgresql",
   dbCredentials: {
