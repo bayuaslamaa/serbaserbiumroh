@@ -56,3 +56,12 @@ tmp/
 
 # supplier price-list catalogs (large PDFs/images kept locally as pricing evidence)
 docs/pricelist/
+
+# lockfile dari package manager lain — sumber konflik, dan repo ini pakai pnpm.
+# pnpm-lock.yaml sengaja TIDAK diabaikan: Dockerfile menjalankan
+# `pnpm install --frozen-lockfile` dan gagal tanpanya.
+package-lock.json
+yarn.lock
+bun.lockb
+bun.lock
+npm-shrinkwrap.json

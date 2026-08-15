@@ -29,7 +29,6 @@ function mdx(): Plugin {
         jsx: false,
         development: false,
         remarkPlugins: [remarkFrontmatter],
-        providerImportSource: "@/mdx-components",
       })
       return { code: String(compiled), map: null }
     },

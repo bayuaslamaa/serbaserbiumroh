@@ -17,8 +17,8 @@
   --color-text-soft: #d9d4c4;
   --color-danger-text: #e08585;
   --color-danger-text-hover: #f0a0a0;
-  --font-heading: "Amiri", serif;
-  --font-body: "DM Sans", sans-serif;
+  --font-heading: 'Amiri', serif;
+  --font-body: 'DM Sans', sans-serif;
   --radius: 0.5rem;
 }
 

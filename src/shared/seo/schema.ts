@@ -1,133 +1,107 @@
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from "./config"
-
-/**
- * schema.org JSON-LD builders.
- *
- * These return plain objects so they can be asserted directly in tests without
- * rendering. Serialization and escaping happen in components/seo/JsonLd.tsx.
- *
- * Rule of thumb for every builder here: only describe what the page actually
- * shows. Markup that overstates the content -- a SearchAction with no site
- * search, an Offer for a price we merely estimate -- is what earns a manual
- * action, and it is a much more expensive mistake than omitting the markup.
- */
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from './config';
 
 export interface JsonLdObject {
-  "@context": string
-  "@type": string
-  [key: string]: unknown
+  '@context': string;
+  '@type': string;
+  [key: string]: unknown;
 }
 
-const WHATSAPP_NUMBER = "+6285161134844"
+const WHATSAPP_NUMBER = '+6285161134844';
 
-export function buildOrganizationSchema(): JsonLdObject {
+export const buildOrganizationSchema = (): JsonLdObject => {
   return {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
     name: SITE_NAME,
-    alternateName: "SSU",
+    alternateName: 'SSU',
     url: SITE_URL,
-    logo: absoluteUrl("/logo.png"),
+    logo: absoluteUrl('/logo.png'),
     description: SITE_DESCRIPTION,
     contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "customer support",
+      '@type': 'ContactPoint',
+      contactType: 'customer support',
       telephone: WHATSAPP_NUMBER,
-      availableLanguage: ["id"],
+      availableLanguage: ['id'],
     },
-    // sameAs is deliberately absent. The only social link in the codebase is a
-    // personal Instagram account, not an official organisation profile, and
-    // claiming it here would assert an identity we cannot back up. Add real
-    // org-owned profiles when they exist.
-  }
-}
+  };
+};
 
-export function buildWebSiteSchema(): JsonLdObject {
+export const buildWebSiteSchema = (): JsonLdObject => {
   return {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
-    inLanguage: "id-ID",
-    // No potentialAction/SearchAction: the site has no search endpoint, and
-    // declaring one Google cannot exercise is a markup/content mismatch.
-  }
-}
+    inLanguage: 'id-ID',
+  };
+};
 
 export interface FaqEntry {
-  question: string
-  answer: string
+  question: string;
+  answer: string;
 }
 
-/**
- * FAQPage markup for the /faq page.
- *
- * Returns null when there is nothing published. Rendering an empty FAQPage
- * while the page itself says "FAQ belum tersedia" is exactly the
- * markup/content mismatch that earns a manual action.
- */
-export function buildFaqPageSchema(entries: FaqEntry[]): JsonLdObject | null {
-  const usable = entries.filter((entry) => entry.question.trim() && entry.answer.trim())
-  if (usable.length === 0) return null
+export const buildFaqPageSchema = (entries: FaqEntry[]): JsonLdObject | null => {
+  const usable = entries.filter((entry) => entry.question.trim() && entry.answer.trim());
+  if (usable.length === 0) return null;
 
   return {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
     mainEntity: usable.map((entry) => ({
-      "@type": "Question",
+      '@type': 'Question',
       name: entry.question.trim(),
       acceptedAnswer: {
-        "@type": "Answer",
+        '@type': 'Answer',
         text: entry.answer.trim(),
       },
     })),
-  }
-}
+  };
+};
 
 export interface ArticleInput {
-  headline: string
-  description: string
-  path: string
-  authorName: string
-  datePublished: Date
-  dateModified: Date
+  headline: string;
+  description: string;
+  path: string;
+  authorName: string;
+  datePublished: Date;
+  dateModified: Date;
 }
 
-export function buildArticleSchema(input: ArticleInput): JsonLdObject {
+export const buildArticleSchema = (input: ArticleInput): JsonLdObject => {
   return {
-    "@context": "https://schema.org",
-    "@type": "Article",
+    '@context': 'https://schema.org',
+    '@type': 'Article',
     headline: input.headline,
     description: input.description,
     mainEntityOfPage: absoluteUrl(input.path),
-    author: { "@type": "Person", name: input.authorName },
+    author: { '@type': 'Person', name: input.authorName },
     publisher: {
-      "@type": "Organization",
+      '@type': 'Organization',
       name: SITE_NAME,
-      logo: { "@type": "ImageObject", url: absoluteUrl("/logo.png") },
+      logo: { '@type': 'ImageObject', url: absoluteUrl('/logo.png') },
     },
     datePublished: input.datePublished.toISOString(),
     dateModified: input.dateModified.toISOString(),
-    inLanguage: "id-ID",
-  }
-}
+    inLanguage: 'id-ID',
+  };
+};
 
 export interface BreadcrumbItem {
-  name: string
-  /** Site-relative path, e.g. "/hotel-nusuk". */
-  path: string
+  name: string;
+  path: string;
 }
 
-export function buildBreadcrumbSchema(items: BreadcrumbItem[]): JsonLdObject {
+export const buildBreadcrumbSchema = (items: BreadcrumbItem[]): JsonLdObject => {
   return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
     itemListElement: items.map((item, index) => ({
-      "@type": "ListItem",
+      '@type': 'ListItem',
       position: index + 1,
       name: item.name,
       item: absoluteUrl(item.path),
     })),
-  }
-}
+  };
+};

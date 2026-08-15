@@ -12,7 +12,7 @@ community intake, and a cost estimator for the internal team.
 | Language | TypeScript, React 18 |
 | Database | PostgreSQL 17 + Drizzle ORM |
 | Auth | Auth.js v5 (`next-auth@5 beta`) — credentials + Google |
-| Content | MDX (`src/content/`) for guides, DB for stories and hotels |
+| Content | MDX (`src/shared/content/`) for guides, DB for stories and hotels |
 | Article CMS | `badalin-eco-api`, edited from `ssu-admin` — not this repo's DB |
 | Styling | Tailwind + shadcn/ui |
 | Tests | Vitest + Testing Library (127 files, 1300+ tests) |
@@ -27,30 +27,67 @@ All application code lives under `src/`. The `@/*` alias resolves there, so
 src/
 ├── app/          Next.js routes — thin, they call into packages/
 ├── packages/     feature slices (see Architecture below)
-├── components/   shared UI, incl. components/ui (shadcn)
-├── shared/       infrastructure used everywhere: db, analytics, seo,
-│                 utils, hooks, types
-├── content/      MDX guides, read from disk at runtime
+├── components/   shared UI: atoms, molecules, organisms, templates
+├── shared/       used by more than one package: db, auth, analytics,
+│                 seo, content, hooks, types, logging, utils
 ├── test/         test helpers (import-graph)
 └── auth.ts  auth.config.ts  middleware.ts  mdx-components.tsx
 ```
 
 This mirrors `badalin-visa-web`, which has the same `app` / `components` /
 `packages` / `shared` / `test` split. Two differences, both deliberate: this app
-has no `i18n/` because it ships Indonesian only, and it adds `content/` for the
+has no `i18n/` because it ships Indonesian only, and `shared/content/` holds the
 MDX guides, which badalin has no equivalent of.
+
+## Conventions
 
 **File names are kebab-case**, without exception — `cta-band.tsx`,
 `site-footer.tsx`, `repository.port.ts`. Exported symbols stay PascalCase
-(`export function CtaBand`). Same rule as badalin.
+(`export const CtaBand = ...`). Same rule as badalin.
+
+**Arrow functions everywhere.** `export const handler = async (req) => {}`, not
+`export function handler(req) {}`. Two exceptions the language forces:
+overloaded functions (`src/packages/estimate/domain/services.ts`) have no arrow form, and
+class methods stay methods because an arrow rebinds `this`.
+
+Because `const` does not hoist, calling something above its declaration is now a
+compile error instead of working by accident. Run `npx tsc --noEmit` — it is the
+only check that catches this.
+
+**No comments except `TODO`.** Names and types carry the meaning; anything that
+needs a paragraph belongs in the commit message, where `git log -S` and
+`git blame` can find it.
+
+**Pages hold metadata and nothing else.** A file under `src/app/` exports the
+route contract Next reads — `metadata` or `generateMetadata`, plus
+`revalidate` / `generateStaticParams` / `dynamicParams` where the route needs
+them — and re-exports the view as its default:
+
+```tsx
+import { pageMetadata } from '@/shared/seo/metadata'
+import { HotelNusukView } from '@/packages/hotel/presentation/view/hotel-nusuk.view'
+
+export const revalidate = 3600
+export const metadata = pageMetadata({ title: '...', description: '...', path: '/hotel-nusuk' })
+
+export default HotelNusukView
+```
+
+No wrapper component. Next passes `params` and `searchParams` straight to the
+default export, so a wrapper would only forward them and add a name to read
+past. Data fetching, branching and markup live in the view, not the route.
+
+Only the route contract may stay in the page, because Next reads those exports
+from the route file and nowhere else.
 
 Kept at the repo root on purpose: `public/` (served verbatim by Next),
 `drizzle/` (migrations, not application code), `scripts/` (one-off tooling run
 with `tsx`), and the config files.
 
 Two things depend on this layout beyond the alias — change them together if the
-layout moves again: `src/shared/panduan.ts` reads `process.cwd()/src/content/panduan`
-from disk, and `next.config.mjs` traces `./src/content/**/*` into the standalone
+layout moves again: `src/packages/panduan/domain/panduan.ts` reads
+`process.cwd()/src/shared/content/panduan` from disk, and `next.config.mjs`
+traces `./src/shared/content/**/*` into the standalone
 output so those files exist in the container.
 
 ## Architecture
@@ -102,27 +139,50 @@ It covers all five layers, including a repository whose only job is one Drizzle
 insert, and its route handler (`src/app/api/community/join/route.ts`) is down to
 argument shuffling.
 
-### Migration status
+### Package map
 
-The rest of the codebase still uses the older flat layout: logic in `src/shared/<area>/`,
-components in `src/components/<area>/`, DB access inline in route handlers. Both
-styles coexist on purpose — a rewrite in one sweep is how a working site
-breaks. Move a slice when you are already changing it.
+Every feature lives in `src/packages/`. What is left in `shared/` and
+`components/` is there because more than one package needs it.
 
-| Slice | Status |
+| Package | Covers |
 |---|---|
-| `community/join` | ✅ migrated — reference |
-| `community/admin-requests` | pending (`src/shared/community/admin-requests*.ts`) |
-| `estimate` | pending (`src/shared/estimate/`, `src/shared/budget/`, `src/shared/ai/`) |
-| `hotel` | pending (`src/shared/hotels/`, `src/shared/hotel-nusuk/`) |
-| `story` | pending (`src/shared/stories/`) |
-| `faq` | pending (`src/shared/faq.ts`) |
-| `article` | pending (`src/shared/articles.ts`) |
-| `stats` | pending (`src/shared/stats/`) |
+| `admin` | pricing tables, content CRUD, CSV import |
+| `article` | articles pulled from badalin-eco-api |
+| `badalin` | badalin cross-promo |
+| `community/join` | intake form — the reference slice, all five layers |
+| `community/admin-requests` | reviewing and matching incoming requests |
+| `email-template` | email template gallery |
+| `estimate` | estimator, budget maths, AI parsing, PDF export |
+| `faq` | FAQ list and preview |
+| `home` | homepage sections |
+| `hotel` | Nusuk hotels, pricelist, monthly pricing |
+| `layanan` | service catalogue and contact links |
+| `panduan` | MDX guides |
+| `stats` | visitor and community statistics |
+| `story` | pilgrim stories |
+| `webinar` | webinar schedule and RSVP |
 
-Anything genuinely cross-cutting — `src/shared/db`, `src/shared/analytics.ts`,
-`src/shared/seo/`, `src/shared/utils.ts`, `src/shared/hooks/`, `src/shared/types/`
-— stays in `shared/` and never moves into a package.
+`shared/` keeps `db`, `auth/`, `analytics.ts`, `seo/`, `content/`, `hooks/`,
+`types/`, `logging/`, `nav-links.ts` and `utils.ts`.
+
+`components/` follows badalin's atomic split and holds only UI that more than
+one package renders:
+
+| Layer | Holds | Examples |
+|---|---|---|
+| `atoms/` | indivisible primitives | `button`, `input`, `badge`, `json-ld`, `tracked-link` |
+| `molecules/` | a few atoms bound together | `card`, `dialog`, `select`, `toast`, `nav-dropdown` |
+| `organisms/` | whole sections of the shell | `nav-bar`, `site-footer`, `mobile-menu` |
+| `templates/` | page scaffolding | `page-column`, `full-bleed` |
+
+Anything only one package renders belongs in that package's
+`presentation/view/`, not here. `nav-links.ts` sits in `shared/` rather than in
+a layer because it is route data, not a component.
+
+Not every package needs five layers. `port/` and `usecase/` earn their place
+only where there is an adapter to hide behind them — a module of pure functions
+gets `domain/` and nothing else. `community/join` is the one to copy when a
+slice does talk to the database.
 
 ## Route map
 

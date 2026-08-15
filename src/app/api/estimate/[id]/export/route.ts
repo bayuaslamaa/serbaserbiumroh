@@ -1,59 +1,59 @@
-export const runtime = "nodejs"
+export const runtime = 'nodejs';
 
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
-import { db } from "@/shared/db"
-import { estimates } from "@/shared/db/schema"
-import { fetchPricingConfig, calculateBudget } from "@/shared/budget/calculate"
-import { applyOverrides } from "@/shared/budget/overrides"
-import { generateWhatsAppText } from "@/shared/export/whatsapp"
-import { generatePDF } from "@/shared/export/pdf"
-import { normaliseStoredOverrides, normaliseStoredParams } from "@/shared/estimate/services"
-import { eq } from "drizzle-orm"
-import type { EstimateParams, ManualOverrides } from "@/shared/types"
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/shared/auth/next-auth';
+import { db } from '@/shared/db';
+import { estimates } from '@/shared/db/schema';
+import { fetchPricingConfig, calculateBudget } from '@/packages/estimate/domain/budget/calculate';
+import { applyOverrides } from '@/packages/estimate/domain/budget/overrides';
+import { generateWhatsAppText } from '@/packages/estimate/domain/whatsapp';
+import { generatePDF } from '@/packages/estimate/domain/pdf';
+import {
+  normaliseStoredOverrides,
+  normaliseStoredParams,
+} from '@/packages/estimate/domain/services';
+import { eq } from 'drizzle-orm';
+import type { EstimateParams, ManualOverrides } from '@/shared/types';
 
-type RouteCtx = { params: Promise<{ id: string }> }
+type RouteCtx = { params: Promise<{ id: string }> };
 
-export async function GET(req: NextRequest, ctx: RouteCtx) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+export const GET = async (req: NextRequest, ctx: RouteCtx) => {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await ctx.params
-  const format = req.nextUrl.searchParams.get("format")
+  const { id } = await ctx.params;
+  const format = req.nextUrl.searchParams.get('format');
 
-  if (format !== "pdf" && format !== "whatsapp") {
-    return NextResponse.json({ error: "format must be 'pdf' or 'whatsapp'" }, { status: 400 })
+  if (format !== 'pdf' && format !== 'whatsapp') {
+    return NextResponse.json({ error: "format must be 'pdf' or 'whatsapp'" }, { status: 400 });
   }
 
-  const [estimate] = await db.select().from(estimates).where(eq(estimates.id, id))
-  if (!estimate) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  const [estimate] = await db.select().from(estimates).where(eq(estimates.id, id));
+  if (!estimate) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  if (estimate.userId !== session.user.id && session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (estimate.userId !== session.user.id && session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const pricing = await fetchPricingConfig(db)
-  // Exports read the stored snapshot directly, so they get the same read-time migration the
-  // estimator does — otherwise the retired transport line would simply be missing from the PDF.
-  const params = normaliseStoredParams(estimate.params as EstimateParams)
-  const storedOverrides = (estimate.manualOverrides as ManualOverrides | null) ?? null
-  const overrides = storedOverrides && normaliseStoredOverrides(storedOverrides)
-  const breakdown = calculateBudget(params, pricing)
-  const display = applyOverrides(breakdown, overrides, params.pax)
+  const pricing = await fetchPricingConfig(db);
+  const params = normaliseStoredParams(estimate.params as EstimateParams);
+  const storedOverrides = (estimate.manualOverrides as ManualOverrides | null) ?? null;
+  const overrides = storedOverrides && normaliseStoredOverrides(storedOverrides);
+  const breakdown = calculateBudget(params, pricing);
+  const display = applyOverrides(breakdown, overrides, params.pax);
 
-  if (format === "whatsapp") {
-    const text = generateWhatsAppText(params, breakdown, display, estimate.title)
+  if (format === 'whatsapp') {
+    const text = generateWhatsAppText(params, breakdown, display, estimate.title);
     return new Response(text, {
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    })
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   }
 
-  // PDF
-  const pdfBytes = await generatePDF(params, breakdown, display, estimate.title, estimate.id)
+  const pdfBytes = await generatePDF(params, breakdown, display, estimate.title, estimate.id);
   return new Response(Buffer.from(pdfBytes), {
     headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=estimasi-umroh-${id}.pdf`,
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=estimasi-umroh-${id}.pdf`,
     },
-  })
-}
+  });
+};

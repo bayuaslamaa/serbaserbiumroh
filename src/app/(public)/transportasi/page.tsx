@@ -1,13 +1,11 @@
-import TransportasiClient from './transportasi-client'
-import { pageMetadata } from '@/shared/seo/metadata'
+import { pageMetadata } from '@/shared/seo/metadata';
+import { TransportasiView } from '@/packages/transportasi/presentation/view/transportasi.view';
 
 export const metadata = pageMetadata({
   title: 'Tarif Sewa Transportasi dan Antar Jemput Bandara Arab Saudi',
   description:
     'Daftar harga sewa mobil dan antar jemput bandara Jeddah & Madinah untuk umroh mandiri, lengkap dengan kalkulator kurs Rupiah dan pemesanan langsung via WhatsApp.',
   path: '/transportasi',
-})
+});
 
-export default function TransportasiPage() {
-  return <TransportasiClient />
-}
+export default TransportasiView;

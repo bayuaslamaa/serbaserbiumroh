@@ -1,72 +1,82 @@
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
-import { db } from "@/shared/db"
-import { pilgrimStories } from "@/shared/db/schema"
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/shared/auth/next-auth';
+import { db } from '@/shared/db';
+import { pilgrimStories } from '@/shared/db/schema';
 import {
   PILGRIM_STORY_IMPORT_MAX_BYTES,
   PILGRIM_STORY_IMPORT_MAX_ROWS,
   parsePilgrimStoryCsv,
   type PilgrimStoryImportRowResult,
-} from "@/shared/admin/pilgrim-story-import"
-import { eq } from "drizzle-orm"
+} from '@/packages/admin/domain/pilgrim-story-import';
+import { eq } from 'drizzle-orm';
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) return { error: "Unauthorized", status: 401 } as const
-  if (session.user.role !== "ADMIN") return { error: "Forbidden", status: 403 } as const
-  return { session }
-}
+const requireAdmin = async () => {
+  const session = await auth();
+  if (!session?.user) return { error: 'Unauthorized', status: 401 } as const;
+  if (session.user.role !== 'ADMIN') return { error: 'Forbidden', status: 403 } as const;
+  return { session };
+};
 
-export async function POST(req: NextRequest) {
-  const guard = await requireAdmin()
-  if ("error" in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
+export const POST = async (req: NextRequest) => {
+  const guard = await requireAdmin();
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
-  let body: { csv?: unknown }
+  let body: { csv?: unknown };
   try {
-    body = await req.json()
+    body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  if (typeof body.csv !== "string" || body.csv.trim().length === 0) {
-    return NextResponse.json({ error: "csv is required" }, { status: 400 })
+  if (typeof body.csv !== 'string' || body.csv.trim().length === 0) {
+    return NextResponse.json({ error: 'csv is required' }, { status: 400 });
   }
-  if (Buffer.byteLength(body.csv, "utf8") > PILGRIM_STORY_IMPORT_MAX_BYTES) {
-    return NextResponse.json({ error: `csv must be ${PILGRIM_STORY_IMPORT_MAX_BYTES} bytes or less` }, { status: 413 })
+  if (Buffer.byteLength(body.csv, 'utf8') > PILGRIM_STORY_IMPORT_MAX_BYTES) {
+    return NextResponse.json(
+      { error: `csv must be ${PILGRIM_STORY_IMPORT_MAX_BYTES} bytes or less` },
+      { status: 413 },
+    );
   }
 
-  const existingStories = await db.select({ id: pilgrimStories.id, slug: pilgrimStories.slug }).from(pilgrimStories)
-  const preview = parsePilgrimStoryCsv(body.csv, { existingStories })
+  const existingStories = await db
+    .select({ id: pilgrimStories.id, slug: pilgrimStories.slug })
+    .from(pilgrimStories);
+  const preview = parsePilgrimStoryCsv(body.csv, { existingStories });
   if (preview.rows.length > PILGRIM_STORY_IMPORT_MAX_ROWS) {
-    return NextResponse.json({ error: `csv must contain ${PILGRIM_STORY_IMPORT_MAX_ROWS} rows or fewer` }, { status: 413 })
+    return NextResponse.json(
+      { error: `csv must contain ${PILGRIM_STORY_IMPORT_MAX_ROWS} rows or fewer` },
+      { status: 413 },
+    );
   }
 
-  const writableRows = preview.rows.filter((row) => row.status === "create" || row.status === "update")
+  const writableRows = preview.rows.filter(
+    (row) => row.status === 'create' || row.status === 'update',
+  );
   const appliedRows: Array<{
-    rowNumber: number
-    slug: string
-    status: "create" | "update"
-    storyId: string
-  }> = []
+    rowNumber: number;
+    slug: string;
+    status: 'create' | 'update';
+    storyId: string;
+  }> = [];
 
   if (writableRows.length > 0) {
     await db.transaction(async (tx) => {
       for (const row of writableRows) {
-        appliedRows.push(await applyImportRow(tx, row))
+        appliedRows.push(await applyImportRow(tx, row));
       }
-    })
+    });
   }
 
-  return NextResponse.json({ preview, applied: writableRows.length, appliedRows })
-}
+  return NextResponse.json({ preview, applied: writableRows.length, appliedRows });
+};
 
-async function applyImportRow(
+const applyImportRow = async (
   tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
-  row: PilgrimStoryImportRowResult
-) {
-  if (!row.data) throw new Error("Cannot apply import row without parsed data")
+  row: PilgrimStoryImportRowResult,
+) => {
+  if (!row.data) throw new Error('Cannot apply import row without parsed data');
 
-  const now = new Date()
+  const now = new Date();
   const storyData = {
     slug: row.data.slug,
     authorName: row.data.authorName,
@@ -83,31 +93,28 @@ async function applyImportRow(
     isPublished: row.data.isPublished,
     isFeatured: row.data.isFeatured,
     updatedAt: now,
-  }
+  };
 
-  if (row.status === "update" && row.existingStoryId) {
+  if (row.status === 'update' && row.existingStoryId) {
     await tx
       .update(pilgrimStories)
       .set(storyData)
-      .where(eq(pilgrimStories.id, row.existingStoryId))
+      .where(eq(pilgrimStories.id, row.existingStoryId));
 
     return {
       rowNumber: row.rowNumber,
       slug: row.data.slug,
-      status: "update" as const,
+      status: 'update' as const,
       storyId: row.existingStoryId,
-    }
+    };
   }
 
-  const [created] = await tx
-    .insert(pilgrimStories)
-    .values(storyData)
-    .returning()
+  const [created] = await tx.insert(pilgrimStories).values(storyData).returning();
 
   return {
     rowNumber: row.rowNumber,
     slug: row.data.slug,
-    status: "create" as const,
+    status: 'create' as const,
     storyId: created.id,
-  }
-}
+  };
+};

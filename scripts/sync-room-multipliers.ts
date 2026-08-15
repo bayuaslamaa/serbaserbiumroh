@@ -1,18 +1,9 @@
-/**
- * Sync room_multipliers to the canonical rows in lib/estimate/room-types.ts.
- *
- * Split from the seed on purpose: `pnpm seed` runs every seed block, which is not something you
- * want to point at a live database just to correct four pricing rows.
- *
- *   pnpm sync:room-multipliers            # show what the table holds now, change nothing
- *   pnpm sync:room-multipliers --apply    # upsert the rows, delete retired types, read back
- */
 import { db } from "../src/shared/db"
 import { roomMultipliers } from "../src/shared/db/schema"
 import { syncRoomMultipliers } from "../src/shared/db/sync-room-multipliers"
-import { ROOM_MULTIPLIER_ROWS } from "../src/shared/estimate/room-types"
+import { ROOM_MULTIPLIER_ROWS } from "../src/packages/estimate/domain/room-types"
 
-async function main() {
+const main = async () => {
   const apply = process.argv.includes("--apply")
 
   const before = await db.select().from(roomMultipliers)

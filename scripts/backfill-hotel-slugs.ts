@@ -1,24 +1,10 @@
-/**
- * Backfill the `slug` column on `hotel_prices`.
- *
- * Every hotel needs a stable URL identity before /hotel-nusuk/[slug] can
- * exist. Rows that already have a slug are left alone -- rewriting one would
- * move a URL Google has already indexed.
- *
- * Usage (via package.json, which loads .env.local):
- *   pnpm backfill:hotel-slugs           # dry-run: print what would change
- *   pnpm backfill:hotel-slugs --apply   # actually write
- *
- * Safe to re-run: slug assignment is idempotent and ordered by importKey, so
- * a second run over its own output is a no-op.
- */
 import { eq } from "drizzle-orm"
 
 import { db } from "../src/shared/db"
 import { hotelPrices } from "../src/shared/db/schema"
-import { assignHotelSlugs } from "../src/shared/hotels/slug"
+import { assignHotelSlugs } from "../src/packages/hotel/domain/slug"
 
-async function main() {
+const main = async () => {
   const apply = process.argv.includes("--apply")
 
   const rows = await db
@@ -65,9 +51,6 @@ async function main() {
     return
   }
 
-  // All-or-nothing: a mid-loop unique violation (a concurrent admin create
-  // taking a slug this run planned to use) would otherwise leave the table
-  // half-populated, with no record of where it stopped.
   await db.transaction(async (tx) => {
     for (const change of changes) {
       await tx.update(hotelPrices).set({ slug: change.slug }).where(eq(hotelPrices.id, change.id))

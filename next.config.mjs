@@ -8,7 +8,7 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["pg", "@react-pdf/renderer", "isomorphic-dompurify"],
     outputFileTracingIncludes: {
-      "/**": ["./src/content/**/*"],
+      "/**": ["./src/shared/content/**/*"],
     },
   },
   // Config redirects run ahead of middleware, so /hotel no longer bounces

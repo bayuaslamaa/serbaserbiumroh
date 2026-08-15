@@ -1,27 +1,11 @@
-/**
- * Bulk-import real hotel prices from a CSV into `real_hotel_prices`.
- *
- * Reuses the exact parse + apply logic as the admin endpoint
- * (lib/admin/real-hotel-pricing-import.ts), so behaviour matches the HTTP path —
- * but runs locally against DATABASE_URL, so no admin session/cookie is needed.
- *
- * Usage (via package.json, which loads .env.local):
- *   pnpm import:real-prices                          # dry-run on the default CSV
- *   pnpm import:real-prices <path.csv>               # dry-run on a specific CSV
- *   pnpm import:real-prices --source "Katalog X" --apply   # actually write
- *
- * Dry-run (default) prints matched hotels, unmatched rows, and per-row errors
- * WITHOUT touching the database. Add --apply (with --source) to persist.
- * Re-running is safe: writes upsert per (hotel, month).
- */
 import { readFileSync } from "node:fs"
 import { db } from "../src/shared/db"
 import { hotelPrices } from "../src/shared/db/schema"
-import { parseRealHotelPricingCsv, applyRealHotelPricing } from "../src/shared/admin/real-hotel-pricing-import"
+import { parseRealHotelPricingCsv, applyRealHotelPricing } from "../src/packages/admin/domain/real-hotel-pricing-import"
 
 const DEFAULT_CSV = "docs/data/real-hotel-prices-2027.csv"
 
-function parseArgs(argv: string[]) {
+const parseArgs = (argv: string[]) => {
   let csvPath = DEFAULT_CSV
   let source = ""
   let apply = false
@@ -35,7 +19,7 @@ function parseArgs(argv: string[]) {
   return { csvPath, source: source.trim(), apply }
 }
 
-async function main() {
+const main = async () => {
   const { csvPath, source, apply } = parseArgs(process.argv.slice(2))
 
   let csv: string

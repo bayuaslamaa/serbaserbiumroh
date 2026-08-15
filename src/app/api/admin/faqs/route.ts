@@ -1,32 +1,32 @@
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/auth"
-import { db } from "@/shared/db"
-import { faqGroups, faqItems } from "@/shared/db/schema"
-import { asc, eq } from "drizzle-orm"
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/shared/auth/next-auth';
+import { db } from '@/shared/db';
+import { faqGroups, faqItems } from '@/shared/db/schema';
+import { asc, eq } from 'drizzle-orm';
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) return { error: "Unauthorized", status: 401 } as const
-  if (session.user.role !== "ADMIN") return { error: "Forbidden", status: 403 } as const
-  return { session }
-}
+const requireAdmin = async () => {
+  const session = await auth();
+  if (!session?.user) return { error: 'Unauthorized', status: 401 } as const;
+  if (session.user.role !== 'ADMIN') return { error: 'Forbidden', status: 403 } as const;
+  return { session };
+};
 
-function readSortOrder(value: unknown) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0
-}
+const readSortOrder = (value: unknown) => {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+};
 
-async function groupExists(groupId: string) {
+const groupExists = async (groupId: string) => {
   const [group] = await db
     .select({ id: faqGroups.id })
     .from(faqGroups)
     .where(eq(faqGroups.id, groupId))
-    .limit(1)
-  return !!group
-}
+    .limit(1);
+  return !!group;
+};
 
-export async function GET() {
-  const guard = await requireAdmin()
-  if ("error" in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
+export const GET = async () => {
+  const guard = await requireAdmin();
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
   const faqs = await db
     .select({
@@ -42,36 +42,36 @@ export async function GET() {
     })
     .from(faqItems)
     .innerJoin(faqGroups, eq(faqItems.groupId, faqGroups.id))
-    .orderBy(asc(faqGroups.sortOrder), asc(faqItems.sortOrder), asc(faqItems.question))
+    .orderBy(asc(faqGroups.sortOrder), asc(faqItems.sortOrder), asc(faqItems.question));
 
-  return NextResponse.json({ faqs })
-}
+  return NextResponse.json({ faqs });
+};
 
-export async function POST(req: NextRequest) {
-  const guard = await requireAdmin()
-  if ("error" in guard) return NextResponse.json({ error: guard.error }, { status: guard.status })
+export const POST = async (req: NextRequest) => {
+  const guard = await requireAdmin();
+  if ('error' in guard) return NextResponse.json({ error: guard.error }, { status: guard.status });
 
-  let body: Record<string, unknown>
+  let body: Record<string, unknown>;
   try {
-    body = await req.json()
+    body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { groupId, question, answer, sortOrder, isPublished } = body
+  const { groupId, question, answer, sortOrder, isPublished } = body;
 
-  if (typeof groupId !== "string" || !groupId.trim()) {
-    return NextResponse.json({ error: "groupId required" }, { status: 400 })
+  if (typeof groupId !== 'string' || !groupId.trim()) {
+    return NextResponse.json({ error: 'groupId required' }, { status: 400 });
   }
-  const trimmedGroupId = groupId.trim()
+  const trimmedGroupId = groupId.trim();
   if (!(await groupExists(trimmedGroupId))) {
-    return NextResponse.json({ error: "group not found" }, { status: 400 })
+    return NextResponse.json({ error: 'group not found' }, { status: 400 });
   }
-  if (typeof question !== "string" || !question.trim()) {
-    return NextResponse.json({ error: "question required" }, { status: 400 })
+  if (typeof question !== 'string' || !question.trim()) {
+    return NextResponse.json({ error: 'question required' }, { status: 400 });
   }
-  if (typeof answer !== "string" || !answer.trim()) {
-    return NextResponse.json({ error: "answer required" }, { status: 400 })
+  if (typeof answer !== 'string' || !answer.trim()) {
+    return NextResponse.json({ error: 'answer required' }, { status: 400 });
   }
 
   const [faq] = await db
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       sortOrder: readSortOrder(sortOrder),
       isPublished: isPublished === true,
     })
-    .returning()
+    .returning();
 
-  return NextResponse.json({ faq }, { status: 201 })
-}
+  return NextResponse.json({ faq }, { status: 201 });
+};

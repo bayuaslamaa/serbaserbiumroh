@@ -1,0 +1,61 @@
+import { SERVICE_KEYS } from '@/shared/types';
+import { expandRetiredStoredParams } from './services';
+import type { City, EstimateParams, PricingConfig } from '@/shared/types';
+
+const HOTEL_TIERS = ['ECONOMY', 'STANDARD', 'PELATARAN', 'PREMIUM'];
+const ROOM_TYPES = ['QUINT', 'QUAD', 'TRIPLE', 'DOUBLE'];
+const AIRLINE_TIERS = ['NONE', 'BUDGET', 'STANDARD', 'GARUDA', 'BUSINESS'];
+
+export const validateEstimateParamsShape = (p: unknown): p is EstimateParams => {
+  if (!p || typeof p !== 'object') return false;
+  const o = p as Record<string, unknown>;
+
+  const travelMonthValid =
+    o.travelMonth === undefined ||
+    (typeof o.travelMonth === 'number' &&
+      Number.isInteger(o.travelMonth) &&
+      o.travelMonth >= 1 &&
+      o.travelMonth <= 12);
+
+  return (
+    typeof o.nightsMadinah === 'number' &&
+    typeof o.nightsMakkah === 'number' &&
+    typeof o.pax === 'number' &&
+    HOTEL_TIERS.includes(o.hotelTier as string) &&
+    (o.madinahHotelId === undefined || typeof o.madinahHotelId === 'string') &&
+    (o.makkahHotelId === undefined || typeof o.makkahHotelId === 'string') &&
+    ROOM_TYPES.includes(o.roomType as string) &&
+    AIRLINE_TIERS.includes(o.airline as string) &&
+    Array.isArray(o.services) &&
+    (o.services as string[]).every((s) =>
+      SERVICE_KEYS.includes(s as (typeof SERVICE_KEYS)[number]),
+    ) &&
+    typeof o.fullboard === 'boolean' &&
+    travelMonthValid
+  );
+};
+
+export const normaliseAndValidateEstimateParams = (p: unknown): EstimateParams | null => {
+  const expanded = expandRetiredStoredParams(p);
+  return validateEstimateParamsShape(expanded) ? expanded : null;
+};
+
+const hotelIdBelongsToCity = (pricing: PricingConfig, city: City, hotelId?: string): boolean => {
+  if (!hotelId) return true;
+  return pricing.hotelOptions?.[city]?.some((hotel) => hotel.id === hotelId) ?? false;
+};
+
+export const validateEstimateHotelIds = (
+  params: EstimateParams,
+  pricing: PricingConfig,
+): boolean => {
+  return (
+    hotelIdBelongsToCity(pricing, 'MADINAH', params.madinahHotelId) &&
+    hotelIdBelongsToCity(pricing, 'MAKKAH', params.makkahHotelId)
+  );
+};
+
+export const estimateTitle = (params: EstimateParams): string => {
+  const hotelTierLabel = params.hotelTier.charAt(0) + params.hotelTier.slice(1).toLowerCase();
+  return `Estimasi ${hotelTierLabel} ${params.nightsMadinah}+${params.nightsMakkah} malam`;
+};

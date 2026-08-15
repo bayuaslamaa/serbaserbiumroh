@@ -5,7 +5,7 @@ const config: Config = {
   darkMode: ["class"],
   content: [
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/content/**/*.mdx",
+    "./src/shared/content/**/*.mdx",
   ],
   theme: {
     extend: {
