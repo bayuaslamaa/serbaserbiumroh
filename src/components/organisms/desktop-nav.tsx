@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { CommunityStats } from '@/packages/stats/presentation/view/community-stats';
 import { AccountMenu } from './account-menu';
@@ -36,14 +37,16 @@ export const DesktopNav = ({
         <div className="flex min-w-0 items-center gap-7">
           <Link
             href={isLoggedIn ? '/dashboard' : '/'}
-            className="flex items-baseline gap-1.5 whitespace-nowrap"
+            className="flex items-center gap-2 whitespace-nowrap"
           >
-            <span
-              className="text-[22px] font-bold text-gold"
-              style={{ fontFamily: 'var(--font-heading)' }}
-            >
-              SSU
-            </span>
+            <Image
+              src="/assets/images/logo.webp"
+              alt="Serba Serbi Umroh"
+              width={36}
+              height={36}
+              priority
+              className="h-9 w-9 object-contain"
+            />
             <span className="text-[11px] tracking-[0.08em] text-text-muted">Serba Serbi Umroh</span>
           </Link>
 

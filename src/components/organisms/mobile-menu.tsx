@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createPortal } from 'react-dom';
@@ -24,13 +25,14 @@ const rowBorder = { borderColor: 'rgba(201,168,76,0.1)' } as const;
 
 const Wordmark = ({ withTagline = false }: { withTagline?: boolean }) => {
   return (
-    <span className="flex items-baseline gap-1.5">
-      <span
-        className="text-[21px] font-bold text-gold"
-        style={{ fontFamily: 'var(--font-heading)' }}
-      >
-        SSU
-      </span>
+    <span className="flex items-center gap-2">
+      <Image
+        src="/assets/images/logo.webp"
+        alt="Serba Serbi Umroh"
+        width={32}
+        height={32}
+        className="h-8 w-8 object-contain"
+      />
       {withTagline && <span className="text-[11px] text-text-muted">Serba Serbi Umroh</span>}
     </span>
   );

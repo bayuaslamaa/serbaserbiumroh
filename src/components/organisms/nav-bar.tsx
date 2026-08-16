@@ -1,5 +1,3 @@
-'use server';
-
 import { auth, signOut } from '@/shared/auth/next-auth';
 import { getPublicVisitorCount } from '@/packages/stats/domain/visitor-count';
 import { DesktopNav } from './desktop-nav';
@@ -11,6 +9,7 @@ export const NavBar = async ({ isAdmin = false }: { isAdmin?: boolean }) => {
   const showAdmin = isAdmin || user?.role === 'ADMIN';
 
   const handleSignOut = async () => {
+    'use server';
     await signOut({ redirectTo: '/login' });
   };
 
